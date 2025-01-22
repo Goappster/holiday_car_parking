@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl_mobile_field/intl_mobile_field.dart';
-
-import '../routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:holidayscar/services/register_api.dart';
 import '../widgets/text.dart';
 
 
@@ -26,27 +27,18 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
 
+  final RegisterApi _registerApi = RegisterApi();
+
   Future<void> _registerUser() async {
-    final response = await http.post(
-      Uri.parse('https://holidayscarparking.uk/api/register'),
-      body: {
-        'title': titleController.text,
-        'first_name': firstNameController.text,
-        'last_name': lastNameController.text,
-        'phone_number': phoneNumberController.text,
-        'email': emailController.text,
-        'password': passwordController.text,
-        'name': nameController.text,
-      },
+    final success = await _registerApi.registerUser(
+      title: titleController.text,
+      firstName: firstNameController.text,
+      lastName: lastNameController.text,
+      phoneNumber: phoneNumberController.text,
+      email: emailController.text,
+      password: passwordController.text,
     );
 
-    if (response.statusCode == 200) {
-      // Handle successful registration
-      print('Registration successful');
-    } else {
-      // Handle registration error
-      print('Registration failed: ${response.body}');
-    }
   }
 
   @override
@@ -82,40 +74,39 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
               ),
               const SizedBox(height: 20),
               // Title Field
-              CustomTextField(
-                label: 'Title',
-                hintText: 'Mr/Ms',
-                obscureText: false,
-                icon: Icons.person,
-                controller: titleController,
-              ),
-              const SizedBox(height: 10),
               // First Name Field
-              CustomTextField(
-                label: 'First Name',
-                hintText: 'First Name',
-                obscureText: false,
-                icon: Icons.person,
-                controller: firstNameController,
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Title',
+                      hintText: 'Mr/Ms',
+                      obscureText: false,
+                      icon: Icons.person,
+                      controller: firstNameController,
+                    ),
+                  ),
+                  const SizedBox(width: 10), // Space between the fields
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'First Name',
+                      hintText: 'First Name',
+                      obscureText: false,
+                      icon: Icons.person,
+                      controller: lastNameController,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
-              // Last Name Field
               CustomTextField(
                 label: 'Last Name',
                 hintText: 'Last Name',
                 obscureText: false,
                 icon: Icons.person,
-                controller: lastNameController,
+                controller: titleController,
               ),
-              const SizedBox(height: 10),
-              // Name Field
-              CustomTextField(
-                label: 'Name',
-                hintText: 'Name',
-                obscureText: false,
-                icon: Icons.supervised_user_circle_outlined,
-                controller: nameController,
-              ),
+
               const SizedBox(height: 10),
               // Email Field
               CustomTextField(
@@ -153,23 +144,6 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
                   },
                 ),
                 controller: passwordController,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                label: 'Confirm Password',
-                hintText: 'Confirm Passwords',
-                obscureText: !_passwordVisible,
-                icon: Icons.lock,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;
-                    });
-                  },
-                ), controller: passwordController, 
               ),
               const SizedBox(height: 10),
               const SizedBox(height: 20),

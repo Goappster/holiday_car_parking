@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:holidayscar/screens/booking.dart';
 import 'package:holidayscar/screens/booking_confirmation.dart';
 import 'package:holidayscar/screens/booking_details_screen.dart';
 import 'package:holidayscar/screens/home.dart';
 import 'package:holidayscar/screens/login_screen.dart';
+import 'package:holidayscar/screens/my_booking.dart';
 import 'package:holidayscar/screens/show_result_screeen.dart';
-import 'package:holidayscar/screens/signup_screen.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:holidayscar/routes.dart';
 
 void main() {
   runApp(
@@ -28,10 +28,10 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Holidays Car',
-          initialRoute: '/',
+          initialRoute: AppRoutes.login,
           routes: {
-            '/': (context) => const LoginScreen(),
-            '/Signup': (context) => const CreateAccountScreeen(),
+            // '/': (context) => const LoginScreen(),
+            // '/Signup': (context) => const CreateAccountScreeen(),
             '/Login': (context) => const LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
             // '/Booking': (context) => BookingScreen(),
@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
             '/BookingDetails': (context) => BookingDetailsScreen(),
 
           },
+          onGenerateRoute: AppRoutes.generateRoute,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           // themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -61,7 +62,7 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const ShowResultsScreen(),
+    MyBookingsScreen(),
     // const CartScreen(),
    // BookingScreen(),
     const HomeScreen(),
@@ -116,21 +117,13 @@ class BookmarksScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Bookmarks Screen', style: Theme.of(context).textTheme.bodyLarge),
+      child: Text('Bookmarks Screen', style: Theme
+          .of(context)
+          .textTheme
+          .bodyLarge),
     );
   }
 }
-//
-// class CartScreen extends StatelessWidget {
-//   const CartScreen({Key? key}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Center(
-//       child: Text('Cart Screen', style: Theme.of(context).textTheme.bodyLarge),
-//     );
-//   }
-// }
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -142,4 +135,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-

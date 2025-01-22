@@ -6,7 +6,6 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../services/api_service.dart';
-import 'booking_details_screen.dart';
 
 class ShowResultsScreen extends StatefulWidget {
   const ShowResultsScreen({super.key});
@@ -34,12 +33,12 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
     final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
 
-    final startDate = arguments['startDate'];
-    final endDate = arguments['endDate'];
-    final startTime = arguments['startTime'];
-    final endTime = arguments['endTime'];
-    final airportId = arguments['AirportId'];
-    final airportName = arguments['AirportName'];
+    final startDate = arguments['startDate'] ?? 'defaultStartDate';
+    final endDate = arguments['endDate'] ?? 'defaultEndDate';
+    final startTime = arguments['startTime'] ?? 'defaultStartTime';
+    final endTime = arguments['endTime'] ?? 'defaultEndTime';
+    final airportId = arguments['AirportId'] ?? 'defaultAirportId';
+    final airportName = arguments['AirportName'] ?? 'defaultAirportName';
 
     _quotes = _apiService.fetchQuotes(
       airportId: airportId,

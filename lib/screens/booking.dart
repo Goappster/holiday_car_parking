@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookingScreen extends StatefulWidget {
-  const BookingScreen({super.key, required this.company});
   final Map<String, dynamic> company;
+
+  BookingScreen({super.key, required this.company});
 
   @override
   _BookingScreenState createState() => _BookingScreenState();
@@ -17,18 +21,25 @@ class _BookingScreenState extends State<BookingScreen> {
   String _departureTime = '';
   String _arrivalTime = '';
   Vehicle? _selectedVehicle;
+  String? token;
+
+  Map<String, dynamic>? user;
 
   @override
   void initState() {
     super.initState();
-    // Set the first vehicle as the default selected vehicle
-    // _selectedVehicle = Vehicle(
-    //   imageUrl: 'assets/images/car.png',
-    //   make: 'Toyota',
-    //   registration: 'AB-123',
-    //   color: 'Cherry Black',
-    //   model: '2019',
-    // );
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = prefs.getString('token');
+      String? userData = prefs.getString('user');
+      if (userData != null) {
+        user = json.decode(userData);
+      }
+    });
   }
 
   @override
@@ -84,18 +95,18 @@ class _BookingScreenState extends State<BookingScreen> {
         leading: const CircleAvatar(
           backgroundImage: NetworkImage('https://img.freepik.com/free-psd/3d-render-avatar-character_23-2150611759.jpg?t=st=1737462976~exp=1737466576~hmac=bb7f1ed6b30ebe44da413b5b2cc15fa51ea4e9e3affc6444ac96799a26db1911&w=740'), // Replace with actual image asset
         ),
-        title: const Text('Mr. Alex Carry'),
-        subtitle: const Column(
+        title:  Text('Mr, ${user!['first_name']} ${user!['last_name']}'),
+        subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.email, color: Colors.blue),
-                SizedBox(width: 4),
-                Text('alex@gmail.com'),
+                const Icon(Icons.email, color: Colors.blue),
+                const SizedBox(width: 4),
+                Text('${user!['email']}'),
               ],
             ),
-            Row(
+            const Row(
               children: [
                 Icon(Icons.phone, color: Colors.green),
                 SizedBox(width: 4),
@@ -236,15 +247,15 @@ class _BookingScreenState extends State<BookingScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.color_lens, color: Colors.blue),
-                SizedBox(width: 4),
+                const Icon(Icons.color_lens, color: Colors.blue),
+                const SizedBox(width: 4),
                 Text('Color: ${vehicle.color}'),
               ],
             ),
             Row(
               children: [
-                Icon(Icons.directions_car, color: Colors.green),
-                SizedBox(width: 4),
+                const Icon(Icons.directions_car, color: Colors.green),
+                const SizedBox(width: 4),
                 Text('Model No: ${vehicle.model}'),
               ],
             ),
@@ -322,12 +333,12 @@ class _BookingScreenState extends State<BookingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Sms Confirmation', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                Text('£1.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const Text('£1.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ],
         ),
-        SizedBox(width: 16), // Space between items
+        const SizedBox(width: 16), // Space between items
         Row(
           children: [
             Checkbox(
@@ -338,7 +349,7 @@ class _BookingScreenState extends State<BookingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Cancellation Cover', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                Text('£4.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const Text('£4.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ],
@@ -352,10 +363,9 @@ class _BookingScreenState extends State<BookingScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: ElevatedButton(
         onPressed: () {
-          // _showUserInformation(context);
           Navigator.pushNamed(context, '/BookingDetails',
             arguments: {
-              'Name': _flightNumber,
+              'company': widget.company,
               'Email': _flightName,
             },
           );
@@ -437,7 +447,14 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return ElevatedButton(
       onPressed: () {
-        Navigator.pushNamed(context, 'BookingDetails');
+        Navigator.pushNamed(context, 'BookingDetails',
+
+        arguments: {
+          ''
+
+        }
+
+        );
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
@@ -497,6 +514,4 @@ class _BookingScreenState extends State<BookingScreen> {
       },
     );
   }
-
-
 }

@@ -1,11 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
+import 'dart:async';
 
-import '../services/get_airports.dart'; // Import the intl package for formatting dates
+import '../services/get_airports.dart';
+import '../theme/app_theme.dart'; // Import the intl package for formatting dates
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,68 +21,114 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? token;
+  Map<String, dynamic>? user;
+  Future<void>? _userDataFuture;
 
+  @override
+  void initState() {
+    super.initState();
+    _userDataFuture = _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = prefs.getString('token');
+      String? userData = prefs.getString('user');
+      if (userData != null) {
+        user = json.decode(userData);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
+    final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
     return Scaffold(
-      // backgroundColor: Colors.white,
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: const Text('Hi, Alex Carry!'),
+        title: Text('Hi, ${user?['first_name']} ${user?['last_name']}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),
-
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // const Text('23 Aug, 2024'),
-              const SizedBox(height: 10),
-              DateTimePickerSection(),
-              // const SizedBox(height: 16),
-              // DateTimePickerSection(),
-              // const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Hot Offers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  // IconButton(onPressed: () {
-                  //   Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(builder: (context) => const SearchScreen()),
-                  //   );
-                  //
-                  // }, icon: const Icon(Icons.search, size: 30,))
-                  TextButton(onPressed:() {
-                    Navigator.push(
-
-                      context,
-                      MaterialPageRoute(builder: (context) => const SearchScreen()),
-                    );
-
-                  }, child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),)
-                ],
+      body: FutureBuilder(
+        future: _userDataFuture, // Simulating a data fetch
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      DateTimePickerSection(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Hot Offers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SearchScreen()),
+                              );
+                            },
+                            child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                          ),
+                        ],
+                      ),
+                      const HotOffersSection(),
+                    ],
+                  ),
+                ),
               ),
-              // const SizedBox(height: 10),
-              const HotOffersSection(),
-            ],
-          ),
-        ),
+            );
+          } else {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    DateTimePickerSection(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Hot Offers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SearchScreen()),
+                            );
+                          },
+                          child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                        ),
+                      ],
+                    ),
+                    const HotOffersSection(),
+                  ],
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }
 }
-
-
-
 
 class DateTimePickerSection extends StatefulWidget {
   @override
@@ -160,7 +212,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
     return '$hour:$minute';
   }
 
-
   late Future<List<Map<String, dynamic>>> _airportData;
 
   @override
@@ -171,7 +222,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
 
   int? _selectedAirportId; // Variable to store selected airport ID
   String? _selectedAirportName; // Variable to store selected airport name
-
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +298,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         child: Row(
                           children: [
                             const Icon(MingCute.calendar_fill, color: Colors.red),
-                            SizedBox(width: 5,),
+                            const SizedBox(width: 5,),
                             Flexible(
                               child: Text(
                                 _getValueText(
@@ -367,7 +417,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           'AirportId': _selectedAirportId.toString(),
                           'AirportName': _selectedAirportName,
                         },
-
                       );
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

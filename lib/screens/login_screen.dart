@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
-import '../routes.dart';
+import 'package:holidayscar/routes.dart';
+import '../main.dart';
+import '../services/login_api.dart';
 import '../widgets/text.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -16,27 +15,35 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
 
   // Method to handle login
-  Future<void> _login(String email, String password) async {
-    const String url = 'https://holidayscarparking.uk/api/login';
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        body: {'email': email, 'password': password},
-      );
+ final LoginApiService _apiService = LoginApiService();
 
-      if (response.statusCode == 200) {
-        // Handle successful login
-        Navigator.pushNamed(context, AppRoutes.Splash);
-      } else {
-        // Handle login failure
-        _showErrorDialog('Login failed. Please check your credentials.');
-      }
-    } catch (e) {
-      _showErrorDialog('An error occurred. Please try again later.');
+  Future<void> _login(String email, String password) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    bool success = await _apiService.login(email, password);
+    Navigator.of(context).pop(); // Close the loading dialog
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User signed in successfully!')),
+      );
+      // Navigator.push(context, MaterialPageRoute(builder: (context) => Material3BottomNav()));
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+            (route) => false, // This condition removes all previous routes
+      );
+    } else {
+      _showErrorDialog('Login failed. Please check your credentials.');
     }
   }
 
-  // Method to show error dialog
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -57,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     TextEditingController emailController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
-
     return Scaffold(
       // backgroundColor: Colors.white,
       body: SingleChildScrollView(

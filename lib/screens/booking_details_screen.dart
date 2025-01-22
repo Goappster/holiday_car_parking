@@ -1,17 +1,43 @@
+import 'dart:convert';
+
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class BookingDetailsScreen extends StatelessWidget {
+class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
   const BookingDetailsScreen({super.key, });
 
   @override
+  State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
+}
+
+class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  String? token;
+
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = prefs.getString('token');
+      String? userData = prefs.getString('user');
+      if (userData != null) {
+        user = json.decode(userData);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-
-    final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-
-    final startDate = arguments['Name'];
-    final endDate = arguments['Email'];
+    final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final company = args['company'];
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -39,8 +65,8 @@ class BookingDetailsScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                    startDate,
+                      Text( '${company['name']}',
+
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const Text('Street 123, Airparks'),
@@ -57,12 +83,12 @@ class BookingDetailsScreen extends StatelessWidget {
               const SizedBox(height: 20,),
               const DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Colors.white70, ),
               const SizedBox(height: 20,),
-              buildDetailRow('Booking Price', '53.49'),
+              buildDetailRow('Booking Price', '£${company['price']}'),
               buildDetailRow('Booking Fee', '1.99'),
               const SizedBox(height: 20,),
               const DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Colors.white70, ),
               const SizedBox(height: 20,),
-              const Row(
+               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
@@ -70,7 +96,7 @@ class BookingDetailsScreen extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    '£55.48',
+                    '£${company['price']}',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -97,7 +123,7 @@ class BookingDetailsScreen extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(startDate,
+                              Text('startDate',
                                 style: const TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
@@ -163,7 +189,6 @@ class BookingDetailsScreen extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildInfoColumn(IconData icon, String title, String value) {
     return Column(
