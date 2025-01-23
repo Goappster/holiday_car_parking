@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
+import '../Code/another_screen.dart';
 import '../main.dart';
 import '../services/login_api.dart';
 import '../widgets/text.dart';
@@ -39,7 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
         AppRoutes.home,
             (route) => false, // This condition removes all previous routes
       );
+
+      // Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => AnotherScreen())
+      // );
     } else {
+
       _showErrorDialog('Login failed. Please check your credentials.');
     }
   }

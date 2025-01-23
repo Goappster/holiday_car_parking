@@ -6,9 +6,8 @@ import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookingScreen extends StatefulWidget {
-  final Map<String, dynamic> company;
 
-  BookingScreen({super.key, required this.company});
+  BookingScreen({super.key,});
 
   @override
   _BookingScreenState createState() => _BookingScreenState();
@@ -44,6 +43,16 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    // final  arguments = ModalRoute.of(context)?.settings.arguments as Map<dynamic, dynamic>;
+    //
+    // final startDate = arguments['startDate'] ?? 'defaultStartDate';
+    // final endDate = arguments['endDate'] ?? 'defaultEndDate';
+    // final startTime = arguments['startTime'] ?? 'defaultStartTime';
+    // final endTime = arguments['endTime'] ?? 'defaultEndTime';
+    //  final company = arguments['company'] ?? 'defaultAirportId';
+
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -52,11 +61,11 @@ class _BookingScreenState extends State<BookingScreen> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('Booking'),
+        title:  Text('price'),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
+          padding: const EdgeInsets.only(left: 8, right: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -90,34 +99,39 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _buildPersonalInfoCard() {
-    return Card(
-      child: ListTile(
-        leading: const CircleAvatar(
-          backgroundImage: NetworkImage('https://img.freepik.com/free-psd/3d-render-avatar-character_23-2150611759.jpg?t=st=1737462976~exp=1737466576~hmac=bb7f1ed6b30ebe44da413b5b2cc15fa51ea4e9e3affc6444ac96799a26db1911&w=740'), // Replace with actual image asset
-        ),
-        title:  Text('Mr, ${user!['first_name']} ${user!['last_name']}'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.email, color: Colors.blue),
-                const SizedBox(width: 4),
-                Text('${user!['email']}'),
-              ],
-            ),
-            const Row(
-              children: [
-                Icon(Icons.phone, color: Colors.green),
-                SizedBox(width: 4),
-                Text('0900-7860123'),
-              ],
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () {},
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        child: ListTile(
+
+
+          leading: const CircleAvatar(
+            backgroundImage: NetworkImage('https://img.freepik.com/free-psd/3d-render-avatar-character_23-2150611759.jpg?t=st=1737462976~exp=1737466576~hmac=bb7f1ed6b30ebe44da413b5b2cc15fa51ea4e9e3affc6444ac96799a26db1911&w=740'), // Replace with actual image asset
+          ),
+          title:  Text('Mr, ${user!['first_name']} ${user!['last_name']}'),
+          subtitle: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.email, color: Colors.blue),
+                  // const SizedBox(width: 1),
+                  Text('${user!['email']}', style: Theme.of(context).textTheme.labelSmall,),
+                ],
+              ),
+              const Row(
+                children: [
+                  Icon(Icons.phone, color: Colors.green),
+                  SizedBox(width: 4),
+                  Text('0900-7860123'),
+                ],
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {},
+          ),
         ),
       ),
     );
@@ -125,8 +139,11 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Widget _buildFlightDetails(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         SwitchListTile(
+
           title: Text(
             'Do you have travel details?',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -365,7 +382,7 @@ class _BookingScreenState extends State<BookingScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/BookingDetails',
             arguments: {
-              'company': widget.company,
+              // 'company': widget.company,
               'Email': _flightName,
             },
           );

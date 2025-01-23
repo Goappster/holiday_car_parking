@@ -9,13 +9,11 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
-
 import '../services/get_airports.dart';
-import '../theme/app_theme.dart'; // Import the intl package for formatting dates
+import '../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -24,13 +22,18 @@ class _HomeScreenState extends State<HomeScreen> {
   String? token;
   Map<String, dynamic>? user;
   Future<void>? _userDataFuture;
+  bool _isShimmerVisible = true;
 
   @override
   void initState() {
     super.initState();
     _userDataFuture = _loadUserData();
+    Timer(const Duration(seconds: 2), () {
+      setState(() {
+        _isShimmerVisible = false;
+      });
+    });
   }
-
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -58,79 +61,79 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _userDataFuture, // Simulating a data fetch
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Shimmer.fromColors(
-              baseColor: baseColor,
-              highlightColor: highlightColor,
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      DateTimePickerSection(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Hot Offers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SearchScreen()),
-                              );
-                            },
-                            child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
-                          ),
-                        ],
-                      ),
-                      const HotOffersSection(),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          } else {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: _isShimmerVisible
+          ? Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+                DateTimePickerSection(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 10),
-                    DateTimePickerSection(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Hot Offers', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SearchScreen()),
-                            );
-                          },
-                          child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
-                        ),
-                      ],
+                    Text(
+                      'Hot Offers',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const HotOffersSection(),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SearchScreen()),
+                        );
+                      },
+                      child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                    ),
                   ],
                 ),
+                const HotOffersSection(),
+              ],
+            ),
+          ),
+        ),
+      )
+          : SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              DateTimePickerSection(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Hot Offers',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SearchScreen()),
+                      );
+                    },
+                    child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                  ),
+                ],
               ),
-            );
-          }
-        },
+              const HotOffersSection(),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class DateTimePickerSection extends StatefulWidget {
+  const DateTimePickerSection({super.key});
   @override
   _DateTimePickerSectionState createState() => _DateTimePickerSectionState();
 }
@@ -225,6 +228,9 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
+    final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,18 +248,20 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   future: _airportData, // Use the stored future
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Container(
-                        width: double.infinity,
-                        height: 50.0,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      );
+                      return Shimmer.fromColors(
+                          baseColor: baseColor, highlightColor: highlightColor,
+                          child: Container(
+                            width: double.infinity,
+                            height: 50.0,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ));
                     } else if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Text('No airports available');
+                      return const Text('No airports available');
                     } else {
                       final airports = snapshot.data!;
                       return DropdownButtonFormField<Map<String, dynamic>>(
@@ -335,7 +343,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                               child: Row(
                                 children: [
                                   const Icon(MingCute.clock_2_line, color: Colors.red),
-                                  SizedBox(width: 5,),
+                                  const SizedBox(width: 5,),
                                   Flexible(
                                     child: Text(
                                       _selectedStartTime != null
@@ -370,7 +378,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                               child: Row(
                                 children: [
                                   const Icon(MingCute.clock_2_line, color: Colors.red),
-                                  SizedBox(width: 5,),
+                                  const SizedBox(width: 5,),
                                   Flexible(
                                     child: Text(
                                       _selectedEndTime != null
@@ -398,7 +406,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           _rangeDatePickerWithActionButtonsWithValue[0] == null ||
                           _rangeDatePickerWithActionButtonsWithValue[1] == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Please select all inputs.')),
+                          const SnackBar(content: Text('Please select all inputs.')),
                         );
                         return;
                       }

@@ -27,7 +27,8 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      // Ensure we return a Map<String, dynamic> from the response
+      print(jsonResponse['total_days']);
+      
       return jsonResponse; // Return the complete response as a Map
     } else {
       throw Exception("Failed to fetch data: ${response.body}");

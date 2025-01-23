@@ -4,6 +4,8 @@ import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'booking_confirmation.dart';
+
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
   const BookingDetailsScreen({super.key, });
@@ -163,7 +165,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+                },
                 style: ElevatedButton.styleFrom(
                  backgroundColor: Colors.red,
                   minimumSize: const Size(double.infinity, 50),

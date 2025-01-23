@@ -25,7 +25,6 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
   void initState() {
     super.initState();
     _apiService = ApiService();
-
   }
 
   @override
@@ -51,7 +50,6 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Show Results'),
-        elevation: 4,
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
       ),
       body: SingleChildScrollView(
@@ -60,7 +58,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildAirportCard(context,startDate, endDate, startTime, endTime, airportName),
+              _buildAirportCard(context,startDate, endDate, startTime, endTime, airportName, {}), // Added an empty map as the offer parameter
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,7 +117,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildOffersList(context),
+              _buildOffersList(context, startDate, endDate, startTime, endTime,),
               const SizedBox(height: 16),
             ],
           ),
@@ -128,7 +126,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     );
   }
 
-  Widget _buildAirportCard(BuildContext context, String startDate, String endDate, String startTime, String endTime, String ariportName, ) {
+  Widget _buildAirportCard(BuildContext context, String startDate, String endDate, String startTime, String endTime, String ariportName, Map<String, dynamic> offer) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -147,7 +145,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text('B-18', style: TextStyle(color: Colors.white)),
+                      child:  Text('${offer['sku']}', style: TextStyle(color: Colors.white)),
                     ),
                     const SizedBox(width: 8),
                     Text(ariportName, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -180,7 +178,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     );
   }
 
-  Widget _buildOffersList(BuildContext context) {
+  Widget _buildOffersList(BuildContext context, String startDate, String endDate, String startTime, String endTime,) {
     return FutureBuilder<Map<String, dynamic>>(
       future: _quotes, // The Future to wait for (which returns a Map)
       builder: (context, snapshot) {
@@ -214,7 +212,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
         } else {
           final offers = snapshot.data!;
           final companies = offers['companies'] as List<dynamic>?;
-
+          final totalDays = snapshot.data?['total_days'] ?? 'N/A';
           if (companies == null || companies.isEmpty) {
             return const Center(child: Text('No companies available.'));
           }
@@ -230,14 +228,24 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
               final company = companies[index]; // Access each offer in the companies list
               return GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>  BookingScreen(company: company,),
-                    ),
+                  Navigator.pushNamed(context, '/Booking',
+
+                    arguments: {
+                      // 'startDate':startDate,
+                      // 'endDate': endDate,
+                      // 'startTime': startTime,
+                      // 'endTime': endTime,
+                      company: company,
+                    },
                   );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) =>  BookingScreen(company: company, ),
+                  //   ),
+                  // );
                 },
-                child: _buildOfferCard(company, context), // Build your offer card
+                child: _buildOfferCard(company, context, totalDays), // Build your offer card
               );
             },
           );
@@ -246,7 +254,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     );
   }
 
-  Widget _buildOfferCard(dynamic offer, BuildContext context) {
+  Widget _buildOfferCard(dynamic offer, BuildContext context, int totalDays) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

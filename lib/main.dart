@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:holidayscar/screens/booking.dart';
 import 'package:holidayscar/screens/booking_confirmation.dart';
 import 'package:holidayscar/screens/booking_details_screen.dart';
 import 'package:holidayscar/screens/home.dart';
@@ -28,13 +29,13 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Holidays Car',
-          initialRoute: AppRoutes.login,
+          initialRoute: AppRoutes.splash,
           routes: {
             // '/': (context) => const LoginScreen(),
             // '/Signup': (context) => const CreateAccountScreeen(),
             '/Login': (context) => const LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
-            // '/Booking': (context) => BookingScreen(),
+            '/Booking': (context) => BookingScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
 
