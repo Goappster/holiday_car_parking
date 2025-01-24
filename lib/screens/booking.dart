@@ -4,10 +4,29 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/booking_api.dart';
+import '../widgets/text.dart';
 
 class BookingScreen extends StatefulWidget {
 
-  BookingScreen({super.key,});
+  final dynamic company;
+
+  final String totalDays;
+  final String startDate;
+  final String endDate;
+  final String startTime;
+  final String endTime;
+
+
+  const BookingScreen({super.key,
+    required this.company,
+    required this.totalDays,
+    required this.startDate,
+    required this.endDate,
+    required this.startTime,
+    required this.endTime,
+
+  });
 
   @override
   _BookingScreenState createState() => _BookingScreenState();
@@ -33,57 +52,67 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      token = prefs.getString('token');
+      token = prefs.getString('token') ?? ''; // Default to an empty string if null
       String? userData = prefs.getString('user');
       if (userData != null) {
-        user = json.decode(userData);
+        try {
+          user = json.decode(userData);
+        } catch (e) {
+          print("Failed to parse user data: $e");
+          user = null;
+        }
       }
     });
   }
 
+  final TextEditingController emailController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-
-    // final  arguments = ModalRoute.of(context)?.settings.arguments as Map<dynamic, dynamic>;
-    //
-    // final startDate = arguments['startDate'] ?? 'defaultStartDate';
-    // final endDate = arguments['endDate'] ?? 'defaultEndDate';
-    // final startTime = arguments['startTime'] ?? 'defaultStartTime';
-    // final endTime = arguments['endTime'] ?? 'defaultEndTime';
-    //  final company = arguments['company'] ?? 'defaultAirportId';
-
-
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title:  Text('price'),
+        title:  Text('Booking'),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle('Your Personal Information'),
-              _buildPersonalInfoCard(),
-              _buildSectionTitle('Flight Details'),
-              _buildFlightDetails(context),
-              _buildSectionTitle('Vehicle Details'),
-              _selectedVehicle != null
-                  ? _buildVehicleDetails(context, _selectedVehicle!)
-                  : const Text('No vehicle selected'),
-              _buildAddVehicleButton(context),
-              _buildSectionTitle('Explore Additional Services'),
-              _buildAdditionalServices(context),
-              _buildContinueButton(context),
-            ],
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, right: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('Your Personal Information'),
+                    _buildPersonalInfoCard(),
+                    _buildSectionTitle('Flight Details'),
+                    _buildFlightDetails(context),
+                    _buildSectionTitle('Vehicle Details'),
+                    _selectedVehicle != null
+                        ? _buildVehicleDetails(context, _selectedVehicle!)
+                        : const Text('No vehicle selected'),
+                    _buildAddVehicleButton(context),
+                    _buildSectionTitle('Explore Additional Services'),
+                    _buildAdditionalServices(context),
+                    _buildContinueButton(context),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     saveBookingDetails();
+          //   },
+          //   child: Text('Add Data'),
+          // ),
+        ],
       ),
     );
   }
@@ -103,34 +132,35 @@ class _BookingScreenState extends State<BookingScreen> {
       width: double.infinity,
       child: Card(
         child: ListTile(
-
-
           leading: const CircleAvatar(
             backgroundImage: NetworkImage('https://img.freepik.com/free-psd/3d-render-avatar-character_23-2150611759.jpg?t=st=1737462976~exp=1737466576~hmac=bb7f1ed6b30ebe44da413b5b2cc15fa51ea4e9e3affc6444ac96799a26db1911&w=740'), // Replace with actual image asset
           ),
-          title:  Text('Mr, ${user!['first_name']} ${user!['last_name']}'),
+          title:  Text('Mr, ${user?['first_name']} ${user?['last_name']}'),
           subtitle: Column(
              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   const Icon(Icons.email, color: Colors.blue),
-                  // const SizedBox(width: 1),
-                  Text('${user!['email']}', style: Theme.of(context).textTheme.labelSmall,),
+                  SizedBox(width: 4),
+                  Text('${user?['email']}', style: Theme.of(context).textTheme.labelSmall,),
                 ],
               ),
-              const Row(
+              Row(
                 children: [
                   Icon(Icons.phone, color: Colors.green),
                   SizedBox(width: 4),
-                  Text('0900-7860123'),
+                  Text('${user?['${user?['email']}']}'),
                 ],
               ),
             ],
           ),
           trailing: IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {},
+            onPressed: () {
+
+              _showUserInformation(context);
+            },
           ),
         ),
       ),
@@ -382,8 +412,13 @@ class _BookingScreenState extends State<BookingScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/BookingDetails',
             arguments: {
-              // 'company': widget.company,
+               'company': widget.company,
               'Email': _flightName,
+              'startDate': widget.startDate,
+              'endDate': widget.endDate,
+              'startTime': widget.startTime,
+              'endTime': widget.endTime,
+              'totalDays': widget.totalDays,
             },
           );
         },
@@ -414,11 +449,57 @@ class _BookingScreenState extends State<BookingScreen> {
                 children: <Widget>[
                   const Text('Add Personal Information', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-                  _buildTextField('Title', 'Mr', context),
-                  _buildTextField('First Name', 'Alex', context),
-                  _buildTextField('Last Name', 'Carry', context),
-                  _buildTextField('Passengers', '03', context),
-                  _buildTextField('Mobile Number', '0900-78601', context),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          label: 'Title',
+                          hintText: 'Mr/Ms',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: emailController,
+                        ),
+                      ),
+                      const SizedBox(width: 10), // Space between the fields
+                      Expanded(
+                        child: CustomTextField(
+                          label: 'First Name',
+                          hintText: 'First Name',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: emailController,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    label: 'Last Name',
+                    hintText: 'Last Name',
+                    obscureText: false,
+                    icon: Icons.person,
+                    controller: emailController,
+                  ),
+
+                  const SizedBox(height: 10),
+                  // Email Field
+                  CustomTextField(
+                    label: 'Email',
+                    hintText: 'Email',
+                    obscureText: false,
+                    icon: Icons.email,
+                    controller: emailController,
+                  ),
+                  // const SizedBox(height: 20),
+                  const SizedBox(height: 10),
+                  // Phone Number Field
+                  CustomTextField(
+                    label: 'Phone Number',
+                    hintText: 'Phone Number',
+                    obscureText: false,
+                    icon: Icons.phone,
+                    controller: emailController,
+                  ),
                   const SizedBox(height: 10),
                   const Text(
                     'Please enter your email address, first name, and last name to enable the mobile number field.',
@@ -464,14 +545,8 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return ElevatedButton(
       onPressed: () {
-        Navigator.pushNamed(context, 'BookingDetails',
-
-        arguments: {
-          ''
-
-        }
-
-        );
+        // saveBookingDetails();
+       Navigator.pushNamed(context, 'BookingDetails',);
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
@@ -530,5 +605,37 @@ class _BookingScreenState extends State<BookingScreen> {
         );
       },
     );
+  }
+
+  void saveBookingDetails() async {
+    BookingApi bookingApi = BookingApi();
+    try {
+      await bookingApi.saveIncompleteBooking(
+        title: 'Mr',
+        firstName: 'test',
+        lastName: 'tes',
+        email: 'ghaniappspk@gmail.com',
+        contactNo: '1234567890',
+        parkingType: 'Meet and Greet',
+        dropDate: '2026-01-25',
+        dropTime: '21:00',
+        pickDate: '2026-01-30',
+        pickTime: '15:00',
+        totalDays: 5,
+        airportId: 1,
+        productId: 429,
+        productCode: 'GNP-01',
+        parkApi: 'DB',
+        bookingAmount: 100.0,
+        bookingFee: 10.0,
+        discountAmount: 15,
+        totalAmount: 105.0,
+        promo: 'HCP-APP-OXT78U',
+      );
+
+      print('Booking saved successfully');
+    } catch (e) {
+      print('Error saving booking: $e');
+    }
   }
 }

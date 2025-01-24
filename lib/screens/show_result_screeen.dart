@@ -11,42 +11,62 @@ class ShowResultsScreen extends StatefulWidget {
   const ShowResultsScreen({super.key});
   @override
   State<ShowResultsScreen> createState() => _ShowResultsScreenState();
-
-
 }
 
 class _ShowResultsScreenState extends State<ShowResultsScreen> {
   String? _selectedOption = 'Low to High';
-  final List<String> _filterOptions = [ 'Low to High', 'High to Low'];
-  late Future<Map<String, dynamic>> _quotes; // Updated to Future<Map<String, dynamic>>
+  final List<String> _filterOptions = ['Low to High', 'High to Low'];
+  Future<Map<String, dynamic>>? _quotes; // Nullable Future
   late ApiService _apiService;
+
+  // Initialize variables with temporary default values
+  String airportId = 'defaultAirportId';
+  String airportName = 'defaultAirportName';
+  String startDate = 'defaultStartDate';
+  String endDate = 'defaultEndDate';
+  String startTime = 'defaultStartTime';
+  String endTime = 'defaultEndTime';
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize the API service
     _apiService = ApiService();
+
+    // Retrieve route arguments in initState
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+      setState(() {
+        airportId = arguments['AirportId'];
+        airportName = arguments['AirportName'];
+        startDate = arguments['startDate'];
+        endDate = arguments['endDate'];
+        startTime = arguments['startTime'];
+        endTime = arguments['endTime'];
+
+        _quotes = _apiService.fetchQuotes(
+          airportId: airportId,
+          dropDate: startDate,
+          dropTime: startTime,
+          pickDate: endDate,
+          pickTime: endTime,
+          promo: 'HCP-APP-OXT78U',
+        ).then((data) {
+          final companies = data['companies'] as List<dynamic>;
+          if (_selectedOption == 'Low to High') {
+            companies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+          } else if (_selectedOption == 'High to Low') {
+            companies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+          }
+          return data;
+        });
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-
-    final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-
-    final startDate = arguments['startDate'] ?? 'defaultStartDate';
-    final endDate = arguments['endDate'] ?? 'defaultEndDate';
-    final startTime = arguments['startTime'] ?? 'defaultStartTime';
-    final endTime = arguments['endTime'] ?? 'defaultEndTime';
-    final airportId = arguments['AirportId'] ?? 'defaultAirportId';
-    final airportName = arguments['AirportName'] ?? 'defaultAirportName';
-
-    _quotes = _apiService.fetchQuotes(
-      airportId: airportId,
-      dropDate: startDate,
-      dropTime: startTime,
-      pickDate: endDate,
-      pickTime: endTime,
-      promo: 'HCP-APP-OXT78U',
-    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Show Results'),
@@ -58,12 +78,13 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildAirportCard(context,startDate, endDate, startTime, endTime, airportName, {}), // Added an empty map as the offer parameter
+              // Pass the required parameters to the airport card
+              _buildAirportCard(context, startDate, endDate, startTime, endTime, airportName, {}),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                 const Text(
+                  const Text(
                     'Available For You',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -75,33 +96,17 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedOption = newValue!;
-                        if (_selectedOption == 'Low to High') {
-                          _quotes = _apiService.fetchQuotes(
-                            airportId: airportId,
-                            dropDate: startDate,
-                            dropTime: startTime,
-                            pickDate: endDate,
-                            pickTime: endTime,
-                            promo: 'HCP-APP-OXT78U',
-                          ).then((data) {
-                            final companies = data['companies'] as List<dynamic>;
-                            companies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
-                            return data;
-                          });
-                        } else if (_selectedOption == 'High to Low') {
-                          _quotes = _apiService.fetchQuotes(
-                            airportId: airportId,
-                            dropDate: startDate,
-                            dropTime: startTime,
-                            pickDate: endDate,
-                            pickTime: endTime,
-                            promo: 'HCP-APP-OXT78U',
-                          ).then((data) {
-                            final companies = data['companies'] as List<dynamic>;
-                            companies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
-                            return data;
-                          });
-                        }
+                        _quotes?.then((data) {
+                          final companies = data['companies'] as List<dynamic>;
+                          if (_selectedOption == 'Low to High') {
+                            companies.sort((a, b) =>
+                                double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+                          } else if (_selectedOption == 'High to Low') {
+                            companies.sort((a, b) =>
+                                double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+                          }
+                          return data;
+                        });
                       });
                     },
                     items: _filterOptions.map<DropdownMenuItem<String>>((String value) {
@@ -117,7 +122,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildOffersList(context, startDate, endDate, startTime, endTime,),
+              _buildOffersList(context, startDate, endDate, startTime, endTime),
               const SizedBox(height: 16),
             ],
           ),
@@ -125,6 +130,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       ),
     );
   }
+
 
   Widget _buildAirportCard(BuildContext context, String startDate, String endDate, String startTime, String endTime, String ariportName, Map<String, dynamic> offer) {
     return Card(
@@ -142,24 +148,24 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.grey[800],
+                        color: Theme.of(context).primaryColor.withOpacity(0.20),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child:  Text('${offer['sku']}', style: TextStyle(color: Colors.white)),
+                      child:  Icon(MingCute.airplane_fill, color: Theme.of(context).primaryColor),
                     ),
                     const SizedBox(width: 8),
-                    Text(ariportName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(ariportName, style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                   ],
                 ),
                 IconButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/Booking');
+                    // Navigator.pushNamed(context, '/Booking');
                   },
                   icon: Icon(MingCute.edit_4_fill, color: Theme.of(context).primaryColor),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
              Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -212,12 +218,12 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
         } else {
           final offers = snapshot.data!;
           final companies = offers['companies'] as List<dynamic>?;
-          final totalDays = snapshot.data?['total_days'] ?? 'N/A';
+          final totalDays = snapshot.data?['total_days'].toString();
           if (companies == null || companies.isEmpty) {
             return const Center(child: Text('No companies available.'));
           }
           return GridView.builder(
-            shrinkWrap: true,
+             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // Number of columns
@@ -228,24 +234,21 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
               final company = companies[index]; // Access each offer in the companies list
               return GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(context, '/Booking',
-
-                    arguments: {
-                      // 'startDate':startDate,
-                      // 'endDate': endDate,
-                      // 'startTime': startTime,
-                      // 'endTime': endTime,
-                      company: company,
-                    },
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>  BookingScreen(
+                        company: company,
+                        totalDays: totalDays.toString(),
+                        startDate: startDate,
+                        endDate: endDate,
+                        startTime: startTime,
+                        endTime: endTime,
+                      ),
+                    ),
                   );
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) =>  BookingScreen(company: company, ),
-                  //   ),
-                  // );
                 },
-                child: _buildOfferCard(company, context, totalDays), // Build your offer card
+                child: _buildOfferCard(company, context), // Build your offer card
               );
             },
           );
@@ -253,8 +256,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       },
     );
   }
-
-  Widget _buildOfferCard(dynamic offer, BuildContext context, int totalDays) {
+  Widget _buildOfferCard(dynamic offer, BuildContext context,) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

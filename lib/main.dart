@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
             // '/Signup': (context) => const CreateAccountScreeen(),
             '/Login': (context) => const LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
-            '/Booking': (context) => BookingScreen(),
+            // '/Booking': (context) => BookingScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
 

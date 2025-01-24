@@ -134,8 +134,8 @@ class AppTheme {
       // filled: true,
       // fillColor: darkSurfaceColor,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.grey),
+        borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.redAccent)
       ),
       // enabledBorder: OutlineInputBorder(
       //   borderRadius: BorderRadius.circular(8),

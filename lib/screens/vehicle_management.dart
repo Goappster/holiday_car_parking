@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../models/vehicle.dart';
+import '../widgets/text.dart';
 
 class VehicleManagementScreen extends StatelessWidget {
   final List<Vehicle> vehicles;
   final Function(Vehicle) onVehicleSelected;
 
   VehicleManagementScreen({required this.vehicles, required this.onVehicleSelected});
-
+  final TextEditingController emailController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,10 +23,11 @@ class VehicleManagementScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+       shape: CircleBorder(),
         onPressed: () {
           _showVehicle(context);
         },
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, color: Colors.white,),
       ),
     );
   }
@@ -48,10 +50,43 @@ class VehicleManagementScreen extends StatelessWidget {
                 children: <Widget>[
                   const Text('Add Vehicle Details', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-                  _buildTextField('Vehicle Registration', 'PK-20', context),
-                  _buildTextField('Vehicle Make', 'Alex', context),
-                  _buildTextField('Vehicle Color', 'Carry', context),
-                  _buildTextField('Vehicle Model', '03', context),
+                  CustomTextField(
+                    label: 'Vehicle Make',
+                    hintText: 'Japan Motors',
+                    obscureText: false,
+                    icon: Icons.person,
+                    controller: emailController,
+                  ),
+                  CustomTextField(
+                    label: 'Vehicle Make',
+                    hintText: 'Japan Motors',
+                    obscureText: false,
+                    icon: Icons.person,
+                    controller: emailController,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          label: 'Vehicle Color',
+                          hintText: 'Black',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: emailController,
+                        ),
+                      ),
+                      const SizedBox(width: 10), // Space between the fields
+                      Expanded(
+                        child: CustomTextField(
+                          label: 'Vehicle Model',
+                          hintText: '2019',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: emailController,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   const Text(
                     'Please enter your email address, first name, and last name to enable the mobile number field.',
@@ -62,7 +97,7 @@ class VehicleManagementScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-                      _buildButton(context, 'Save Information', Colors.red, Colors.white),
+                      _buildButton(context, 'Add Vehicle', Colors.red, Colors.white),
                     ],
                   ),
                 ],
@@ -73,26 +108,6 @@ class VehicleManagementScreen extends StatelessWidget {
       },
     );
   }
-  Widget _buildTextField(String label, String initialValue, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          fillColor: Theme.of(context).colorScheme.surface,
-          filled: true,
-          labelStyle: const TextStyle(fontSize: 14.0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            // borderSide: BorderSide.none,
-          ),
-        ),
-        controller: TextEditingController(text: initialValue),
-        // readOnly: true,
-      ),
-    );
-  }
-
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return ElevatedButton(
       onPressed: () {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,8 +41,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final company = args['company'];
+    final airportId = args['AirportId'];
+    final airportName = args['AirportName'];
+    final startDate = args['startDate'];
+    final endDate = args['endDate'];
+    final startTime = args['startTime'];
+    final endTime = args['endTime'];
+    final totalDays = args['totalDays'];
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -58,37 +67,64 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             children: [
               Row(
                 children: [
-                  Image.asset(
-                    'assets/images/purple.png', // Add your image asset here
-                    width: 50,
-                    height: 50,
+                  ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(3)),
+                    child: company['park_api'] == 'DB'
+                        ? CachedNetworkImage(
+                      imageUrl:
+                      'https://airportparkbooking.uk/storage/${company['logo']}',
+                      height: 40,
+                      width: 60,
+                       fit: BoxFit.cover,
+                      // placeholder: (context, url) =>
+                      //     const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) =>
+                      const Icon(Icons.error),
+                    )
+                        : company['park_api'] == 'holiday'
+                        ? CachedNetworkImage(
+                      imageUrl:
+                      company['logo'],
+                      height: 40,
+                      width: 60,
+                       fit: BoxFit.cover,
+                      // placeholder: (context, url) =>
+                      // const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) =>
+                      const Icon(Icons.error),
+                    )
+                        : null, // Optional: you can return an error widget if the condition doesn't match
                   ),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text( '${company['name']}',
-
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const Text('Street 123, Airparks'),
-                    ],
-                  ),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${company['name']}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis, // Ensures the text truncates instead of overflowing
+                        ),
+                        Text('${company['parking_type']}'),
+                      ],
+                    ),
+                  )
                 ],
               ),
               const SizedBox(height: 26,),
-              const DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Colors.white70, ),
-              const SizedBox(height: 24,),
-              buildDetailRow('Drop-Off', 'Thu 21 Nov 2024 at 09:00'),
-              buildDetailRow('Return', 'Fri 20 Dec 2024 at 09:00'),
-              buildDetailRow('No of Days', '09'),
-              const SizedBox(height: 20,),
-              const DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Colors.white70, ),
-              const SizedBox(height: 20,),
+               DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
+              const SizedBox(height: 10,),
+              buildDetailRow('Drop-Off', '$startDate at $startTime'),
+              buildDetailRow('Return', '$endDate at $endTime'),
+              buildDetailRow('No of Days', '$totalDays'),
+              const SizedBox(height: 10,),
+              DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
+              const SizedBox(height: 10,),
               buildDetailRow('Booking Price', '£${company['price']}'),
               buildDetailRow('Booking Fee', '1.99'),
-              const SizedBox(height: 20,),
-              const DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Colors.white70, ),
+              const SizedBox(height: 10,),
+               DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
               const SizedBox(height: 20,),
                Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -108,7 +144,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
               const SizedBox(height: 22,),
               Card(
-                // margin: EdgeInsets.all(10),
+
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -116,27 +152,51 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     children: [
                       Row(
                         children: [
-                          Image.asset(
-                            'assets/images/purple.png', // Update with your logo path
-                            width: 40,
-                            height: 40,
+                          ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(3)),
+                            child: company['park_api'] == 'DB'
+                                ? CachedNetworkImage(
+                              imageUrl:
+                              'https://airportparkbooking.uk/storage/${company['logo']}',
+                              height: 40,
+                              width: 60,
+                              fit: BoxFit.cover,
+                              // placeholder: (context, url) =>
+                              //     const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                            )
+                                : company['park_api'] == 'holiday'
+                                ? CachedNetworkImage(
+                              imageUrl:
+                              company['logo'],
+                              height: 40,
+                              width: 60,
+                              fit: BoxFit.cover,
+                              // placeholder: (context, url) =>
+                              // const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                            )
+                                : null, // Optional: you can return an error widget if the condition doesn't match
                           ),
                           const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('startDate',
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const Text(
-                                'Street 123, Airparks',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${company['name']}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis, // Ensures the text truncates instead of overflowing
+                                ),
+                                Text('${company['parking_type']}'),
+                              ],
+                            ),
                           ),
-                          const Spacer(),
-                          const Icon(Icons.edit, color: Colors.grey),
+
+                          // const Icon(Icons.edit, color: Colors.grey),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -144,9 +204,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildInfoColumn(Icons.local_shipping, 'Drop-Off',
-                              '21/11/24 at 9:00'),
+                              '$startDate at $startTime'),
                           _buildInfoColumn(Icons.calendar_today, 'Return',
-                              '20/12/24 at 9:00'),
+                              '$endDate at $endTime'),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -154,7 +214,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildInfoColumn(
-                              Icons.attach_money, 'Booking Price', '53.49'),
+                              Icons.attach_money, 'Booking Price', '£${company['price']}'),
                           _buildInfoColumn(
                               Icons.percent, 'Booking Fee', '1.99'),
                         ],

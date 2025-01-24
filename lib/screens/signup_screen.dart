@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:holidayscar/routes.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holidayscar/services/register_api.dart';
@@ -30,6 +31,15 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
   final RegisterApi _registerApi = RegisterApi();
 
   Future<void> _registerUser() async {
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
     final success = await _registerApi.registerUser(
       title: titleController.text,
       firstName: firstNameController.text,
@@ -39,6 +49,34 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
       password: passwordController.text,
     );
 
+    Navigator.pop(context); // Close the loading dialog
+
+    if (success) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+            (route) => false, // This condition removes all previous routes
+      );
+    } else {
+      // Show error message if registration fails
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Registration Failed'),
+            content: const Text('Please try again later.'),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override

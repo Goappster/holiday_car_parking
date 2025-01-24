@@ -1,30 +1,31 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:http/http.dart' as http;
 
 class BookingApi {
   static const String baseUrl = 'https://holidayscarparking.uk/api/saveIncompleteBooking';
 
   Future<void> saveIncompleteBooking({
-    required String title,
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String contactNo,
-    required String parkingType,
-    required String dropDate,
-    required String dropTime,
-    required String pickDate,
-    required String pickTime,
-    required int totalDays,
-    required int airportId,
-    required int productId,
-    required String productCode,
-    required String parkApi,
-    required double bookingAmount,
-    required double bookingFee,
-    required double discountAmount,
-    required double totalAmount,
-    required String promo,
+    required  title,
+    required  firstName,
+    required lastName,
+    required email,
+    required contactNo,
+    required  parkingType,
+    required  dropDate,
+    required  dropTime,
+    required  pickDate,
+    required  pickTime,
+    required  totalDays,
+    required  airportId,
+    required productId,
+    required productCode,
+    required  parkApi,
+    required  bookingAmount,
+    required  bookingFee,
+    required   discountAmount,
+    required  totalAmount,
+    required  promo,
   }) async {
     final response = await http.post(
       Uri.parse(baseUrl),
@@ -54,6 +55,7 @@ class BookingApi {
     );
 
     if (response.statusCode != 200) {
+      print(response.body);
       throw Exception('Failed to save booking');
     }
   }

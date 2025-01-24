@@ -8,9 +8,6 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-
-
-
 class _SplashScreenState extends State<SplashScreen> {
 
     @override
@@ -32,10 +29,10 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     } else {
       // Navigate to login screen if no token
-      Navigator.pushNamed(
-        context,
-        AppRoutes.login,
-      );
+      // Navigator.pushNamed(
+      //   context,
+      //   AppRoutes.login,
+      // );
     }
   }
   
@@ -104,8 +101,8 @@ class _SplashScreenState extends State<SplashScreen> {
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
-                        boxShadow: [
-                          const BoxShadow(
+                        boxShadow: const [
+                          BoxShadow(
                             color: Colors.black45,
                             blurRadius: 10,
                             offset: Offset(0, 4),

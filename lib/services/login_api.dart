@@ -14,16 +14,12 @@ class LoginApiService {
 
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
-        print(responseBody);
 
         // Check if the response contains the expected keys
         if (responseBody.containsKey('token') && responseBody['user'] != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', responseBody['token']);
-          // await prefs.setInt('user_id', responseBody['user']['id']);
-          // await prefs.setString('first_name', responseBody['user']['first_name']);
-          // await prefs.setString('last_name', responseBody['user']['last_name']);
-          // await prefs.setString('email', responseBody['user']['email']);
+
           await prefs.setString('user', json.encode(responseBody['user']));
           return true;
         } else {

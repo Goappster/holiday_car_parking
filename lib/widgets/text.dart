@@ -67,6 +67,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             suffixIcon: widget.suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.redAccent)
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: const BorderSide(color: Colors.red), // Focused border color

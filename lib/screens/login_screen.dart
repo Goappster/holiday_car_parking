@@ -67,10 +67,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-    TextEditingController emailController = TextEditingController();
-    TextEditingController passwordController = TextEditingController();
     return Scaffold(
       // backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -120,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               // Password Field
               CustomTextField(
-                controller: passwordController,
                 label: 'Password',
                 hintText: 'Password',
                 obscureText: !_passwordVisible,
@@ -135,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                 ),
+                controller: passwordController,
               ),
               const SizedBox(height: 10),
               // Remember Me and Forgot Password
@@ -190,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/Signup');
+                        Navigator.pushNamed(context, AppRoutes.signup);
                       },
                       child: const Text(
                         "Create Account",
