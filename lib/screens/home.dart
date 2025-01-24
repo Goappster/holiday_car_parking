@@ -255,7 +255,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                             height: 50.0,
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(8.0),
+                              borderRadius: BorderRadius.circular(50),
                             ),
                           ));
                     } else if (snapshot.hasError) {
