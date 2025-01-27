@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:holidayscar/screens/booking.dart';
 import 'package:holidayscar/screens/booking_confirmation.dart';
 import 'package:holidayscar/screens/booking_details_screen.dart';
 import 'package:holidayscar/screens/home.dart';
 import 'package:holidayscar/screens/login_screen.dart';
 import 'package:holidayscar/screens/my_booking.dart';
+import 'package:holidayscar/screens/profile_screen.dart';
 import 'package:holidayscar/screens/show_result_screeen.dart';
+import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -13,6 +16,8 @@ import 'package:provider/provider.dart';
 import 'package:holidayscar/routes.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -38,6 +43,8 @@ class MyApp extends StatelessWidget {
             // '/Booking': (context) => BookingScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
+            '/MYBooking': (context) => MyBookingsScreen(),
+
 
           },
           onGenerateRoute: AppRoutes.generateRoute,
@@ -66,7 +73,7 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
     MyBookingsScreen(),
     // const CartScreen(),
    // BookingScreen(),
-    const HomeScreen(),
+    UserProfileScreen(),
   ];
 
   @override

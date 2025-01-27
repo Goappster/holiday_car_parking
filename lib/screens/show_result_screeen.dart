@@ -315,7 +315,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 Row(
                   children: [
                     Text(
-                      offer['price'].toString(),
+                      offer['price'].toString().replaceAll(',', ''),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 4),
@@ -329,7 +329,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '£ ${offer['price']}',
+                    '£ ${offer['price'].toString().replaceAll(',', '')}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
                   ),
                 ),

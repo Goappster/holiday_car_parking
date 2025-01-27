@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chips_choice/chips_choice.dart';
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       }
     });
   }
+
+
+  ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(-1);
+
+  @override
+  void dispose() {
+    _selectedIndexNotifier.dispose();
+    super.dispose();
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -129,13 +142,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Total',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
                     '£${company['price']}',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                         color: Colors.red),
@@ -226,7 +239,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+                  _showPaymentOptions(context);
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
                 },
                 style: ElevatedButton.styleFrom(
                  backgroundColor: Colors.red,
@@ -240,6 +254,164 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       ),
     );
   }
+
+  void _showPaymentOptions(BuildContext context) {
+    final List<Map<String, dynamic>> chipData = [
+      {"label": "Visa", "image": "assets/images/visa_logo.png"},
+      {"label": "PayPal", "image": "assets/images/paypal_logo.png"},
+      {"label": "Apple Pay", "image": "assets/images/applepay_logo.png"},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            // crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: List.generate(chipData.length, (index) {
+                  final chip = chipData[index];
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _selectedIndexNotifier,
+                    builder: (context, selectedIndex, _) {
+                      final bool isSelected = selectedIndex == index;
+                      return GestureDetector(
+                        onTap: () {
+                          _selectedIndexNotifier.value = index;
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.red : Colors.transparent,
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: isSelected ? Colors.red : Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                chip["image"],
+                                height: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                chip["label"],
+                                // style: TextStyle(
+                                //   color: isSelected ? Colors.white : Colors.black,
+                                // ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 20),
+              ValueListenableBuilder<int>(
+                valueListenable: _selectedIndexNotifier,
+                builder: (context, selectedIndex, _) {
+                  if (selectedIndex != -1) {
+                    if (chipData[selectedIndex]["label"] == "Apple Pay") {
+                      return _applePayLayout();
+                    } else if (chipData[selectedIndex]["label"] == "PayPal") {
+                      return _paypalLayout();
+                    } else if (chipData[selectedIndex]["label"] == "Visa") {
+                      return _visaLayout();
+                    }
+                  }
+                  return Container(); // Empty container until a selection is made
+                },
+              ),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
+                  _buildButton(context, 'Confirm', Colors.red, Colors.white),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
+    return ElevatedButton(
+      onPressed: () {
+        // saveBookingDetails();
+       Navigator.maybePop(context);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor,
+        minimumSize: const Size(150, 40),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+          side: const BorderSide(color: Colors.red),
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: textColor),
+      ),
+    );
+  }
+
+  Widget _applePayLayout() {
+    return const SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Apple Pay Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Enter your Apple Pay details here."),
+          // You can add Apple Pay-specific widgets here.
+        ],
+      ),
+    );
+  }
+
+  Widget _paypalLayout() {
+    return const SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("PayPal Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Log in to your PayPal account."),
+          // You can add PayPal-specific widgets here.
+        ],
+      ),
+    );
+  }
+
+  Widget _visaLayout() {
+    return const SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Visa Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Enter your Visa card details."),
+          // You can add Visa-specific widgets here.
+        ],
+      ),
+    );
+  }
+
 
   Widget buildDetailRow(String label, String value) {
     return Padding(
@@ -265,3 +437,4 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 }
+
