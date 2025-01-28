@@ -36,16 +36,12 @@ class MyApp extends StatelessWidget {
           title: 'Holidays Car',
           initialRoute: AppRoutes.splash,
           routes: {
-            // '/': (context) => const LoginScreen(),
-            // '/Signup': (context) => const CreateAccountScreeen(),
             '/Login': (context) => const LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
             // '/Booking': (context) => BookingScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
             '/MYBooking': (context) => MyBookingsScreen(),
-
-
           },
           onGenerateRoute: AppRoutes.generateRoute,
           theme: AppTheme.lightTheme,
@@ -81,6 +77,7 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
+
         animationDuration: const Duration(seconds: 1),
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -117,29 +114,3 @@ const _navBarItems = [
   ),
 ];
 
-
-
-class BookmarksScreen extends StatelessWidget {
-  const BookmarksScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Bookmarks Screen', style: Theme
-          .of(context)
-          .textTheme
-          .bodyLarge),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Profile Screen', style: Theme.of(context).textTheme.bodyLarge),
-    );
-  }
-}

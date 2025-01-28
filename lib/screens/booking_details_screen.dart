@@ -39,13 +39,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
 
-  ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(-1);
+  final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(1);
 
   @override
   void dispose() {
     _selectedIndexNotifier.dispose();
     super.dispose();
   }
+
+  
+
+
 
 
 
@@ -61,6 +65,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final startTime = args['startTime'];
     final endTime = args['endTime'];
     final totalDays = args['totalDays'];
+
+    String priceString = company['price'];
+    double price = double.parse(priceString) + 1.99;
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -135,7 +142,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
               const SizedBox(height: 10,),
               buildDetailRow('Booking Price', '£${company['price']}'),
-              buildDetailRow('Booking Fee', '1.99'),
+              buildDetailRow('Booking Fee', '£1.99'),
               const SizedBox(height: 10,),
                DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
               const SizedBox(height: 20,),
@@ -147,7 +154,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    '£${company['price']}',
+                    '£${price.toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -332,13 +339,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 },
               ),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-                  _buildButton(context, 'Confirm', Colors.red, Colors.white),
-                ],
-              ),
+
             ],
           ),
         );
@@ -347,28 +348,30 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
-    return ElevatedButton(
-      onPressed: () {
-        // saveBookingDetails();
-       Navigator.maybePop(context);
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor,
-        minimumSize: const Size(150, 40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          side: const BorderSide(color: Colors.red),
+    return SizedBox(
+      child: ElevatedButton(
+        onPressed: () {
+          // saveBookingDetails();
+         Navigator.maybePop(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+           minimumSize: const Size(250, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            side: const BorderSide(color: Colors.red),
+          ),
         ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor),
+        child: Text(
+          text,
+          style: TextStyle(color: textColor),
+        ),
       ),
     );
   }
 
   Widget _applePayLayout() {
-    return const SizedBox(
+    return  SizedBox(
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,6 +380,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           SizedBox(height: 10),
           Text("Enter your Apple Pay details here."),
           // You can add Apple Pay-specific widgets here.
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
+              _buildButton(context, 'Confirm', Colors.red, Colors.white),
+            ],
+          ),
         ],
       ),
     );
@@ -437,4 +448,3 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 }
-

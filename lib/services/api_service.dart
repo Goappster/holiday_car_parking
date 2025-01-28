@@ -27,7 +27,6 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      print(jsonResponse['total_days']);
       
       return jsonResponse; // Return the complete response as a Map
     } else {

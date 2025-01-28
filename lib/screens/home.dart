@@ -146,8 +146,9 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
   Future<void> _showDatePickerDialog(BuildContext context) async {
     final config = CalendarDatePicker2WithActionButtonsConfig(
       calendarType: CalendarDatePicker2Type.range,
-      disableModePicker: true,
-      rangeBidirectional: true,
+      // disableModePicker: true,
+      // rangeBidirectional: true,
+      firstDate: DateTime.now().add(Duration(days: 1))
     );
 
     final values = await showCalendarDatePicker2Dialog(

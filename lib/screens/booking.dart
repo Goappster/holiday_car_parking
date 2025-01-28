@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
@@ -78,7 +79,7 @@ class _BookingScreenState extends State<BookingScreen> {
             Navigator.pop(context);
           },
         ),
-        title:  Text('Booking'),
+        title:  const Text('Booking'),
       ),
       body: Column(
         children: [
@@ -142,15 +143,22 @@ class _BookingScreenState extends State<BookingScreen> {
               Row(
                 children: [
                   const Icon(Icons.email, color: Colors.blue),
-                  SizedBox(width: 4),
-                  Text('${user?['email']}', style: Theme.of(context).textTheme.labelSmall,),
+                  const SizedBox(width: 4),
+                  // Text('${user?['email']}', style: Theme.of(context).textTheme.labelSmall,),
+                  AutoSizeText(
+                    '${user?['email']}',
+                    presetFontSizes: [12, 20, 14],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
                 ],
               ),
               Row(
                 children: [
-                  Icon(Icons.phone, color: Colors.green),
-                  SizedBox(width: 4),
-                  Text('${user?['${user?['email']}']}'),
+                  const Icon(Icons.phone, color: Colors.green),
+                  const SizedBox(width: 4),
+                  Text('${user?['phone_number']}'),
                 ],
               ),
             ],
@@ -336,23 +344,23 @@ class _BookingScreenState extends State<BookingScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => VehicleManagementScreen(
-                  vehicles: [
-                    Vehicle(
-                      imageUrl: 'assets/images/car.png',
-                      make: 'Japan Motors',
-                      registration: 'AB-123',
-                      color: 'Cherry Black',
-                      model: '2019',
-                    ),
-                    Vehicle(
-                      imageUrl: 'assets/images/car.png',
-                      make: 'China Motors',
-                      registration: 'BA-804',
-                      color: 'Dark Gray',
-                      model: '2020',
-                    ),
-                  ],
-                  onVehicleSelected: _onVehicleSelected,
+                  // vehicles: [
+                  //   Vehicle(
+                  //     imageUrl: 'assets/images/car.png',
+                  //     make: 'Japan Motors',
+                  //     registration: 'AB-123',
+                  //     color: 'Cherry Black',
+                  //     model: '2019',
+                  //   ),
+                  //   Vehicle(
+                  //     imageUrl: 'assets/images/car.png',
+                  //     make: 'China Motors',
+                  //     registration: 'BA-804',
+                  //     color: 'Dark Gray',
+                  //     model: '2020',
+                  //   ),
+                  // ],
+                  // onVehicleSelected: _onVehicleSelected,
                 ),
               ),
             );

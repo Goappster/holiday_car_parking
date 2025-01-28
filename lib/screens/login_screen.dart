@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
  final LoginApiService _apiService = LoginApiService();
 
   Future<void> _login(String email, String password) async {
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -46,26 +47,28 @@ class _LoginScreenState extends State<LoginScreen> {
       //     MaterialPageRoute(builder: (context) => AnotherScreen())
       // );
     } else {
-
-      _showErrorDialog('Login failed. Please check your credentials.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please check your credentials.')),
+      );
+      // _showErrorDialog('Login failed. Please check your credentials.');
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showErrorDialog(String message) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Error'),
+  //       content: Text(message),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.of(context).pop(),
+  //           child: const Text('OK'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();

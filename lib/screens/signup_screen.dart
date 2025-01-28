@@ -2,36 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:holidayscar/services/register_api.dart';
+import 'package:holidayscar/services/registration_api.dart';
 import '../widgets/text.dart';
 
+class RegistrationService {
+  final RegistrationApi _registrationApi = RegistrationApi();
 
-class CreateAccountScreeen extends StatefulWidget {
-  const CreateAccountScreeen({super.key});
-
-  @override
-  State<CreateAccountScreeen> createState() => _CreateAccountScreeenState();
-}
-
-class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
-  bool _passwordVisible = false;
-  bool _rememberMe = false;
-
-  // Add a TextEditingController for each input field
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController phoneNumberController = TextEditingController();
-
-  final RegisterApi _registerApi = RegisterApi();
-
-  Future<void> _registerUser() async {
-
+  Future<void> registerUser({
+    required String title, required String firstName, required String lastName, required String phoneNumber, required String email, required String password, required BuildContext context,
+  }) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -40,49 +19,72 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
       },
     );
 
-    final success = await _registerApi.registerUser(
-      title: titleController.text,
-      firstName: firstNameController.text,
-      lastName: lastNameController.text,
-      phoneNumber: phoneNumberController.text,
-      email: emailController.text,
-      password: passwordController.text,
-    );
-
-    Navigator.pop(context); // Close the loading dialog
-
-    if (success) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.home,
-            (route) => false, // This condition removes all previous routes
+    try {
+      final result = await _registrationApi.registerUser(
+        title: title, firstName: firstName, lastName: lastName, phoneNumber: phoneNumber, email: email, password: password,
       );
-    } else {
-      // Show error message if registration fails
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Registration Failed'),
-            content: const Text('Please try again later.'),
-            actions: [
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
+
+      Navigator.pop(context);
+
+      if (result['statusCode'] == 200) {
+        await _registrationApi.saveUserData(result['body']);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+        );
+      } else {
+        _showErrorDialog(context, 'Error: ${result['statusCode']} - ${result['body']}');
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      _showErrorDialog(context, 'An error occurred. Please try again.');
     }
   }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Registration Failed'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class CreateAccountScreen extends StatefulWidget {
+  const CreateAccountScreen({super.key});
+
+  @override
+  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+}
+
+class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  bool _passwordVisible = false;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+
+  final RegistrationService _registrationService = RegistrationService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -90,141 +92,170 @@ class _CreateAccountScreeenState extends State<CreateAccountScreeen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 50),
-              // Logo
-              Center(
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/images/Logo.png', // Replace with your logo image path
-                      height: 60,
-                    ),
-                  ],
-                ),
-              ),
+              _buildLogo(),
               const SizedBox(height: 40),
-              // Login Label
-              const Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              _buildTitle(),
               const SizedBox(height: 20),
-              // Title Field
-              // First Name Field
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'Title',
-                      hintText: 'Mr/Ms',
-                      obscureText: false,
-                      icon: Icons.person,
-                      controller: firstNameController,
-                    ),
-                  ),
-                  const SizedBox(width: 10), // Space between the fields
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'First Name',
-                      hintText: 'First Name',
-                      obscureText: false,
-                      icon: Icons.person,
-                      controller: lastNameController,
-                    ),
-                  ),
-                ],
-              ),
+              _buildNameFields(),
               const SizedBox(height: 10),
-              CustomTextField(
-                label: 'Last Name',
-                hintText: 'Last Name',
-                obscureText: false,
-                icon: Icons.person,
-                controller: titleController,
-              ),
-
+              _buildLastNameField(),
               const SizedBox(height: 10),
-              // Email Field
-              CustomTextField(
-                label: 'Email',
-                hintText: 'Email',
-                obscureText: false,
-                icon: Icons.email,
-                controller: emailController,
-              ),
-              // const SizedBox(height: 20),
+              _buildEmailField(),
               const SizedBox(height: 10),
-              // Phone Number Field
-              CustomTextField(
-                label: 'Phone Number',
-                hintText: 'Phone Number',
-                obscureText: false,
-                icon: Icons.phone,
-                controller: phoneNumberController,
-              ),
+              _buildPhoneNumberField(),
               const SizedBox(height: 10),
-              // Password Field
-              CustomTextField(
-                label: 'Password',
-                hintText: 'Password',
-                obscureText: !_passwordVisible,
-                icon: Icons.lock,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;
-                    });
-                  },
-                ),
-                controller: passwordController,
-              ),
-              const SizedBox(height: 10),
+              _buildPasswordField(),
               const SizedBox(height: 20),
-              // Create Account Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                onPressed: _registerUser,
-                child: Text(
-                  'Create Account',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
+              _buildCreateAccountButton(),
               const SizedBox(height: 20),
-              // Create Account Link
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                        "Already have an account?",
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/Login');
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),),
-                    ),
-                  ],
-                ),
-              ),
+              _buildLoginLink(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Center(
+      child: Column(
+        children: [
+          Image.asset(
+            'assets/images/Logo.png',
+            height: 60,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return const Text(
+      'Create Account',
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildNameFields() {
+    return Row(
+      children: [
+        Expanded(
+          child: CustomTextField(
+            label: 'Title',
+            hintText: 'Mr/Ms',
+            obscureText: false,
+            icon: Icons.person,
+            controller: titleController,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: CustomTextField(
+            label: 'First Name',
+            hintText: 'First Name',
+            obscureText: false,
+            icon: Icons.person,
+            controller: firstNameController,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLastNameField() {
+    return CustomTextField(
+      label: 'Last Name',
+      hintText: 'Last Name',
+      obscureText: false,
+      icon: Icons.email,
+      controller: lastNameController,
+    );
+  }
+
+  Widget _buildEmailField() {
+    return CustomTextField(
+      label: 'Email',
+      hintText: 'Email',
+      obscureText: false,
+      icon: Icons.email,
+      controller: emailController,
+    );
+  }
+
+  Widget _buildPhoneNumberField() {
+    return CustomTextField(
+      label: 'Phone Number',
+      hintText: 'Phone Number',
+      obscureText: false,
+      icon: Icons.phone,
+      controller: phoneNumberController,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return CustomTextField(
+      label: 'Password',
+      hintText: 'Password',
+      obscureText: !_passwordVisible,
+      icon: Icons.lock,
+      controller: passwordController,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+        ),
+        onPressed: () {
+          setState(() {
+            _passwordVisible = !_passwordVisible;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildCreateAccountButton() {
+    return ElevatedButton(
+      onPressed: () async {
+        await _registrationService.registerUser(
+          title: titleController.text,
+          firstName: firstNameController.text,
+          lastName: lastNameController.text,
+          phoneNumber: phoneNumberController.text,
+          email: emailController.text,
+          password: passwordController.text,
+          context: context,
+        );
+      },
+      child: const Text(
+        'Create Account',
+        style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildLoginLink() {
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            "Already have an account?",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/Login');
+            },
+            child:  Text(
+              'Login',
+              style: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

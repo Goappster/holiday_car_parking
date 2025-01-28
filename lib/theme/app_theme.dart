@@ -83,6 +83,13 @@ class AppTheme {
       // ),
       // contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: backgroundColor,
+      indicatorColor: primaryColor,
+      labelTextStyle: MaterialStateProperty.all(
+        TextStyle(color: textPrimaryColor),
+      ),
+    ),
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -150,6 +157,13 @@ class AppTheme {
       //   borderSide: const BorderSide(color: errorColor),
       // ),
       // contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: darkBackgroundColor,
+      indicatorColor: darkPrimaryColor,
+      labelTextStyle: MaterialStateProperty.all(
+        TextStyle(color: darkTextPrimaryColor),
+      ),
     ),
   );
 }

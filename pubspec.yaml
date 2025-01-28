@@ -44,6 +44,8 @@ dependencies:
   lottie: ^3.2.0
   chips_choice: ^3.0.1
   flutter_stripe: ^11.4.0
+  credit_card_validator: ^2.1.0
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:

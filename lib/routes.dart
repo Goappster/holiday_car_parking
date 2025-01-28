@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/edit_profile_screen.dart';
 import 'package:holidayscar/screens/my_booking.dart';
-import 'package:holidayscar/screens/show_result_screeen.dart';
 import 'package:holidayscar/screens/splash.dart';
 import 'main.dart';
 import 'screens/login_screen.dart';
@@ -22,7 +21,7 @@ class AppRoutes {
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case signup:
-        return MaterialPageRoute(builder: (_) => const CreateAccountScreeen());
+        return MaterialPageRoute(builder: (_) => const CreateAccountScreen());
       case splash:
         return MaterialPageRoute(builder: (_) => SplashScreen());
       case home:

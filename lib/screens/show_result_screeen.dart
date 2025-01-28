@@ -132,7 +132,28 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
   }
 
 
-  Widget _buildAirportCard(BuildContext context, String startDate, String endDate, String startTime, String endTime, String ariportName, Map<String, dynamic> offer) {
+  Widget _buildAirportCard(
+      BuildContext context,
+      String startDate,
+      String endDate,
+      String startTime,
+      String endTime,
+      String airportName,
+      Map<String, dynamic> offer,
+      ) {
+    // Extract reviews from the offer
+    final List<Map<String, dynamic>> reviews = (offer['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
+    // Calculate average rating
+    double averageRating = reviews.isNotEmpty
+        ? reviews
+        .map((review) => review['rating'] ?? 0)
+        .fold(0.0, (sum, rating) => sum + (rating as double)) / reviews.length
+        : 0.0;
+
+    // Round the average rating and cast to int
+    int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -140,6 +161,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Airport Name and Edit Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -151,38 +173,63 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                         color: Theme.of(context).primaryColor.withOpacity(0.20),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child:  Icon(MingCute.airplane_fill, color: Theme.of(context).primaryColor),
+                      child: Icon(
+                        Icons.airplanemode_active,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    Text(ariportName, style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      airportName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
                 IconButton(
                   onPressed: () {
                     // Navigator.pushNamed(context, '/Booking');
                   },
-                  icon: Icon(MingCute.edit_4_fill, color: Theme.of(context).primaryColor),
+                  icon: Icon(
+                    Icons.edit,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-             Padding(
+            const SizedBox(height: 8),
+
+            // Date and Time Row
+            Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.calendar_today, color: Colors.blue),
-                  Text('$startDate \n$startTime'),
-                  const Icon(Icons.calendar_today, color: Colors.green),
-                  Text('$endDate \n$endTime'),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: Colors.blue),
+                      const SizedBox(width: 4),
+                      Text('$startDate\n$startTime'),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: Colors.green),
+                      const SizedBox(width: 4),
+                      Text('$endDate\n$endTime'),
+                    ],
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
     );
   }
+
+
+
 
   Widget _buildOffersList(BuildContext context, String startDate, String endDate, String startTime, String endTime,) {
     return FutureBuilder<Map<String, dynamic>>(
@@ -306,7 +353,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  offer['companyID'].toString(),
+                  offer['parking_type'],
                   style: Theme.of(context).textTheme.bodyMedium,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -315,22 +362,36 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 Row(
                   children: [
                     Text(
-                      offer['price'].toString().replaceAll(',', ''),
+                      (offer['reviews'] != null &&
+                          offer['reviews'] is List &&
+                          (offer['reviews'] as List).isNotEmpty &&
+                          offer['reviews'][0]['rating'] != null)
+                          ? offer['reviews'][0]['rating'].toString()
+                          : 'No rating',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.star, color: Colors.yellow, size: 20),
-                    const Icon(Icons.star, color: Colors.yellow, size: 20),
-                    const Icon(Icons.star, color: Colors.yellow, size: 20),
-                    const Icon(Icons.star, color: Colors.yellow, size: 20),
+                    if (offer['reviews'] != null &&
+                        offer['reviews'] is List &&
+                        (offer['reviews'] as List).isNotEmpty &&
+                        offer['reviews'][0]['rating'] != null) ...[
+                      const SizedBox(width: 4),
+                      for (int i = 0; i < offer['reviews'][0]['rating']; i++) // Dynamically generate stars
+                        const Icon(Icons.star, color: Colors.yellow, size: 20),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '£ ${offer['price'].toString().replaceAll(',', '')}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
+                InkWell(
+                  onTap: () {
+                    print(offer); // To see the complete structure
+                    print(offer['reviews']);
+                  },
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '£ ${offer['price'].toString().replaceAll(',', '')}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
                   ),
                 ),
               ],

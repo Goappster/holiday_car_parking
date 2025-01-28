@@ -110,23 +110,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => VehicleManagementScreen(
-                                vehicles: [
-                                  Vehicle(
-                                    imageUrl: 'assets/images/car.png',
-                                    make: 'Japan Motors',
-                                    registration: 'AB-123',
-                                    color: 'Cherry Black',
-                                    model: '2019',
-                                  ),
-                                  Vehicle(
-                                    imageUrl: 'assets/images/car.png',
-                                    make: 'China Motors',
-                                    registration: 'BA-804',
-                                    color: 'Dark Gray',
-                                    model: '2020',
-                                  ),
-                                ],
-                                onVehicleSelected: _onVehicleSelected,
+                                // vehicles: [
+                                //   Vehicle(
+                                //     imageUrl: 'assets/images/car.png',
+                                //     make: 'Japan Motors',
+                                //     registration: 'AB-123',
+                                //     color: 'Cherry Black',
+                                //     model: '2019',
+                                //   ),
+                                //   Vehicle(
+                                //     imageUrl: 'assets/images/car.png',
+                                //     make: 'China Motors',
+                                //     registration: 'BA-804',
+                                //     color: 'Dark Gray',
+                                //     model: '2020',
+                                //   ),
+                                // ],
+                                // onVehicleSelected: _onVehicleSelected,
                               ),
                             ),
                           );
