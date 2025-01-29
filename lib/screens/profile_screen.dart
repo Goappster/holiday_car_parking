@@ -109,25 +109,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => VehicleManagementScreen(
-                                // vehicles: [
-                                //   Vehicle(
-                                //     imageUrl: 'assets/images/car.png',
-                                //     make: 'Japan Motors',
-                                //     registration: 'AB-123',
-                                //     color: 'Cherry Black',
-                                //     model: '2019',
-                                //   ),
-                                //   Vehicle(
-                                //     imageUrl: 'assets/images/car.png',
-                                //     make: 'China Motors',
-                                //     registration: 'BA-804',
-                                //     color: 'Dark Gray',
-                                //     model: '2020',
-                                //   ),
-                                // ],
-                                // onVehicleSelected: _onVehicleSelected,
-                              ),
+                              builder: (context) => VehicleManagementScreen(),
                             ),
                           );
                         },
@@ -156,7 +138,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         leading: const Icon(Icons.logout, color: Colors.red),
                         title: const Text('Logout'),
                         trailing: const Icon(Icons.arrow_forward_ios),
-                        onTap: () {},
+                        onTap: () async {
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.clear();
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            AppRoutes.login,
+                                (route) => false, // This condition removes all previous routes
+                          );
+                        },
                       ),
                     ),
                   ],

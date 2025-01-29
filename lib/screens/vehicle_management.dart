@@ -5,7 +5,6 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../models/vehicle.dart';
 import '../widgets/text.dart';
 
 class VehicleManagementScreen extends StatefulWidget {
@@ -19,17 +18,13 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
   List<dynamic> _vehicles = [];
   bool _isLoading = true;
   Map<String, dynamic>? user;
-
-
   String? token;
 
   @override
   void initState() {
     super.initState();
-    _fetchVehicles();
-    _loadUserData();
+    _loadUserData(); // First, load user data
   }
-
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,11 +40,29 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         }
       }
     });
+
+    if (user != null) {
+      // Fetch vehicles after user is loaded
+      await _fetchVehicles();
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error: User data is not available.');
+    }
   }
 
   Future<void> _fetchVehicles() async {
+    if (user == null || user?['id'] == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error: User ID is null.');
+      return;
+    }
+
     try {
-      List<dynamic> vehicles = await fetchVehiclesByCustomer('${user?['email']}');
+      List<dynamic> vehicles = await fetchVehiclesByCustomer('${user?['id']}');
       setState(() {
         _vehicles = vehicles;
         _isLoading = false;
@@ -67,7 +80,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vehicle Management'),
+        title: Text('Vehicle Management '),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -77,109 +90,114 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                 itemCount: _vehicles.length,
                 itemBuilder: (context, index) {
                   final vehicle = _vehicles[index];
-                  return Padding(
-                    padding:  EdgeInsets.only(left: 8.0, right: 8.0),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
-                          children: [
-                            Container(
-                                height: 50,
-                                width: 50,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Theme
-                                        .of(context)
-                                        .primaryColor
-                                        .withOpacity(0.20)
-                                ),
-                                child: Icon(MingCute.car_3_line, color: Theme
-                                    .of(context)
-                                    .primaryColor, size: 35,)
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${vehicle['make']}',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                  return GestureDetector(
+                    onTap: () {
+                      _onVehicleSelected(index);
+                    },
+                    child: Padding(
+                      padding:  const EdgeInsets.only(left: 8.0, right: 8.0),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                  height: 50,
+                                  width: 50,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Theme
+                                          .of(context)
+                                          .primaryColor
+                                          .withOpacity(0.20)
                                   ),
-                                  Text(
-                                    '${vehicle['registration']}',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Container(
-                                          height: 32,
-                                          width: 32,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(5),
-                                              color: Color(0xFF1D9DD9)
-                                                  .withOpacity(0.20)
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: SvgPicture.asset(
-                                              'assets/color.svg',
-                                              // semanticsLabel: 'My SVG Image',
-                                              // height: 10,
-                                              // width: 10,
-                                              // fit: BoxFit.fill,
-                                            ),
-                                          ),
-                                      ),
-                                      SizedBox(width: 6),
-                                      Column(
-                                        // mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Color',style: Theme.of(context).textTheme.labelSmall ),
-                                          SizedBox(width: 2),
-                                          Text('${vehicle['color']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                        ],
-                                      ),
-                                      Spacer(),
-                                      SvgPicture.asset(
-                                        'assets/model_no.svg',
-                                        // semanticsLabel: 'My SVG Image',
-                                        height: 30,
-                                      ),
-                                      SizedBox(width: 6),
-                                      Column(
-                                        // mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Model No',style: Theme.of(context).textTheme.labelSmall ),
-                                          SizedBox(width: 2),
-                                          Text('${vehicle['model']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                        ],
-                                      ),
-
-                                    ],
-                                  ),
-                                ],
+                                  child: Icon(MingCute.car_3_line, color: Theme
+                                      .of(context)
+                                      .primaryColor, size: 35,)
                               ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: () {
-                                // Handle edit action
-                              },
-                            ),
-                          ],
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${vehicle['make']}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${vehicle['registration']}',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Container(
+                                            height: 32,
+                                            width: 32,
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(5),
+                                                color: const Color(0xFF1D9DD9)
+                                                    .withOpacity(0.20)
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4.0),
+                                              child: SvgPicture.asset(
+                                                'assets/color.svg',
+                                                // semanticsLabel: 'My SVG Image',
+                                                // height: 10,
+                                                // width: 10,
+                                                // fit: BoxFit.fill,
+                                              ),
+                                            ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Column(
+                                          // mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Color',style: Theme.of(context).textTheme.labelSmall ),
+                                            const SizedBox(width: 2),
+                                            Text('${vehicle['color']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                        const Spacer(),
+                                        SvgPicture.asset(
+                                          'assets/model_no.svg',
+                                          // semanticsLabel: 'My SVG Image',
+                                          height: 30,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Column(
+                                          // mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Model No',style: Theme.of(context).textTheme.labelSmall ),
+                                            const SizedBox(width: 2),
+                                            Text('${vehicle['model']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                    
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  // Handle edit action
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -195,6 +213,17 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         child: const Icon(Icons.add, color: Colors.white,),
       ),
     );
+  }
+
+  void _onVehicleSelected(int index) {
+    final selectedVehicle = _vehicles[index];
+    // // Perform actions with the selected vehicle
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => VehicleDetailScreen(vehicle: selectedVehicle),
+    //   ),
+    // );
   }
 
 
@@ -278,7 +307,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return ElevatedButton(
       onPressed: () {
-        Navigator.pushNamed(context, 'BookingDetails');
+        // Navigator.pushNamed(context, 'BookingDetails');
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
@@ -322,9 +351,6 @@ Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
   }
 }
 
-// Example usage:
-// List<dynamic> vehicles = await fetchVehiclesByCustomer('890');
-// print(vehicles);
 
 class AddVehicleForm extends StatelessWidget {
   const AddVehicleForm({super.key});

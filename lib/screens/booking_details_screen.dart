@@ -1,12 +1,17 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chips_choice/chips_choice.dart';
+
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
+
+import 'package:flutter/material.dart'as Material;
+
+import 'package:flutter_stripe/flutter_stripe.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'booking_confirmation.dart';
+import 'package:http/http.dart' as http ;
 
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
@@ -18,9 +23,9 @@ class BookingDetailsScreen extends StatefulWidget {
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   String? token;
-
   Map<String, dynamic>? user;
 
+  Map<String, dynamic>? paymentIntent;
   @override
   void initState() {
     super.initState();
@@ -39,21 +44,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
 
-  final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(1);
+  final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(0);
 
   @override
   void dispose() {
     _selectedIndexNotifier.dispose();
     super.dispose();
   }
-
-  
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -65,9 +62,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final startTime = args['startTime'];
     final endTime = args['endTime'];
     final totalDays = args['totalDays'];
+    final totalPrice = args['totalPrice'];
 
-    String priceString = company['price'];
-    double price = double.parse(priceString) + 1.99;
+    // String priceString = company['price']; double.parse(priceString)
+    double price = totalPrice + 1.99;
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -87,49 +85,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             children: [
               Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(3)),
-                    child: company['park_api'] == 'DB'
-                        ? CachedNetworkImage(
-                      imageUrl:
-                      'https://airportparkbooking.uk/storage/${company['logo']}',
-                      height: 40,
-                      width: 60,
-                       fit: BoxFit.cover,
-                      // placeholder: (context, url) =>
-                      //     const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                      const Icon(Icons.error),
-                    )
-                        : company['park_api'] == 'holiday'
-                        ? CachedNetworkImage(
-                      imageUrl:
-                      company['logo'],
-                      height: 40,
-                      width: 60,
-                       fit: BoxFit.cover,
-                      // placeholder: (context, url) =>
-                      // const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                      const Icon(Icons.error),
-                    )
-                        : null, // Optional: you can return an error widget if the condition doesn't match
-                  ),
+                  _buildCompanyLogo(company),
                   const SizedBox(width: 10),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${company['name']}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis, // Ensures the text truncates instead of overflowing
-                        ),
-                        Text('${company['parking_type']}'),
-                      ],
-                    ),
-                  )
+                  _buildCompanyDetails(company),
                 ],
               ),
               const SizedBox(height: 26,),
@@ -141,7 +99,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 10,),
               DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
               const SizedBox(height: 10,),
-              buildDetailRow('Booking Price', '£${company['price']}'),
+              buildDetailRow('Booking Price', '£${totalPrice.toStringAsFixed(2)}'),
               buildDetailRow('Booking Fee', '£1.99'),
               const SizedBox(height: 10,),
                DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
@@ -163,7 +121,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
               ),
               const SizedBox(height: 22,),
-              Card(
+              Material.Card(
 
                 child: Padding(
                   padding: const EdgeInsets.all(10),
@@ -172,51 +130,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     children: [
                       Row(
                         children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.all(Radius.circular(3)),
-                            child: company['park_api'] == 'DB'
-                                ? CachedNetworkImage(
-                              imageUrl:
-                              'https://airportparkbooking.uk/storage/${company['logo']}',
-                              height: 40,
-                              width: 60,
-                              fit: BoxFit.cover,
-                              // placeholder: (context, url) =>
-                              //     const CircularProgressIndicator(),
-                              errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                            )
-                                : company['park_api'] == 'holiday'
-                                ? CachedNetworkImage(
-                              imageUrl:
-                              company['logo'],
-                              height: 40,
-                              width: 60,
-                              fit: BoxFit.cover,
-                              // placeholder: (context, url) =>
-                              // const CircularProgressIndicator(),
-                              errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                            )
-                                : null, // Optional: you can return an error widget if the condition doesn't match
-                          ),
+                          _buildCompanyLogo(company),
                           const SizedBox(width: 10),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${company['name']}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis, // Ensures the text truncates instead of overflowing
-                                ),
-                                Text('${company['parking_type']}'),
-                              ],
-                            ),
-                          ),
-
-                          // const Icon(Icons.edit, color: Colors.grey),
+                          _buildCompanyDetails(company),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -234,7 +150,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildInfoColumn(
-                              Icons.attach_money, 'Booking Price', '£${company['price']}'),
+                              Icons.attach_money, 'Booking Price', '£${totalPrice.toStringAsFixed(2)}'),
                           _buildInfoColumn(
                               Icons.percent, 'Booking Fee', '1.99'),
                         ],
@@ -246,11 +162,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  _showPaymentOptions(context);
+                  _showPaymentOptions(context, price.toString());
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
                 },
                 style: ElevatedButton.styleFrom(
-                 backgroundColor: Colors.red,
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 child: const Text('Pay Now'),
@@ -262,7 +177,47 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  void _showPaymentOptions(BuildContext context) {
+  Widget _buildCompanyLogo(Map<String, dynamic> company) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.all(Radius.circular(3)),
+      child: company['park_api'] == 'DB'
+          ? CachedNetworkImage(imageUrl: 'https://airportparkbooking.uk/storage/${company['logo']}',
+              height: 40, width: 60, fit: BoxFit.cover,
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            )
+          : company['park_api'] == 'holiday'
+              ? CachedNetworkImage(
+                  imageUrl: company['logo'],
+                  height: 40,
+                  width: 60,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                )
+              : null,
+    );
+  }
+
+  Widget _buildCompanyDetails(Map<String, dynamic> company) {
+    return Flexible(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${company['name']}',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text('${company['parking_type']}'),
+        ],
+      ),
+    );
+  }
+
+  void _showPaymentOptions(BuildContext context, String price) {
     final List<Map<String, dynamic>> chipData = [
       {"label": "Visa", "image": "assets/images/visa_logo.png"},
       {"label": "PayPal", "image": "assets/images/paypal_logo.png"},
@@ -271,6 +226,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
     showModalBottomSheet(
       context: context,
+      isDismissible: false,
       builder: (BuildContext context) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -292,7 +248,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isSelected ? Colors.red : Colors.transparent,
+                            color: isSelected ? Theme.of(context).primaryColor: Colors.transparent,
                             borderRadius: BorderRadius.circular(50),
                             border: Border.all(
                               color: isSelected ? Colors.red : Colors.grey.shade300,
@@ -332,14 +288,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     } else if (chipData[selectedIndex]["label"] == "PayPal") {
                       return _paypalLayout();
                     } else if (chipData[selectedIndex]["label"] == "Visa") {
-                      return _visaLayout();
+                      return _visaLayout(price);
                     }
                   }
                   return Container(); // Empty container until a selection is made
                 },
               ),
-
-
             ],
           ),
         );
@@ -350,13 +304,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return SizedBox(
       child: ElevatedButton(
-        onPressed: () {
-          // saveBookingDetails();
-         Navigator.maybePop(context);
+        onPressed: () async {
+          Navigator.maybePop(context);
+
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: bgColor,
-           minimumSize: const Size(250, 48),
+           // minimumSize: const Size( w48),   minimumSize: const Size( w48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
             side: const BorderSide(color: Colors.red),
@@ -371,23 +324,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _applePayLayout() {
-    return  SizedBox(
+    return  const SizedBox(
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Apple Pay Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text("Enter your Apple Pay details here."),
+          Text("Coming soon!!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           // You can add Apple Pay-specific widgets here.
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-              _buildButton(context, 'Confirm', Colors.red, Colors.white),
-            ],
-          ),
         ],
       ),
     );
@@ -399,31 +342,128 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("PayPal Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text("Log in to your PayPal account."),
+          Text("Coming soon!!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           // You can add PayPal-specific widgets here.
         ],
       ),
     );
   }
 
-  Widget _visaLayout() {
-    return const SizedBox(
+  Widget _visaLayout(String price) {
+    return  SizedBox(
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Visa Selected", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text("Enter your Visa card details."),
-          // You can add Visa-specific widgets here.
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Enter Card Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),   InkWell(
+                onTap: () async {
+                  Navigator.maybePop(context);
+                  print(price.runtimeType);
+                  await saveCardAndMakePayment(context, price);
+                },
+                child: Text(
+                  '*Autofill Link',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                ),
+              ),
+
+            ],
+          ),
+          const SizedBox(height: 20),
+          CardField(
+            onCardChanged: (cardDetails) {
+              setState(() {
+                // _cardDetails = cardDetails! as CardDetails;
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
+              _buildButton(context, 'Confirm', Colors.red, Colors.white),
+            ],
+          ),
         ],
       ),
     );
   }
 
+  Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
+    try {
+      var paymentIntent = await createPaymentIntent(price, 'GBP');
+      if (paymentIntent == null) {
+        throw Exception("Failed to create payment intent");
+      }
 
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntent['client_secret'],
+          merchantDisplayName: 'Holiday Car Parking',
+          googlePay: const PaymentSheetGooglePay(
+            testEnv: true,
+            currencyCode: 'GBP',
+            merchantCountryCode: 'GB',
+          ),
+        ),
+      );
+
+      await displayPaymentSheet(context);
+    } catch (e) {
+      print("Payment Exception: $e");
+    }
+  }
+
+  Future<void> displayPaymentSheet(BuildContext context) async {
+    try {
+      await Stripe.instance.presentPaymentSheet();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Paid successfully")),
+      );
+    } on StripeException catch (e) {
+      print('Stripe Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Payment Cancelled")),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': (double.parse(amount) * 100).round().toString(),
+        'currency': currency,
+        'payment_method_types[]': 'card',
+      };
+      var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
+      var response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+
+        headers: {
+          'Authorization': 'Bearer $secretKey', // Store securely
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print('Stripe Error: ${response.body}');
+        return null;
+      }
+    } catch (err) {
+      print('HTTP Error: ${err.toString()}');
+      return null;
+    }
+  }
   Widget buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -436,7 +476,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       ),
     );
   }
-
   Widget _buildInfoColumn(IconData icon, String title, String value) {
     return Column(
       children: [

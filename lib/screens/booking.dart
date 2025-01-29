@@ -11,7 +11,7 @@ import '../widgets/text.dart';
 class BookingScreen extends StatefulWidget {
 
   final dynamic company;
-
+  final Vehicle? vehicle;
   final String totalDays;
   final String startDate;
   final String endDate;
@@ -25,7 +25,7 @@ class BookingScreen extends StatefulWidget {
     required this.startDate,
     required this.endDate,
     required this.startTime,
-    required this.endTime,
+    required this.endTime, this.vehicle,
 
   });
 
@@ -40,16 +40,48 @@ class _BookingScreenState extends State<BookingScreen> {
   String _departureTime = '';
   String _arrivalTime = '';
   Vehicle? _selectedVehicle;
-  String? token;
 
-  Map<String, dynamic>? user;
+  double smsFees = 1.99;
+  double cancellationFees = 1.99;
+  late double totalPrice;
+
+  bool _smsConfirmationSelected = false;
+  bool _cancellationCoverSelected = false;
+
+  void _updateTotalPrice() {
+    double parsedPrice = double.tryParse(widget.company['price'].toString()) ?? 0.0;
+
+    double updatedTotal = parsedPrice;
+    if (_smsConfirmationSelected) updatedTotal += smsFees;
+    if (_cancellationCoverSelected) updatedTotal += cancellationFees;
+
+    setState(() {
+      totalPrice = updatedTotal;
+    });
+  }
+
+
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    // _initializeDefaultVehicle();
+    _updateTotalPrice();
   }
 
+  // void _initializeDefaultVehicle() async {
+  //   List vehiclesData = await fetchVehiclesByCustomer('${user?['id']}'); // Replace with actual user ID
+  //   List<Vehicle> vehicles = vehiclesData.map((data) => Vehicle.fromMap(data)).toList();
+  //
+  //   if (vehicles.isNotEmpty) {
+  //     setState(() {
+  //       _selectedVehicle = vehicles[0]; // Set the first vehicle as the default
+  //     });
+  //   }
+  // }
+  String? token;
+  Map<String, dynamic>? user;
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -70,6 +102,8 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double companyPrice = double.tryParse(widget.company['price'].toString()) ?? 0.0;
+
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -97,10 +131,10 @@ class _BookingScreenState extends State<BookingScreen> {
                     _buildSectionTitle('Vehicle Details'),
                     _selectedVehicle != null
                         ? _buildVehicleDetails(context, _selectedVehicle!)
-                        : const Text('No vehicle selected'),
+                        : const Text('No vehicle selected.'),
                     _buildAddVehicleButton(context),
                     _buildSectionTitle('Explore Additional Services'),
-                    _buildAdditionalServices(context),
+                    _buildAdditionalServices(context, companyPrice),
                     _buildContinueButton(context),
                   ],
                 ),
@@ -151,7 +185,6 @@ class _BookingScreenState extends State<BookingScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
                 ],
               ),
               Row(
@@ -166,7 +199,6 @@ class _BookingScreenState extends State<BookingScreen> {
           trailing: IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-
               _showUserInformation(context);
             },
           ),
@@ -181,7 +213,6 @@ class _BookingScreenState extends State<BookingScreen> {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         SwitchListTile(
-
           title: Text(
             'Do you have travel details?',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -311,7 +342,7 @@ class _BookingScreenState extends State<BookingScreen> {
               children: [
                 const Icon(Icons.directions_car, color: Colors.green),
                 const SizedBox(width: 4),
-                Text('Model No: ${vehicle.model}'),
+                Text('Model: ${vehicle.model}'),
               ],
             ),
           ],
@@ -319,7 +350,7 @@ class _BookingScreenState extends State<BookingScreen> {
         trailing: IconButton(
           icon: const Icon(Icons.edit),
           onPressed: () {
-            // Handle edit action
+            _selectVehicle(context);
           },
         ),
       ),
@@ -340,55 +371,80 @@ class _BookingScreenState extends State<BookingScreen> {
         width: double.infinity,
         child: OutlinedButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VehicleManagementScreen(
-                  // vehicles: [
-                  //   Vehicle(
-                  //     imageUrl: 'assets/images/car.png',
-                  //     make: 'Japan Motors',
-                  //     registration: 'AB-123',
-                  //     color: 'Cherry Black',
-                  //     model: '2019',
-                  //   ),
-                  //   Vehicle(
-                  //     imageUrl: 'assets/images/car.png',
-                  //     make: 'China Motors',
-                  //     registration: 'BA-804',
-                  //     color: 'Dark Gray',
-                  //     model: '2020',
-                  //   ),
-                  // ],
-                  // onVehicleSelected: _onVehicleSelected,
-                ),
-              ),
-            );
+            print('Selected Vehicle: $_selectedVehicle');
+            _selectVehicle(context);
           },
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
             side: const BorderSide(color: Colors.red), // Border color
           ),
-          child: const Text('+ Add Vehicle'),
+          child: const Text('+ Select Vehicle'),
         ),
       ),
     );
   }
 
-  Widget _buildAdditionalServices(BuildContext context) {
+  Future<void> _selectVehicle(BuildContext context) async {
+    // Fetch vehicles from your data source
+    List vehiclesData = await fetchVehiclesByCustomer('${user?['id']}'); // Replace with actual user ID
+    List<Vehicle> vehicles = vehiclesData.map((data) => Vehicle.fromMap(data)).toList();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select a Vehicle'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: vehicles.length,
+              itemBuilder: (context, index) {
+                final vehicle = vehicles[index];
+                return ListTile(
+                  title: Text('Make: ${vehicle.make}'),
+                  subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}'),
+                  onTap: () {
+                    _onVehicleSelected(vehicle);
+                    // Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    ).then((selectedVehicle) {
+      if (selectedVehicle != null) {
+        _onVehicleSelected(selectedVehicle);
+      }
+    });
+  }
+
+  Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
     return Row(
       children: [
         Row(
           children: [
             Checkbox(
-              value: false,
-              onChanged: (bool? value) {},
+              value: _smsConfirmationSelected,
+              onChanged: (bool? value) {
+                setState(() {
+                  _smsConfirmationSelected = value ?? false;
+                  _updateTotalPrice();
+                });
+              },
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sms Confirmation', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                const Text('£1.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  'Sms Confirmation',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '£${smsFees.toStringAsFixed(2)}', // Ensures two decimal places
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ],
@@ -397,14 +453,25 @@ class _BookingScreenState extends State<BookingScreen> {
         Row(
           children: [
             Checkbox(
-              value: true,
-              onChanged: (bool? value) {},
+              value: _cancellationCoverSelected,
+              onChanged: (bool? value) {
+                setState(() {
+                  _cancellationCoverSelected = value ?? false;
+                  _updateTotalPrice();
+                });
+              },
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Cancellation Cover', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                const Text('£4.99', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  'Cancellation Cover',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '£${cancellationFees.toStringAsFixed(2)}', // Correct price display
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ],
@@ -416,25 +483,30 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget _buildContinueButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/BookingDetails',
-            arguments: {
-               'company': widget.company,
-              'Email': _flightName,
-              'startDate': widget.startDate,
-              'endDate': widget.endDate,
-              'startTime': widget.startTime,
-              'endTime': widget.endTime,
-              'totalDays': widget.totalDays,
-            },
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          minimumSize: const Size(double.infinity, 50),
+      child: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/BookingDetails',
+              arguments: {
+                'company': widget.company,
+                'Email': _flightName,
+                'startDate': widget.startDate,
+                'endDate': widget.endDate,
+                'startTime': widget.startTime,
+                'endTime': widget.endTime,
+                'totalDays': widget.totalDays,
+                'totalPrice': totalPrice,
+              },
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            // minimumSize: const Size(double.infinity, 50),
+          ),
+          child: const Text('continue'),
         ),
-        child: const Text('continue'),
       ),
     );
   }
@@ -488,7 +560,6 @@ class _BookingScreenState extends State<BookingScreen> {
                     icon: Icons.person,
                     controller: emailController,
                   ),
-
                   const SizedBox(height: 10),
                   // Email Field
                   CustomTextField(
@@ -530,26 +601,6 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String initialValue, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          fillColor: Theme.of(context).colorScheme.surface,
-          filled: true,
-          labelStyle: const TextStyle(fontSize: 14.0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            // borderSide: BorderSide.none,
-          ),
-        ),
-        controller: TextEditingController(text: initialValue),
-        // readOnly: true,
-      ),
-    );
-  }
-
   Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
     return ElevatedButton(
       onPressed: () {
@@ -568,50 +619,6 @@ class _BookingScreenState extends State<BookingScreen> {
         text,
         style: TextStyle(color: textColor),
       ),
-    );
-  }
-
-  void _showVehicle(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.60,
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text('Add Vehicle Details', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  _buildTextField('Vehicle Registration', 'PK-20', context),
-                  _buildTextField('Vehicle Make', 'Alex', context),
-                  _buildTextField('Vehicle Color', 'Carry', context),
-                  _buildTextField('Vehicle Model', '03', context),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Please enter your email address, first name, and last name to enable the mobile number field.',
-                    style: TextStyle(fontSize: 12.0, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-                      _buildButton(context, 'Save Information', Colors.red, Colors.white),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

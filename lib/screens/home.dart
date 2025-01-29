@@ -148,7 +148,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       calendarType: CalendarDatePicker2Type.range,
       // disableModePicker: true,
       // rangeBidirectional: true,
-      firstDate: DateTime.now().add(Duration(days: 1))
+      firstDate: DateTime.now(),
     );
 
     final values = await showCalendarDatePicker2Dialog(
@@ -428,7 +428,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         },
                       );
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+
                     child: const Text('Find Parking'),
                   ),
                 ),
