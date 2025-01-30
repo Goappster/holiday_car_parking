@@ -72,7 +72,6 @@ class PaymentWidget extends StatelessWidget {
 
     // This will trigger the payment initiation as soon as the widget is built
     Future.delayed(Duration.zero, initiatePayment);
-
     return Scaffold(
       appBar: AppBar(title: const Text("Payment Screen")),
       body: const Center(

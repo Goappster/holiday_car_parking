@@ -20,7 +20,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
   late ApiService _apiService;
 
   // Initialize variables with temporary default values
-  String airportId = 'defaultAirportId';
+  String? airportId;
   String airportName = 'defaultAirportName';
   String startDate = 'defaultStartDate';
   String endDate = 'defaultEndDate';
@@ -46,7 +46,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
         endTime = arguments['endTime'];
 
         _quotes = _apiService.fetchQuotes(
-          airportId: airportId,
+          airportId: airportId!,
           dropDate: startDate,
           dropTime: startTime,
           pickDate: endDate,
@@ -291,6 +291,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                         endDate: endDate,
                         startTime: startTime,
                         endTime: endTime,
+                        airportId: airportId!,
                       ),
                     ),
                   );

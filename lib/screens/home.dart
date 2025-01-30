@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
-                DateTimePickerSection(),
+                const DateTimePickerSection(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              DateTimePickerSection(),
+              const DateTimePickerSection(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -192,7 +192,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
 
   String _getValueText(CalendarDatePicker2Type datePickerType, List<DateTime?> values) {
     if (values.length < 2 || (values[0] == null && values[1] == null)) {
-      return 'Check in - Check Out';
+      return 'Drop-off Date - Pick-Up Date';
     }
     values = values.map((e) => e != null ? DateUtils.dateOnly(e) : null).toList();
     if (datePickerType == CalendarDatePicker2Type.range) {
@@ -224,14 +224,17 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
     _airportData = GetAirports.fetchAirports(); // Fetch data only once
   }
 
+
   int? _selectedAirportId; // Variable to store selected airport ID
   String? _selectedAirportName; // Variable to store selected airport name
+
 
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
     final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -266,10 +269,20 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     } else {
                       final airports = snapshot.data!;
                       return DropdownButtonFormField<Map<String, dynamic>>(
+                        // value: airports.firstWhere(
+                        //       (airport) => airport['id'] == 20,
+                        //   orElse: () => airports.isNotEmpty ? airports[0] : {'id': 0, 'name': 'Unknown'}, // Ensures a valid fallback
+                        // ),
+                        // value: airports.isNotEmpty ? airports[0] : null,
                         decoration: InputDecoration(
+                          // hintText: 'Select Airport',
                           labelText: 'Select Airport',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(50),
+                            borderSide: const BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
                           ),
                         ),
                         items: airports.map((airport) {
@@ -285,6 +298,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           });
                         },
                       );
+
                     }
                   },
                 ),
@@ -347,9 +361,10 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                                   const SizedBox(width: 5,),
                                   Flexible(
                                     child: Text(
+                                      style: Theme.of(context).textTheme.labelMedium,
                                       _selectedStartTime != null
                                         ? _formatTimeOfDay(_selectedStartTime)
-                                        : 'Start Time',
+                                        : 'Drop-Off Time',
                                     ),
                                   )
                                 ],
@@ -382,9 +397,10 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                                   const SizedBox(width: 5,),
                                   Flexible(
                                     child: Text(
+                                      style: Theme.of(context).textTheme.labelMedium,
                                       _selectedEndTime != null
                                         ? _formatTimeOfDay(_selectedEndTime)
-                                        : 'End Time',
+                                        : 'Pick-up Time',
                                     ),
                                   )
                                 ],

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
+import 'package:holidayscar/screens/app_setting.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -97,7 +98,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         leading: const Icon(Icons.settings, color: Colors.red),
                         title: const Text('Setting'),
                         trailing: const Icon(Icons.arrow_forward_ios),
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AppSetting(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     Card(

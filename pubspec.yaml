@@ -46,6 +46,7 @@ dependencies:
   flutter_stripe: ^11.4.0
   credit_card_validator: ^2.1.0
   flutter_svg: ^2.0.17
+#  stripe_sdk: ^5.0.0
 
 dev_dependencies:
   flutter_test:

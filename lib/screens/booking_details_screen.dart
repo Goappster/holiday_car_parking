@@ -1,22 +1,15 @@
 import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter/material.dart'as Material;
-
 import 'package:flutter_stripe/flutter_stripe.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:http/http.dart' as http ;
 
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
   const BookingDetailsScreen({super.key, });
-
   @override
   State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
 }
@@ -24,7 +17,6 @@ class BookingDetailsScreen extends StatefulWidget {
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   String? token;
   Map<String, dynamic>? user;
-
   Map<String, dynamic>? paymentIntent;
   @override
   void initState() {
@@ -42,10 +34,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       }
     });
   }
-
-
   final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(0);
-
   @override
   void dispose() {
     _selectedIndexNotifier.dispose();
@@ -53,7 +42,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
   @override
   Widget build(BuildContext context) {
+
     final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
     final company = args['company'];
     final airportId = args['AirportId'];
     final airportName = args['AirportName'];
@@ -63,6 +54,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final endTime = args['endTime'];
     final totalDays = args['totalDays'];
     final totalPrice = args['totalPrice'];
+    final cancellationCover = args['cancellationCover'];
+    final ConfirmationSelected = args['ConfirmationSelected'];
+
 
     // String priceString = company['price']; double.parse(priceString)
     double price = totalPrice + 1.99;
@@ -75,7 +69,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('Booking Details'),
+        title:  Text('Booking Details'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -122,7 +116,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
               const SizedBox(height: 22,),
               Material.Card(
-
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -162,7 +155,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  _showPaymentOptions(context, price.toString());
+                  _showPaymentOptions(context, price.toString(), company, airportId.toString(), startDate, endDate, startTime, endTime, totalDays.toString(), totalPrice.toString(), price);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
                 },
                 style: ElevatedButton.styleFrom(
@@ -217,7 +210,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  void _showPaymentOptions(BuildContext context, String price) {
+  void _showPaymentOptions(BuildContext context, String price, Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal ) {
     final List<Map<String, dynamic>> chipData = [
       {"label": "Visa", "image": "assets/images/visa_logo.png"},
       {"label": "PayPal", "image": "assets/images/paypal_logo.png"},
@@ -288,7 +281,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     } else if (chipData[selectedIndex]["label"] == "PayPal") {
                       return _paypalLayout();
                     } else if (chipData[selectedIndex]["label"] == "Visa") {
-                      return _visaLayout(price);
+                      return _visaLayout(price, company, airportId, startDate, endDate, startTime, endTime, totalDays, totalPrice, priceTotal);
                     }
                   }
                   return Container(); // Empty container until a selection is made
@@ -298,28 +291,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
-    return SizedBox(
-      child: ElevatedButton(
-        onPressed: () async {
-          Navigator.maybePop(context);
-
-        },
-        style: ElevatedButton.styleFrom(
-           // minimumSize: const Size( w48),   minimumSize: const Size( w48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            side: const BorderSide(color: Colors.red),
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: textColor),
-        ),
-      ),
     );
   }
 
@@ -349,7 +320,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  Widget _visaLayout(String price) {
+  Widget _visaLayout(String price, Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal) {
     return  SizedBox(
       width: double.infinity,
       child: Column(
@@ -364,7 +335,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),   InkWell(
                 onTap: () async {
                   Navigator.maybePop(context);
-                  print(price.runtimeType);
                   await saveCardAndMakePayment(context, price);
                 },
                 child: Text(
@@ -372,23 +342,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                 ),
               ),
-
             ],
           ),
           const SizedBox(height: 20),
-          CardField(
-            onCardChanged: (cardDetails) {
-              setState(() {
-                // _cardDetails = cardDetails! as CardDetails;
-              });
-            },
-          ),
+          // CardField(
+          //   onCardChanged: (cardDetails) {
+          //     setState(() {
+          //       // _cardDetails = cardDetails! as CardDetails;
+          //     });
+          //   },
+          // ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-              _buildButton(context, 'Confirm', Colors.red, Colors.white),
+              // _buildButton(context, 'Confirm', Colors.red, Colors.white),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.maybePop(context);
+                  // postBookingData('100');
+                 saveIncompleteBooking( company, airportId, startDate, endDate, startTime, endTime,totalDays,totalPrice,priceTotal);
+
+                  // print('$airportId $startDate $startTime $endDate $endTime $totalDays $totalPrice ${priceTotal + 1.99}',);
+
+                },
+                style: ElevatedButton.styleFrom(
+                  // minimumSize: const Size( w48),   minimumSize: const Size( w48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'text',
+                ),
+              ),
             ],
           ),
         ],
@@ -402,7 +390,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       if (paymentIntent == null) {
         throw Exception("Failed to create payment intent");
       }
-
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: paymentIntent['client_secret'],
@@ -414,7 +401,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           ),
         ),
       );
-
       await displayPaymentSheet(context);
     } catch (e) {
       print("Payment Exception: $e");
@@ -424,6 +410,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Future<void> displayPaymentSheet(BuildContext context) async {
     try {
       await Stripe.instance.presentPaymentSheet();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Paid successfully")),
       );
@@ -445,15 +432,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
       var response = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
-
         headers: {
           'Authorization': 'Bearer $secretKey', // Store securely
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: body,
       );
-
       if (response.statusCode == 200) {
+        Map<String, dynamic> paymentIntentResponse = jsonDecode(response.body);
+        String paymentIntentId = paymentIntentResponse['id']; // Payment intent ID
+        String paymentStatus = paymentIntentResponse['status'];
+        print('PaymentId:$paymentIntentId paymentStatus:$paymentStatus');
+        String price = amount;
+        postBookingData(price);
         return jsonDecode(response.body);
       } else {
         print('Stripe Error: ${response.body}');
@@ -485,5 +476,74 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       ],
     );
+  }
+  Future<void> postBookingData(String price) async {
+    final url = Uri.parse('https://holidayscarparking.uk/api/booking');
+    final response = await http.post(
+      url,
+      body: {
+        'referenceNo': 'HCP-04241127820',
+        'title': '${user?['title']}',
+        'first_name': '${user?['first_name']}',
+        'last_name': '${user?['last_name']}',
+        'email': '${user?['email']}',
+        'contactno': '${user?['phone_number']}',
+        'deprTerminal': '457',
+        'deptFlight': 'ASD124',
+        'returnTerminal': '457',
+        'returnFlight': 'ASD125',
+        'model': 'A5',
+        'color': 'White',
+        'make': 'Audi',
+        'registration': 'ASX 075',
+        'payment_status': 'success',
+        'booking_amount': '60.99',
+        'cancelfee': '4.99',
+        'smsfee': '1.99',
+        'booking_fee': '1.99',
+        'discount_amount': '6.52',
+        'total_amount': price,
+        'intent_id': 'pi_3QPVaHIpEtljCntg2iTKEAFd',
+      },
+    );
+    if (response.statusCode == 200) {
+      print('Booking successful: ${response.body}');
+    } else {
+      print('Failed to book: ${response.reasonPhrase}');
+    }
+  }
+
+  Future<void> saveIncompleteBooking(Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal) async {
+    final url = Uri.parse('https://holidayscarparking.uk/api/saveIncompleteBooking');
+    final response = await http.post(
+      url,
+      body: {
+        'title': '${user?['title']}',
+        'first_name': '${user?['first_name']}',
+        'last_name': '${user?['last_name']}',
+        'email': '${user?['email']}',
+        'contactno': '${user?['phone_number']}',
+        'parking_type': '${company['parking_type']}',
+        'drop_date': startDate,
+        'drop_time': startDate,
+        'pick_date': endDate,
+        'pick_time': endTime,
+        'total_days': totalDays,
+        'airport_id': airportId,
+        'product_id': '${company['companyID']}',
+        'product_code': '${company['product_code']}',
+        'park_api': '${company['park_api']}',
+        'booking_amount': totalPrice,
+        'booking_fee': '1.99',
+        'discount_amount': '4.29',
+        'total_amount': '${priceTotal + 1.99}',
+        'promo': 'HCP-APP-OXT78U',
+      },
+    );
+    if (response.statusCode == 200) {
+      print('Booking successful: ${response.body}');
+    } else {
+      print('Failed to book: ${response.reasonPhrase}');
+    }
   }
 }

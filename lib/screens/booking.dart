@@ -17,6 +17,7 @@ class BookingScreen extends StatefulWidget {
   final String endDate;
   final String startTime;
   final String endTime;
+  final String airportId;
 
 
   const BookingScreen({super.key,
@@ -25,7 +26,7 @@ class BookingScreen extends StatefulWidget {
     required this.startDate,
     required this.endDate,
     required this.startTime,
-    required this.endTime, this.vehicle,
+    required this.endTime, this.vehicle, required this.airportId,
 
   });
 
@@ -498,6 +499,9 @@ class _BookingScreenState extends State<BookingScreen> {
                 'endTime': widget.endTime,
                 'totalDays': widget.totalDays,
                 'totalPrice': totalPrice,
+                'AirportId': widget.airportId,
+                'cancellationCover': _cancellationCoverSelected ? 1.99 : null,
+                'ConfirmationSelected': _smsConfirmationSelected ? 1.99 : null,
               },
             );
           },
@@ -620,37 +624,5 @@ class _BookingScreenState extends State<BookingScreen> {
         style: TextStyle(color: textColor),
       ),
     );
-  }
-
-  void saveBookingDetails() async {
-    BookingApi bookingApi = BookingApi();
-    try {
-      await bookingApi.saveIncompleteBooking(
-        title: 'Mr',
-        firstName: 'test',
-        lastName: 'tes',
-        email: 'ghaniappspk@gmail.com',
-        contactNo: '1234567890',
-        parkingType: 'Meet and Greet',
-        dropDate: '2026-01-25',
-        dropTime: '21:00',
-        pickDate: '2026-01-30',
-        pickTime: '15:00',
-        totalDays: 5,
-        airportId: 1,
-        productId: 429,
-        productCode: 'GNP-01',
-        parkApi: 'DB',
-        bookingAmount: 100.0,
-        bookingFee: 10.0,
-        discountAmount: 15,
-        totalAmount: 105.0,
-        promo: 'HCP-APP-OXT78U',
-      );
-
-      print('Booking saved successfully');
-    } catch (e) {
-      print('Error saving booking: $e');
-    }
   }
 }
