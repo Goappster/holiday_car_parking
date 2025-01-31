@@ -217,6 +217,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   Widget _buildCreateAccountButton() {
     return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15),
+      ),
       onPressed: () async {
         await _registrationService.registerUser(
           title: titleController.text,

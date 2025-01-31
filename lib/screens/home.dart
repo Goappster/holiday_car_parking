@@ -11,6 +11,7 @@ import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 import '../services/get_airports.dart';
 import '../theme/app_theme.dart';
+import 'booking_confirmation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,7 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+            },
           ),
         ],
       ),

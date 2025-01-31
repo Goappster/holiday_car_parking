@@ -136,12 +136,14 @@ class _BookingScreenState extends State<BookingScreen> {
                     _buildAddVehicleButton(context),
                     _buildSectionTitle('Explore Additional Services'),
                     _buildAdditionalServices(context, companyPrice),
-                    _buildContinueButton(context),
+                    SizedBox(height: 16,),
+                    _buildContinueButton(context, _selectedVehicle),
                   ],
                 ),
               ),
             ),
           ),
+
           // ElevatedButton(
           //   onPressed: () {
           //     saveBookingDetails();
@@ -327,7 +329,7 @@ class _BookingScreenState extends State<BookingScreen> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
-        leading: Image.asset(vehicle.imageUrl),
+        leading: Image.asset('assets/images/car.png'),
         title: Text(vehicle.make),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +405,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 final vehicle = vehicles[index];
                 return ListTile(
                   title: Text('Make: ${vehicle.make}'),
-                  subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}'),
+                  subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}, registration: ${vehicle.registration}'),
                   onTap: () {
                     _onVehicleSelected(vehicle);
                     // Navigator.pop(context);
@@ -481,36 +483,47 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
-  Widget _buildContinueButton(BuildContext context) {
+  Widget _buildContinueButton(BuildContext context, Vehicle? vehicle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
       child: SizedBox(
         width: double.infinity,
         height: 48,
         child: ElevatedButton(
           onPressed: () {
-            Navigator.pushNamed(context, '/BookingDetails',
-              arguments: {
-                'company': widget.company,
-                'Email': _flightName,
-                'startDate': widget.startDate,
-                'endDate': widget.endDate,
-                'startTime': widget.startTime,
-                'endTime': widget.endTime,
-                'totalDays': widget.totalDays,
-                'totalPrice': totalPrice,
-                'AirportId': widget.airportId,
-                'cancellationCover': _cancellationCoverSelected ? 1.99 : null,
-                'ConfirmationSelected': _smsConfirmationSelected ? 1.99 : null,
-              },
-            );
+            if (vehicle != null) {
+              Navigator.pushNamed(
+                context,
+                '/BookingDetails',
+                arguments: {
+                  'company': widget.company,
+                  'Email': _flightName,
+                  'startDate': widget.startDate,
+                  'endDate': widget.endDate,
+                  'startTime': widget.startTime,
+                  'endTime': widget.endTime,
+                  'totalDays': widget.totalDays,
+                  'totalPrice': totalPrice,
+                  'AirportId': widget.airportId,
+                  'cancellationCover': _cancellationCoverSelected ? 1.99 : null,
+                  'ConfirmationSelected': _smsConfirmationSelected ? 1.99 : null,
+                  'registration': vehicle!.registration!,
+                  'make': vehicle.make!,
+                  'color': vehicle.color!,
+                  'model': vehicle.model!,
+                },
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Please select a vehicle to continue.'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            // minimumSize: const Size(double.infinity, 50),
-          ),
-          child: const Text('continue'),
-        ),
+          child: Text('Continue'),
+        )
       ),
     );
   }

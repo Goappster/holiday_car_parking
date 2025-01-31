@@ -7,6 +7,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http ;
 
+import 'booking_confirmation.dart';
+
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
   const BookingDetailsScreen({super.key, });
@@ -18,10 +20,53 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   String? token;
   Map<String, dynamic>? user;
   Map<String, dynamic>? paymentIntent;
+
+  String? savedReferenceNo;
+  // @override
+  // void initState() {
+  //   super.initState();
+  //
+  // }
+
+  late var confirmationSelected;
+  late var cancellationCover;
+  late var company;
+  late var airportId;
+  late var airportName;
+  late var startDate;
+  late var endDate;
+  late var startTime;
+  late var endTime;
+  late var  totalDays;
+  late double bookingPrice;
+  late double totalPrice;
+  late String registration; late String make; late String color; late String model;
+
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    confirmationSelected = args['ConfirmationSelected'];
+    cancellationCover = args['cancellationCover'];
+    company = args['company'];
+    airportId = args['AirportId'];
+    airportName = args['AirportName'];
+    startDate = args['startDate'];
+    endDate = args['endDate'];
+    startTime = args['startTime'];
+    endTime = args['endTime'];
+    totalDays = args['totalDays'];
+    bookingPrice = (args['totalPrice'] as num).toDouble();
+    totalPrice = bookingPrice + 1.99;
+    registration = args['registration']; make = args['make']; color = args['color']; model = args['model'];
+
   }
 
   Future<void> _loadUserData() async {
@@ -34,32 +79,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       }
     });
   }
-  final ValueNotifier<int> _selectedIndexNotifier = ValueNotifier<int>(0);
-  @override
-  void dispose() {
-    _selectedIndexNotifier.dispose();
-    super.dispose();
-  }
+
+
   @override
   Widget build(BuildContext context) {
-
-    final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    final company = args['company'];
-    final airportId = args['AirportId'];
-    final airportName = args['AirportName'];
-    final startDate = args['startDate'];
-    final endDate = args['endDate'];
-    final startTime = args['startTime'];
-    final endTime = args['endTime'];
-    final totalDays = args['totalDays'];
-    final totalPrice = args['totalPrice'];
-    final cancellationCover = args['cancellationCover'];
-    final ConfirmationSelected = args['ConfirmationSelected'];
-
-
-    // String priceString = company['price']; double.parse(priceString)
-    double price = totalPrice + 1.99;
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -69,7 +92,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             Navigator.pop(context);
           },
         ),
-        title:  Text('Booking Details'),
+        title:   Text('Booking Details $registration $make $model $color'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -93,7 +116,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 10,),
               DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
               const SizedBox(height: 10,),
-              buildDetailRow('Booking Price', '£${totalPrice.toStringAsFixed(2)}'),
+              buildDetailRow('Booking Price', '£${bookingPrice.toStringAsFixed(2)}'),
               buildDetailRow('Booking Fee', '£1.99'),
               const SizedBox(height: 10,),
                DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
@@ -106,7 +129,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Text(
-                    '£${price.toStringAsFixed(2)}',
+                    '£${totalPrice.toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -143,7 +166,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildInfoColumn(
-                              Icons.attach_money, 'Booking Price', '£${totalPrice.toStringAsFixed(2)}'),
+                              Icons.attach_money, 'Booking Price', '£${bookingPrice.toStringAsFixed(2)}'),
                           _buildInfoColumn(
                               Icons.percent, 'Booking Fee', '1.99'),
                         ],
@@ -155,8 +178,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  _showPaymentOptions(context, price.toString(), company, airportId.toString(), startDate, endDate, startTime, endTime, totalDays.toString(), totalPrice.toString(), price);
+                  _showBottomSheet(context);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+                  // saveIncompleteBooking();
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -210,179 +234,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  void _showPaymentOptions(BuildContext context, String price, Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal ) {
-    final List<Map<String, dynamic>> chipData = [
-      {"label": "Visa", "image": "assets/images/visa_logo.png"},
-      {"label": "PayPal", "image": "assets/images/paypal_logo.png"},
-      {"label": "Apple Pay", "image": "assets/images/applepay_logo.png"},
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            // crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: List.generate(chipData.length, (index) {
-                  final chip = chipData[index];
-                  return ValueListenableBuilder<int>(
-                    valueListenable: _selectedIndexNotifier,
-                    builder: (context, selectedIndex, _) {
-                      final bool isSelected = selectedIndex == index;
-                      return GestureDetector(
-                        onTap: () {
-                          _selectedIndexNotifier.value = index;
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected ? Theme.of(context).primaryColor: Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-                              color: isSelected ? Colors.red : Colors.grey.shade300,
-                              width: 1.5,
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                chip["image"],
-                                height: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                chip["label"],
-                                // style: TextStyle(
-                                //   color: isSelected ? Colors.white : Colors.black,
-                                // ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 20),
-              ValueListenableBuilder<int>(
-                valueListenable: _selectedIndexNotifier,
-                builder: (context, selectedIndex, _) {
-                  if (selectedIndex != -1) {
-                    if (chipData[selectedIndex]["label"] == "Apple Pay") {
-                      return _applePayLayout();
-                    } else if (chipData[selectedIndex]["label"] == "PayPal") {
-                      return _paypalLayout();
-                    } else if (chipData[selectedIndex]["label"] == "Visa") {
-                      return _visaLayout(price, company, airportId, startDate, endDate, startTime, endTime, totalDays, totalPrice, priceTotal);
-                    }
-                  }
-                  return Container(); // Empty container until a selection is made
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _applePayLayout() {
-    return  const SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Coming soon!!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          // You can add Apple Pay-specific widgets here.
-        ],
-      ),
-    );
-  }
-
-  Widget _paypalLayout() {
-    return const SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Coming soon!!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          // You can add PayPal-specific widgets here.
-        ],
-      ),
-    );
-  }
-
-  Widget _visaLayout(String price, Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal) {
-    return  SizedBox(
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Enter Card Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),   InkWell(
-                onTap: () async {
-                  Navigator.maybePop(context);
-                  await saveCardAndMakePayment(context, price);
-                },
-                child: Text(
-                  '*Autofill Link',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // CardField(
-          //   onCardChanged: (cardDetails) {
-          //     setState(() {
-          //       // _cardDetails = cardDetails! as CardDetails;
-          //     });
-          //   },
-          // ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-              // _buildButton(context, 'Confirm', Colors.red, Colors.white),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.maybePop(context);
-                  // postBookingData('100');
-                 saveIncompleteBooking( company, airportId, startDate, endDate, startTime, endTime,totalDays,totalPrice,priceTotal);
-
-                  // print('$airportId $startDate $startTime $endDate $endTime $totalDays $totalPrice ${priceTotal + 1.99}',);
-
-                },
-                style: ElevatedButton.styleFrom(
-                  // minimumSize: const Size( w48),   minimumSize: const Size( w48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: const Text(
-                  'text',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
     try {
@@ -441,10 +292,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       if (response.statusCode == 200) {
         Map<String, dynamic> paymentIntentResponse = jsonDecode(response.body);
         String paymentIntentId = paymentIntentResponse['id']; // Payment intent ID
-        String paymentStatus = paymentIntentResponse['status'];
-        print('PaymentId:$paymentIntentId paymentStatus:$paymentStatus');
+        // String paymentStatus = paymentIntentResponse['status'];
+        print('PaymentId:$paymentIntentId');
         String price = amount;
-        postBookingData(price);
+        // postBookingData(price, paymentIntentId);
         return jsonDecode(response.body);
       } else {
         print('Stripe Error: ${response.body}');
@@ -455,6 +306,103 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       return null;
     }
   }
+
+  Future<void> postBookingData(String price, String _paymentIntentId) async {
+    final url = Uri.parse('https://holidayscarparking.uk/api/booking');
+
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          'referenceNo': '$savedReferenceNo',
+          'title': '${user?['title']}',
+          'first_name': '${user?['first_name']}',
+          'last_name': '${user?['last_name']}',
+          'email': '${user?['email']}',
+          'contactno': '${user?['phone_number']}',
+          'deprTerminal': '509',
+          'deptFlight': 'ASD124',
+          'returnTerminal': '510',
+          'returnFlight': 'ASD125',
+          'model': 'A5',
+          'color': 'White',
+          'make': 'Audi',
+          'registration': 'ASX 075',
+          'payment_status': 'success',
+          'booking_amount': '$bookingPrice',
+          'cancelfee': '4.99',
+          'smsfee': '1.99',
+          'booking_fee': '1.99',
+          'discount_amount': '6.52',
+          'total_amount': price,
+          'intent_id': _paymentIntentId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Booking successful: ${response.body}');
+        Navigator.pushNamed(context, '/PaymentConfirm',
+          arguments: {
+            'company': company,
+            'startDate': startDate,
+            'endDate': endDate,
+            'startTime': startTime,
+            'endTime': endTime,
+            'totalPrice': totalPrice,
+          },
+        );
+      } else {
+        print('Failed to book: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Error occurred while posting booking data: $e');
+    }
+  }
+
+
+  Future<void> saveIncompleteBooking( ) async {
+    final url = Uri.parse('https://holidayscarparking.uk/api/saveIncompleteBooking');
+    final response = await http.post(
+      url,
+      body: {
+        'title': '${user?['title']}',
+        'first_name': '${user?['first_name']}',
+        'last_name': '${user?['last_name']}',
+        'email': '${user?['email']}',
+        'contactno': '${user?['phone_number']}',
+        'parking_type': '${company['parking_type']}',
+        'drop_date': '$startDate',
+        'drop_time': '$startTime',
+        'pick_date':' $endDate',
+        'pick_time': '$endTime',
+        'total_days': '$totalDays',
+        'airport_id': '$airportId',
+        'product_id': '${company['companyID']}',
+        'product_code': '${company['product_code']}',
+        'park_api': '${company['park_api']}',
+        'booking_amount': '$bookingPrice',
+        'booking_fee': '1.99',
+        'discount_amount': '4.29',
+        'total_amount': '${bookingPrice + 1.99}',
+        'promo': 'HCP-APP-OXT78U',
+      },
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      if (responseData['success'] == true) {
+        savedReferenceNo = responseData['booking']['referenceNo']; // Store reference number
+        print('Reference No: $responseData');
+      }
+      ('Booking successful: ${response.body}');
+
+
+    } else {
+      print('Failed to book: ${response.reasonPhrase}');
+    }
+  }
+
+
   Widget buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -477,73 +425,267 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       ],
     );
   }
-  Future<void> postBookingData(String price) async {
-    final url = Uri.parse('https://holidayscarparking.uk/api/booking');
-    final response = await http.post(
-      url,
-      body: {
-        'referenceNo': 'HCP-04241127820',
-        'title': '${user?['title']}',
-        'first_name': '${user?['first_name']}',
-        'last_name': '${user?['last_name']}',
-        'email': '${user?['email']}',
-        'contactno': '${user?['phone_number']}',
-        'deprTerminal': '457',
-        'deptFlight': 'ASD124',
-        'returnTerminal': '457',
-        'returnFlight': 'ASD125',
-        'model': 'A5',
-        'color': 'White',
-        'make': 'Audi',
-        'registration': 'ASX 075',
-        'payment_status': 'success',
-        'booking_amount': '60.99',
-        'cancelfee': '4.99',
-        'smsfee': '1.99',
-        'booking_fee': '1.99',
-        'discount_amount': '6.52',
-        'total_amount': price,
-        'intent_id': 'pi_3QPVaHIpEtljCntg2iTKEAFd',
-      },
+
+
+
+
+  final TextEditingController _promoController = TextEditingController(text: "POPFLUX44");
+  String _promoState = "none";
+  String _errorText = '';
+
+  void applyPromoCode() {
+    setState(() {
+      if (_promoController.text == "POPFLUX44") {
+        _promoState = "applied";
+        _errorText = '';
+      } else {
+        _promoState = "expired";
+        _errorText = 'Invalid Promo Code';
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_promoState == "applied"
+            ? "Promo Code Applied Successfully!"
+            : "Promo Code Expired!"),
+        backgroundColor: _promoState == "applied" ? Colors.green : Colors.red,
+        duration: const Duration(seconds: 2),
+      ),
     );
-    if (response.statusCode == 200) {
-      print('Booking successful: ${response.body}');
-    } else {
-      print('Failed to book: ${response.reasonPhrase}');
-    }
   }
 
-  Future<void> saveIncompleteBooking(Map<String, dynamic> company, String airportId, String startDate, String endDate, String startTime, String endTime, String totalDays, String totalPrice, double priceTotal) async {
-    final url = Uri.parse('https://holidayscarparking.uk/api/saveIncompleteBooking');
-    final response = await http.post(
-      url,
-      body: {
-        'title': '${user?['title']}',
-        'first_name': '${user?['first_name']}',
-        'last_name': '${user?['last_name']}',
-        'email': '${user?['email']}',
-        'contactno': '${user?['phone_number']}',
-        'parking_type': '${company['parking_type']}',
-        'drop_date': startDate,
-        'drop_time': startDate,
-        'pick_date': endDate,
-        'pick_time': endTime,
-        'total_days': totalDays,
-        'airport_id': airportId,
-        'product_id': '${company['companyID']}',
-        'product_code': '${company['product_code']}',
-        'park_api': '${company['park_api']}',
-        'booking_amount': totalPrice,
-        'booking_fee': '1.99',
-        'discount_amount': '4.29',
-        'total_amount': '${priceTotal + 1.99}',
-        'promo': 'HCP-APP-OXT78U',
+  void removePromoCode() {
+    setState(() {
+      _promoState = "removed";
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Promo Code Removed"),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void togglePromoCode() {
+    setState(() {
+      if (_promoState == "applied") {
+        _promoState = "removed";
+        _promoController.clear();
+        _errorText = '';
+      } else {
+        applyPromoCode();
+      }
+    });
+  }
+
+  void _showBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  // color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          // color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Center(
+                      child: Text(
+                        'Enter Promo Code',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _promoController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: "Promo code",
+                        labelStyle: const TextStyle(color: Colors.black54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: Icon(Icons.local_offer, color: Theme.of(context).primaryColor),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // IconButton(
+                            //   icon: Icon(Icons.paste, color: Colors.blueAccent),
+                            //   onPressed: () async {
+                            //     ClipboardData? data = await Clipboard.getData('text/plain');
+                            //     if (data != null) {
+                            //       setState(() {
+                            //         _promoController.text = data.text ?? '';
+                            //       });
+                            //     }
+                            //   },
+                            // ),
+                            TextButton(
+                              onPressed: () {
+                                togglePromoCode();
+                                setModalState(() {});
+                              },
+                              child: Row(
+                                children: [
+                                  Text(_promoState == "applied" ? "Remove" : "Apply Promo", style: TextStyle(color: Theme.of(context).primaryColor)),
+                                  // Icon(_promoState == "applied" ? Icons.close : Icons.check, color: Colors.blueAccent),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        errorText: _errorText.isEmpty ? null : _errorText,
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (_promoState == "applied") promoCodeApplied(),
+                    // if (_promoState == "expired") promoCodeExpired(),
+                    // if (_promoState == "removed") promoCodeRemoved(),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        onPressed: () {
+                          Navigator.maybePop(context);
+                          saveCardAndMakePayment(context, totalPrice.toString());
+                        },
+                        child: const Text("Proceed to Payment", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       },
     );
-    if (response.statusCode == 200) {
-      print('Booking successful: ${response.body}');
-    } else {
-      print('Failed to book: ${response.reasonPhrase}');
-    }
   }
+
+  Widget promoCodeApplied() {
+    return promoCodeContainer(
+      icon: Icons.check_circle,
+      iconColor: Colors.green,
+      text: "POPFLUX44 -\$20.00 (10% off)",
+      message: "Promo Code Applied",
+      messageColor: Colors.green,
+      onRemove: removePromoCode,
+    );
+  }
+
+  // Expired Promo Code UI
+  Widget promoCodeExpired() {
+    return promoCodeContainer(
+      icon: Icons.error,
+      iconColor: Colors.red,
+      text: "POPFLUX44",
+      message: "Promo Code Expired",
+      messageColor: Colors.red,
+      isError: true,
+    );
+  }
+
+  // Removed Promo Code UI
+  Widget promoCodeRemoved() {
+    return promoCodeContainer(
+      icon: Icons.info,
+      iconColor: Colors.blue,
+      text: "POPFLUX44",
+      message: "Promo Code Removed",
+      messageColor: Colors.blue,
+    );
+  }
+
+  // Generic Promo Code UI Container
+  Widget promoCodeContainer({
+    required IconData icon,
+    required Color iconColor,
+    required String text,
+    required String message,
+    required Color messageColor,
+    bool isError = false,
+    VoidCallback? onRemove,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isError ? Colors.red[50] : Colors.green[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: iconColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    message,
+                    style: TextStyle(color: messageColor),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // if (onRemove != null)
+          //   TextButton(
+          //     onPressed: onRemove,
+          //     child: const Text("Remove", style: TextStyle(color: Colors.blue)),
+          //   ),
+        ],
+      ),
+    );
+  }
+
+
 }
+
+
