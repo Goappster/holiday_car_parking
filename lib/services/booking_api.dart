@@ -55,7 +55,7 @@ class BookingApi {
     );
 
     if (response.statusCode != 200) {
-      print(response.body);
+      //print(response.body);
       throw Exception('Failed to save booking');
     }
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/services/registration_api.dart';
+import 'package:intl_mobile_field/intl_mobile_field.dart';
 import '../widgets/text.dart';
 
 class RegistrationService {
@@ -102,7 +103,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const SizedBox(height: 10),
               _buildEmailField(),
               const SizedBox(height: 10),
-              _buildPhoneNumberField(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Phone Number',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPhoneNumberField(),
+                ],
+              ),
               const SizedBox(height: 10),
               _buildPasswordField(),
               const SizedBox(height: 20),
@@ -143,12 +154,37 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     return Row(
       children: [
         Expanded(
-          child: CustomTextField(
-            label: 'Title',
-            hintText: 'Mr/Ms',
-            obscureText: false,
-            icon: Icons.person,
-            controller: titleController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Ensures alignment at the top
+            children: [
+              Text(
+                'Title',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.redAccent),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                  prefixIcon: Icon(Icons.person),
+                ),
+                value: 'Mr', // Default selected value
+                items: ['Mr', 'Ms', 'Miss', 'Dr', 'Prof']
+                    .map((title) => DropdownMenuItem(
+                  value: title,
+                  child: Text(title),
+                ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    titleController.text = value;
+                  }
+                },
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 10),
@@ -163,6 +199,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
       ],
     );
+
   }
 
   Widget _buildLastNameField() {
@@ -186,12 +223,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Widget _buildPhoneNumberField() {
-    return CustomTextField(
-      label: 'Phone Number',
-      hintText: 'Phone Number',
-      obscureText: false,
-      icon: Icons.phone,
+    return IntlMobileField(
       controller: phoneNumberController,
+      decoration: InputDecoration(
+        labelText: 'Mobile Number',
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.redAccent)
+        ),
+      ),
+      initialCountryCode: 'GB',
+      disableLengthCounter: true,
+      languageCode: "en",
     );
   }
 
@@ -224,6 +267,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         padding: const EdgeInsets.symmetric(vertical: 15),
       ),
       onPressed: () async {
+        //print('$titleController $phoneNumberController');
         await _registrationService.registerUser(
           title: titleController.text,
           firstName: firstNameController.text,

@@ -180,7 +180,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 onPressed: () {
                   _showBottomSheet(context);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
-                  // saveIncompleteBooking();
+                 saveIncompleteBooking();
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -254,7 +254,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
       await displayPaymentSheet(context);
     } catch (e) {
-      print("Payment Exception: $e");
+      //print("Payment Exception: $e");
     }
   }
 
@@ -266,7 +266,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         const SnackBar(content: Text("Paid successfully")),
       );
     } on StripeException catch (e) {
-      print('Stripe Error: $e');
+      //print('Stripe Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Payment Cancelled")),
       );
@@ -293,16 +293,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         Map<String, dynamic> paymentIntentResponse = jsonDecode(response.body);
         String paymentIntentId = paymentIntentResponse['id']; // Payment intent ID
         // String paymentStatus = paymentIntentResponse['status'];
-        print('PaymentId:$paymentIntentId');
         String price = amount;
-        // postBookingData(price, paymentIntentId);
+        postBookingData(price, paymentIntentId);
         return jsonDecode(response.body);
       } else {
-        print('Stripe Error: ${response.body}');
+        //print('Stripe Error: ${response.body}');
         return null;
       }
     } catch (err) {
-      print('HTTP Error: ${err.toString()}');
+      //print('HTTP Error: ${err.toString()}');
       return null;
     }
   }
@@ -324,10 +323,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           'deptFlight': 'ASD124',
           'returnTerminal': '510',
           'returnFlight': 'ASD125',
-          'model': 'A5',
-          'color': 'White',
-          'make': 'Audi',
-          'registration': 'ASX 075',
+          'model': model,
+          'color': color,
+          'make': make,
+          'registration': registration,
           'payment_status': 'success',
           'booking_amount': '$bookingPrice',
           'cancelfee': '4.99',
@@ -340,7 +339,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
 
       if (response.statusCode == 200) {
-        print('Booking successful: ${response.body}');
+        // //print('Booking successful: ${response.body}');
         Navigator.pushNamed(context, '/PaymentConfirm',
           arguments: {
             'company': company,
@@ -352,10 +351,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           },
         );
       } else {
-        print('Failed to book: ${response.reasonPhrase}');
+        // //print('Failed to book: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error occurred while posting booking data: $e');
+      // //print('Error occurred while posting booking data: $e');
     }
   }
 
@@ -392,13 +391,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
       if (responseData['success'] == true) {
         savedReferenceNo = responseData['booking']['referenceNo']; // Store reference number
-        print('Reference No: $responseData');
+        //print('Reference No: $responseData');
       }
       ('Booking successful: ${response.body}');
 
 
     } else {
-      print('Failed to book: ${response.reasonPhrase}');
+      //print('Failed to book: ${response.reasonPhrase}');
     }
   }
 

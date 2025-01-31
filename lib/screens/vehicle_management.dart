@@ -35,7 +35,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         try {
           user = json.decode(userData);
         } catch (e) {
-          print("Failed to parse user data: $e");
+          //print("Failed to parse user data: $e");
           user = null;
         }
       }
@@ -48,7 +48,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      print('Error: User data is not available.');
+      //print('Error: User data is not available.');
     }
   }
 
@@ -57,7 +57,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      print('Error: User ID is null.');
+      //print('Error: User ID is null.');
       return;
     }
 
@@ -71,7 +71,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      print('Error fetching vehicles: $e');
+      //print('Error fetching vehicles: $e');
     }
   }
 
@@ -346,7 +346,7 @@ Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
       throw Exception('Failed to load vehicles: ${response.statusCode}');
     }
   } catch (e) {
-    print('Error fetching vehicles: $e');
+    //print('Error fetching vehicles: $e');
     return [];
   }
 }

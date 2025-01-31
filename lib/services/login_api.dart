@@ -24,13 +24,13 @@ class LoginApiService {
           return true;
         } else {
           // Log an error message if keys are missing
-          print('Error: Missing keys in response body');
+          //print('Error: Missing keys in response body');
           return false;
         }
 
       } else {
         // Log the response status code for debugging
-        print('Error: Failed to login, status code: ${response.statusCode}');
+        //print('Error: Failed to login, status code: ${response.statusCode}');
         return false;
       }
     } catch (e) {

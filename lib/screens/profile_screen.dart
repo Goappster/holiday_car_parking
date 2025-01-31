@@ -35,7 +35,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         try {
           user = json.decode(userData);
         } catch (e) {
-          print("Failed to parse user data: $e");
+          //print("Failed to parse user data: $e");
           user = null;
         }
       }

@@ -258,7 +258,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
             ),
           );
         } else if (snapshot.hasError) {
-          print(snapshot.error);
+          //print(snapshot.error);
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No data available.'));
@@ -384,8 +384,8 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: () {
-                    print(offer); // To see the complete structure
-                    print(offer['reviews']);
+                    //print(offer); // To see the complete structure
+                    //print(offer['reviews']);
                   },
                   child: Align(
                     alignment: Alignment.centerRight,

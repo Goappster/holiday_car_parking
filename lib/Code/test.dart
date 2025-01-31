@@ -73,7 +73,7 @@ class _TerminalDropdownState extends State<TerminalDropdown> {
                   setState(() {
                     selectedDropoffTerminalId = selectedId;
                   });
-                  print('Selected Drop-off Terminal ID: $selectedId');
+                  //print('Selected Drop-off Terminal ID: $selectedId');
                 },
                 value: selectedDropoffTerminalId,
                 hint: Text('Choose Drop-off Terminal'),
@@ -99,7 +99,7 @@ class _TerminalDropdownState extends State<TerminalDropdown> {
                   setState(() {
                     selectedPickupTerminalId = selectedId;
                   });
-                  print('Selected Pickup Terminal ID: $selectedId');
+                  //print('Selected Pickup Terminal ID: $selectedId');
                 },
                 value: selectedPickupTerminalId,
                 hint: Text('Choose Pickup Terminal'),
