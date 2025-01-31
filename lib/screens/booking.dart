@@ -217,11 +217,11 @@ class _BookingScreenState extends State<BookingScreen> {
       children: [
         SwitchListTile(
           title: Text(
-            'Do you have travel details?',
+            'Do you have Flight details?',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
-            'We will set your Travel details to be confirmed if you select. You can add these details later on by contacting support desk.',
+            'We will set your Flight details to be confirmed if you select. You can add these details later on by contacting support desk.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           value: _hasTravelDetails,
