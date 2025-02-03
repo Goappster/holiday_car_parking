@@ -7,6 +7,7 @@ import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/booking_api.dart';
 import '../widgets/text.dart';
+import 'package:http/http.dart' as http;
 
 class BookingScreen extends StatefulWidget {
 
@@ -62,6 +63,36 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
 
+  Future<void> fetchTerminals(int airportId) async {
+    final response = await http.post(
+      Uri.parse('https://holidayscarparking.uk/api/airportTerminals'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'airport_id': airportId}),
+    );
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body)['data'];
+      setState(() {
+        terminals = data.map<Map<String, dynamic>>((terminal) {
+          return {
+            'id': terminal['id'],
+            'name': terminal['name'],
+          };
+        }).toList();
+      });
+    } else {
+      throw Exception('Failed to load terminals');
+    }
+  }
+
+  final int staticAirportId = 20; // Static airport ID
+  List<Map<String, dynamic>> terminals = [];
+  int? selectedDropoffTerminalId;
+  int? selectedPickupTerminalId;
+
+
+
+
 
   @override
   void initState() {
@@ -69,6 +100,8 @@ class _BookingScreenState extends State<BookingScreen> {
     _loadUserData();
     // _initializeDefaultVehicle();
     _updateTotalPrice();
+    int? airportIdInt = int.tryParse(widget.airportId);
+    fetchTerminals(airportIdInt!);
   }
 
   // void _initializeDefaultVehicle() async {
@@ -134,10 +167,13 @@ class _BookingScreenState extends State<BookingScreen> {
                         ? _buildVehicleDetails(context, _selectedVehicle!)
                         : const Text('No vehicle selected.'),
                     _buildAddVehicleButton(context),
-                    _buildSectionTitle('Explore Additional Services'),
-                    _buildAdditionalServices(context, companyPrice),
+                    _buildSectionTitle('Terminal Selections'),
+                    _selectTerminal(),
+                    // _buildSectionTitle('Explore Additional Services'),
+                    // _buildAdditionalServices(context, companyPrice),
                     SizedBox(height: 16,),
                     _buildContinueButton(context, _selectedVehicle),
+
                   ],
                 ),
               ),
@@ -152,6 +188,92 @@ class _BookingScreenState extends State<BookingScreen> {
           // ),
         ],
       ),
+    );
+  }
+
+  Widget _selectTerminal() {
+
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Drop-off Terminal Section
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8.0), // Space between dropdowns
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Drop-off Terminal', // Text label
+
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.grey, width: 1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  items: terminals.map((terminal) {
+                    return DropdownMenuItem<int>(
+                      value: terminal['id'],
+                      child: Text(terminal['name']),
+                    );
+                  }).toList(),
+                  onChanged: (selectedId) {
+                    setState(() {
+                      selectedDropoffTerminalId = selectedId;
+                    });
+                  },
+                  value: selectedDropoffTerminalId,
+                  hint: Text('Choose Drop-off Terminal'),
+                  isExpanded: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Pickup Terminal Section
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0), // Space between dropdowns
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pickup Terminal', // Text label
+
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  items: terminals.map((terminal) {
+                    return DropdownMenuItem<int>(
+                      value: terminal['id'],
+                      child: Text(terminal['name']),
+                    );
+                  }).toList(),
+                  onChanged: (selectedId) {
+                    setState(() {
+                      selectedPickupTerminalId = selectedId;
+                    });
+                  },
+                  value: selectedPickupTerminalId,
+                  hint: Text('Choose Pickup Terminal'),
+                  isExpanded: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -485,10 +607,10 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Widget _buildContinueButton(BuildContext context, Vehicle? vehicle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 0),
       child: SizedBox(
         width: double.infinity,
-        height: 48,
+        height: 50,
         child: ElevatedButton(
           onPressed: () {
             if (vehicle != null) {

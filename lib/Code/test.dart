@@ -14,10 +14,7 @@ class TerminalDropdown extends StatefulWidget {
 }
 
 class _TerminalDropdownState extends State<TerminalDropdown> {
-  final int staticAirportId = 20; // Static airport ID
-  List<Map<String, dynamic>> terminals = [];
-  int? selectedDropoffTerminalId;
-  int? selectedPickupTerminalId;
+
 
   @override
   void initState() {
@@ -46,69 +43,111 @@ class _TerminalDropdownState extends State<TerminalDropdown> {
       throw Exception('Failed to load terminals');
     }
   }
+  final int staticAirportId = 20; // Static airport ID
+  List<Map<String, dynamic>> terminals = [];
+  int? selectedDropoffTerminalId;
+  int? selectedPickupTerminalId;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              // Drop-off Terminal Dropdown
-              DropdownButtonFormField<int>(
-                decoration: InputDecoration(
-                  labelText: 'Select Drop-off Terminal',
-                  border: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Row containing both Dropdown buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Drop-off Terminal Section
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0), // Space between dropdowns
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Drop-off Terminal', // Text label
+
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<int>(
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              items: terminals.map((terminal) {
+                                return DropdownMenuItem<int>(
+                                  value: terminal['id'],
+                                  child: Text(terminal['name']),
+                                );
+                              }).toList(),
+                              onChanged: (selectedId) {
+                                setState(() {
+                                  selectedDropoffTerminalId = selectedId;
+                                });
+                              },
+                              value: selectedDropoffTerminalId,
+                              hint: Text('Choose Drop-off Terminal'),
+                              isExpanded: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Pickup Terminal Section
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0), // Space between dropdowns
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pickup Terminal', // Text label
+
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<int>(
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.grey, width: 1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              items: terminals.map((terminal) {
+                                return DropdownMenuItem<int>(
+                                  value: terminal['id'],
+                                  child: Text(terminal['name']),
+                                );
+                              }).toList(),
+                              onChanged: (selectedId) {
+                                setState(() {
+                                  selectedPickupTerminalId = selectedId;
+                                });
+                              },
+                              value: selectedPickupTerminalId,
+                              hint: Text('Choose Pickup Terminal'),
+                              isExpanded: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                items: terminals.map((terminal) {
-                  return DropdownMenuItem<int>(
-                    value: terminal['id'],
-                    child: Text(terminal['name']),
-                  );
-                }).toList(),
-                onChanged: (selectedId) {
-                  setState(() {
-                    selectedDropoffTerminalId = selectedId;
-                  });
-                  //print('Selected Drop-off Terminal ID: $selectedId');
-                },
-                value: selectedDropoffTerminalId,
-                hint: Text('Choose Drop-off Terminal'),
-                isExpanded: true,
-              ),
-              SizedBox(height: 16), // Spacing
-              // Pickup Terminal Dropdown
-              DropdownButtonFormField<int>(
-                decoration: InputDecoration(
-                  labelText: 'Select Pickup Terminal',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey, width: 1),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-                items: terminals.map((terminal) {
-                  return DropdownMenuItem<int>(
-                    value: terminal['id'],
-                    child: Text(terminal['name']),
-                  );
-                }).toList(),
-                onChanged: (selectedId) {
-                  setState(() {
-                    selectedPickupTerminalId = selectedId;
-                  });
-                  //print('Selected Pickup Terminal ID: $selectedId');
-                },
-                value: selectedPickupTerminalId,
-                hint: Text('Choose Pickup Terminal'),
-                isExpanded: true,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+
 }

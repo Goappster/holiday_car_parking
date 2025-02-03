@@ -24,17 +24,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? user;
   Future<void>? _userDataFuture;
   bool _isShimmerVisible = true;
+  Timer? _shimmerTimer;
 
   @override
   void initState() {
     super.initState();
     _userDataFuture = _loadUserData();
-    Timer(const Duration(seconds: 2), () {
+    _shimmerTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _isShimmerVisible = false;
       });
     });
   }
+
+  @override
+  void dispose() {
+    _shimmerTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -83,7 +84,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         title: Text('Vehicle Management '),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator())
           : RefreshIndicator(
               onRefresh: _fetchVehicles,
               child: ListView.builder(

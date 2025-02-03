@@ -1,12 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/screens/booking.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../services/api_service.dart';
-
+import 'package:intl/intl.dart';
 class ShowResultsScreen extends StatefulWidget {
   const ShowResultsScreen({super.key});
   @override
@@ -153,6 +154,11 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
     // Round the average rating and cast to int
     int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
+    DateTime startDateTime = DateTime.parse(startDate); // Convert String to DateTime
+    DateTime endDateTime = DateTime.parse(endDate);
+    // DateTime departureTime = DateTime.parse(startTime);
+    // DateTime returnTime = DateTime.parse(endTime);
+
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -188,6 +194,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 IconButton(
                   onPressed: () {
                     // Navigator.pushNamed(context, '/Booking');
+                    print(endTime);
                   },
                   icon: Icon(
                     Icons.edit,
@@ -199,29 +206,83 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
             const SizedBox(height: 8),
 
             // Date and Time Row
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today, color: Colors.blue),
-                      const SizedBox(width: 4),
-                      Text('$startDate\n$startTime'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today, color: Colors.green),
-                      const SizedBox(width: 4),
-                      Text('$endDate\n$endTime'),
-                    ],
-                  ),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: const Color(0xFF1D9DD9)
+                              .withOpacity(0.20)
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: SvgPicture.asset(
+                          'assets/map_blue.svg',
+                          // semanticsLabel: 'My SVG Image',
+                          // height: 10,
+                          // width: 10,
+                          // fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(DateFormat('dd/MM/yyyy').format(startDateTime)),
+                        Text(
+                          '$startTime',
+                          style: TextStyle(color: Colors.grey),  // Change the color here
+                        )
+                      ],
+                    ),
+
+                  ],
+                ),
+                SizedBox(width: 0),
+
+                Row(
+                  children: [
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: const Color(0xFF33D91D)
+                              .withOpacity(0.20)
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: SvgPicture.asset(
+                          'assets/map.svg',
+                          // semanticsLabel: 'My SVG Image',
+                          // height: 10,
+                          // width: 10,
+                          // fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(DateFormat('dd/MM/yyyy').format(endDateTime)),
+                        Text(
+                          endTime,
+                          style: TextStyle(color: Colors.grey),  // Change the color here
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            // const SizedBox(height: 8),
           ],
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:holidayscar/screens/booking_details_screen.dart';
 import 'package:holidayscar/screens/home.dart';
 import 'package:holidayscar/screens/login_screen.dart';
 import 'package:holidayscar/screens/my_booking.dart';
+import 'package:holidayscar/screens/paymetn_receipt.dart';
 import 'package:holidayscar/screens/profile_screen.dart';
 import 'package:holidayscar/screens/show_result_screeen.dart';
 import 'package:holidayscar/theme/app_theme.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
             '/MYBooking': (context) => MyBookingsScreen(),
+            '/PaymentReceipt': (context) => PaymentReceipt(),
           },
           onGenerateRoute: AppRoutes.generateRoute,
           theme: AppTheme.lightTheme,
