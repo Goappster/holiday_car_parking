@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/services/registration_api.dart';
+import 'package:intl_mobile_field/intl_mobile_field.dart';
 import '../widgets/text.dart';
 
 class RegistrationService {
@@ -73,13 +73,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   bool _passwordVisible = false;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController titleController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
 
   final RegistrationService _registrationService = RegistrationService();
+
+  final _formKey = GlobalKey<FormState>();
+
+  String? selectedTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -87,28 +89,31 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 50),
-              _buildLogo(),
-              const SizedBox(height: 40),
-              _buildTitle(),
-              const SizedBox(height: 20),
-              _buildNameFields(),
-              const SizedBox(height: 10),
-              _buildLastNameField(),
-              const SizedBox(height: 10),
-              _buildEmailField(),
-              const SizedBox(height: 10),
-              _buildPhoneNumberField(),
-              const SizedBox(height: 10),
-              _buildPasswordField(),
-              const SizedBox(height: 20),
-              _buildCreateAccountButton(),
-              const SizedBox(height: 20),
-              _buildLoginLink(),
-            ],
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 50),
+                _buildLogo(),
+                const SizedBox(height: 40),
+                _buildTitle(),
+                const SizedBox(height: 20),
+                _buildNameFields(),
+                const SizedBox(height: 10),
+                _buildLastNameField(),
+                const SizedBox(height: 10),
+                _buildEmailField(),
+                const SizedBox(height: 10),
+                _buildPhoneNumberField(),
+                const SizedBox(height: 10),
+                _buildPasswordField(),
+                const SizedBox(height: 20),
+                _buildCreateAccountButton(),
+                const SizedBox(height: 20),
+                _buildLoginLink(),
+              ],
+            ),
           ),
         ),
       ),
@@ -139,15 +144,67 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Widget _buildNameFields() {
+
+    late FocusNode _focusNode;
+    bool _isFocused = false;
+
+    @override
+    void initState() {
+      super.initState();
+      _focusNode = FocusNode();
+      _focusNode.addListener(() {
+        setState(() {
+          _isFocused = _focusNode.hasFocus;
+        });
+      });
+    }
+
+    @override
+    void dispose() {
+      _focusNode.dispose();
+      super.dispose();
+    }
+
+
     return Row(
       children: [
         Expanded(
-          child: CustomTextField(
-            label: 'Title',
-            hintText: 'Mr/Ms',
-            obscureText: false,
-            icon: Icons.person,
-            controller: titleController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Title',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.person,
+                    color: _isFocused ? Colors.red : Colors.grey,
+                  ),
+                ),
+                hint: Text("Select title"),
+                style: Theme.of(context).textTheme.labelLarge,
+                value: selectedTitle,
+                items: ['Mr', 'Ms', 'Mrs', 'Dr']
+                    .map((title) => DropdownMenuItem(
+                  value: title,
+                  child: Text(title),
+                ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedTitle = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a title';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 10),
@@ -158,6 +215,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             obscureText: false,
             icon: Icons.person,
             controller: firstNameController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your first name';
+              }
+              return null;
+            },
           ),
         ),
       ],
@@ -171,6 +234,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       obscureText: false,
       icon: Icons.email,
       controller: lastNameController,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your last name';
+        }
+        return null;
+      },
     );
   }
 
@@ -181,16 +250,52 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       obscureText: false,
       icon: Icons.email,
       controller: emailController,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your email';
+        }
+        if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
+          return 'Please enter a valid email';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildPhoneNumberField() {
-    return CustomTextField(
-      label: 'Phone Number',
-      hintText: 'Phone Number',
-      obscureText: false,
-      icon: Icons.phone,
-      controller: phoneNumberController,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Phone Number',
+          style: const TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+
+        IntlMobileField(
+          decoration: InputDecoration(
+            // labelText: 'Mobile Number',
+            hintText: 'Phone Number',
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.redAccent)
+            ),
+          ),
+          controller: phoneNumberController,
+          initialCountryCode: 'GB',
+          disableLengthCounter: true,
+          languageCode: "en",
+          validator: (value) {
+            if (value == null ) {
+              return 'Please enter your phone number';
+            }
+            if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(value as String)) {
+              return 'Please enter a valid phone number';
+            }
+            return null;
+          },
+        )
+      ],
     );
   }
 
@@ -211,6 +316,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           });
         },
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your password';
+        }
+        if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        return null;
+      },
     );
   }
 
@@ -223,15 +337,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         padding: const EdgeInsets.symmetric(vertical: 15),
       ),
       onPressed: () async {
-        await _registrationService.registerUser(
-          title: titleController.text,
-          firstName: firstNameController.text,
-          lastName: lastNameController.text,
-          phoneNumber: phoneNumberController.text,
-          email: emailController.text,
-          password: passwordController.text,
-          context: context,
-        );
+        if (_formKey.currentState!.validate()) {
+          await _registrationService.registerUser(
+            title: selectedTitle!,
+            firstName: firstNameController.text,
+            lastName: lastNameController.text,
+            phoneNumber: phoneNumberController.text,
+            email: emailController.text,
+            password: passwordController.text,
+            context: context,
+          );
+        }
       },
       child: const Text(
         'Create Account',

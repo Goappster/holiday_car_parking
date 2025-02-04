@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:holidayscar/screens/booking_confirmation.dart';
@@ -112,3 +113,58 @@ const _navBarItems = [
     label: 'Profile',
   ),
 ];
+
+
+// class Material3BottomNav extends StatefulWidget {
+//   const Material3BottomNav({super.key});
+//
+//   @override
+//   State<Material3BottomNav> createState() => _Material3BottomNavState();
+// }
+//
+// class _Material3BottomNavState extends State<Material3BottomNav> {
+//   int _selectedIndex = 0;
+//
+//   final List<Widget> _screens = [
+//     const HomeScreen(),
+//     MyBookingsScreen(),
+//     UserProfileScreen(),
+//   ];
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return CupertinoTabScaffold(
+//       tabBar: CupertinoTabBar(
+//         // activeColor: CupertinoColors.activeBlue,
+//         // inactiveColor: CupertinoColors.inactiveGray,
+//         currentIndex: _selectedIndex,
+//         onTap: (index) {
+//           setState(() {
+//             _selectedIndex = index;
+//           });
+//         },
+//         items: [
+//           BottomNavigationBarItem(
+//             icon: Icon(CupertinoIcons.home),
+//             label: 'Home',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(CupertinoIcons.car),
+//             label: 'Bookings',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(CupertinoIcons.person),
+//             label: 'Profile',
+//           ),
+//         ],
+//       ),
+//       tabBuilder: (context, index) {
+//         return CupertinoTabView(
+//           builder: (context) {
+//             return _screens[index];
+//           },
+//         );
+//       },
+//     );
+//   }
+// }

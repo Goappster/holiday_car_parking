@@ -63,24 +63,25 @@ class AppTheme {
     //   ),
     // ),
     inputDecorationTheme: InputDecorationTheme(
+      hintStyle: TextStyle(color: Colors.grey),
       // filled: true,
       // fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: Colors.grey),
       ),
-      // enabledBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: textSecondaryColor),
-      // ),
-      // focusedBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: primaryColor, width: 2),
-      // ),
-      // errorBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: errorColor),
-      // ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: textSecondaryColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: errorColor),
+      ),
       // contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -140,22 +141,23 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       // filled: true,
       // fillColor: darkSurfaceColor,
+      hintStyle: TextStyle(color: Colors.grey),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.redAccent)
       ),
-      // enabledBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: darkTextSecondaryColor),
-      // ),
-      // focusedBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: darkPrimaryColor, width: 2),
-      // ),
-      // errorBorder: OutlineInputBorder(
-      //   borderRadius: BorderRadius.circular(8),
-      //   borderSide: const BorderSide(color: errorColor),
-      // ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: darkTextSecondaryColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: darkPrimaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: errorColor),
+      ),
       // contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
     navigationBarTheme: NavigationBarThemeData(

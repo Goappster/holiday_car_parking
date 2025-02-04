@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/booking_api.dart';
 import '../widgets/text.dart';
@@ -134,6 +136,10 @@ class _BookingScreenState extends State<BookingScreen> {
 
   final TextEditingController emailController = TextEditingController();
 
+
+  final TextEditingController depFlightController = TextEditingController();
+  final TextEditingController arrivalFlightController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     double companyPrice = double.tryParse(widget.company['price'].toString()) ?? 0.0;
@@ -169,8 +175,8 @@ class _BookingScreenState extends State<BookingScreen> {
                     _buildAddVehicleButton(context),
                     _buildSectionTitle('Terminal Selections'),
                     _selectTerminal(),
-                    // _buildSectionTitle('Explore Additional Services'),
-                    // _buildAdditionalServices(context, companyPrice),
+                     // // _buildSectionTitle('Explore Additional Services'),
+                     // _buildAdditionalServices(context, companyPrice),
                     SizedBox(height: 16,),
                     _buildContinueButton(context, _selectedVehicle),
 
@@ -366,76 +372,100 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+
   void _showFlightDetailsForm(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      isDismissible: false,
       builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(labelText: 'Flight Number'),
-                onChanged: (value) {
-                  setState(() {
-                    _flightNumber = value;
-                  });
-                },
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Flight Name'),
-                onChanged: (value) {
-                  setState(() {
-                    _flightName = value;
-                  });
-                },
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration(labelText: 'Departure Time'),
-                      onTap: () async {
-                        final TimeOfDay? picked = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _departureTime = picked.format(context);
-                          });
-                        }
-                      },
-                    ),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Form(
+              key: _formKey,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: Text(
+                          'Add Flight Details',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Departure Flight',
+                        hintText: 'Enter Flight Number',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: depFlightController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Departure Flight Number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      CustomTextField(
+                        label: 'Arrival Flight',
+                        hintText: 'Enter Flight Number',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: arrivalFlightController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Arrival Flight Number';
+                          }
+                          return null;
+                        },
+                      ),
+                      // if (_promoState == "expired") promoCodeExpired(),
+                      // if (_promoState == "removed") promoCodeRemoved(),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          onPressed: () {
+
+                            if (_formKey.currentState!.validate()) {
+                              Navigator.maybePop(context);
+                            }
+                          },
+                          child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration(labelText: 'Arrival Time'),
-                      onTap: () async {
-                        final TimeOfDay? picked = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _arrivalTime = picked.format(context);
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Submit'),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -545,65 +575,6 @@ class _BookingScreenState extends State<BookingScreen> {
     });
   }
 
-  Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
-    return Row(
-      children: [
-        Row(
-          children: [
-            Checkbox(
-              value: _smsConfirmationSelected,
-              onChanged: (bool? value) {
-                setState(() {
-                  _smsConfirmationSelected = value ?? false;
-                  _updateTotalPrice();
-                });
-              },
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sms Confirmation',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '£${smsFees.toStringAsFixed(2)}', // Ensures two decimal places
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(width: 16), // Space between items
-        Row(
-          children: [
-            Checkbox(
-              value: _cancellationCoverSelected,
-              onChanged: (bool? value) {
-                setState(() {
-                  _cancellationCoverSelected = value ?? false;
-                  _updateTotalPrice();
-                });
-              },
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Cancellation Cover',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '£${cancellationFees.toStringAsFixed(2)}', // Correct price display
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildContinueButton(BuildContext context, Vehicle? vehicle) {
     return Padding(
@@ -613,7 +584,7 @@ class _BookingScreenState extends State<BookingScreen> {
         height: 50,
         child: ElevatedButton(
           onPressed: () {
-            if (vehicle != null) {
+            if (vehicle != null && selectedDropoffTerminalId != null && selectedPickupTerminalId != null) {
               Navigator.pushNamed(
                 context,
                 '/BookingDetails',
@@ -627,22 +598,29 @@ class _BookingScreenState extends State<BookingScreen> {
                   'totalDays': widget.totalDays,
                   'totalPrice': totalPrice,
                   'AirportId': widget.airportId,
-                  'cancellationCover': _cancellationCoverSelected ? 1.99 : null,
-                  'ConfirmationSelected': _smsConfirmationSelected ? 1.99 : null,
+                  'ArrivalFlightNo': arrivalFlightController.text,
+                  'DepartureFlightNo': depFlightController.text,
                   'registration': vehicle!.registration!,
                   'make': vehicle.make!,
                   'color': vehicle.color!,
                   'model': vehicle.model!,
+                  'deprTerminal': selectedDropoffTerminalId.toString(),
+                  'returnTerminal': selectedPickupTerminalId.toString(),
                 },
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Please select a vehicle to continue.'),
+                  content: Text(
+                    vehicle == null
+                        ? 'Please select a vehicle to continue.'
+                        : 'Please select both drop-off and pick-up terminals to continue.',
+                  ),
                   duration: Duration(seconds: 2),
                 ),
               );
             }
+
           },
           child: Text('Continue'),
         )

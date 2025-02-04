@@ -16,7 +16,7 @@ class BookingDatabase {
     final response = await http.post(
       Uri.parse('https://holidayscarparking.uk/api/bookingHistory'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_id': 25}),
+      body: jsonEncode({'user_id': 890}),
     );
 
     if (response.statusCode == 200) {
@@ -126,7 +126,7 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(16.0),
+      margin: EdgeInsets.only(left: 16.0, right: 16.0, top: 16, ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -143,7 +143,7 @@ class BookingCard extends StatelessWidget {
                         height: 48,
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: AssetImage('assets/images/purple.png'),
+                            image: NetworkImage(booking.companyLogo),
                             fit: BoxFit.cover,
                           ),
                           borderRadius: BorderRadius.circular(8.0),

@@ -270,7 +270,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                             height: 50.0,
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(50),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ));
                     } else if (snapshot.hasError) {
@@ -285,17 +285,38 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         //   orElse: () => airports.isNotEmpty ? airports[0] : {'id': 0, 'name': 'Unknown'}, // Ensures a valid fallback
                         // ),
                         // value: airports.isNotEmpty ? airports[0] : null,
+                        // decoration: InputDecoration(
+                        //   // hintText: 'Select Airport',
+                        //   // labelText: 'Select Airport',
+                        //   hintText: 'Select Airport',
+                        //   //
+                        //   border: OutlineInputBorder(
+                        //     borderRadius: BorderRadius.circular(50),
+                        //     borderSide: const BorderSide(
+                        //       color: Colors.grey,
+                        //       width: 1,
+                        //     ),
+                        //   ),
+                        // ),
+
                         decoration: InputDecoration(
-                          // hintText: 'Select Airport',
-                          labelText: 'Select Airport',
+                          prefixIcon: Icon(Icons.person,
+                            color:  Colors.red,
+                          ),
                           border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50), // Rounded corners
+                          ),
+                          enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(50),
-                            borderSide: const BorderSide(
-                              color: Colors.grey,
-                              width: 1,
-                            ),
+                            // borderSide: BorderSide(color: Colors.grey, width: 1.0), // Default border
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            // borderSide: BorderSide(color: Colors.blue, width: 2.0), // When focused
                           ),
                         ),
+                        hint: Text("Select title",style: Theme.of(context).textTheme.titleMedium,),
+
                         items: airports.map((airport) {
                           return DropdownMenuItem<Map<String, dynamic>>(
                             value: airport,
@@ -455,7 +476,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         },
                       );
                     },
-
                     child: const Text('Find Parking'),
                   ),
                 ),

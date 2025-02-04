@@ -1,7 +1,6 @@
 // Custom Text Field Widget
 import 'package:flutter/material.dart';
 
-
 class CustomTextField extends StatefulWidget {
   final String label;
   final String hintText;
@@ -9,6 +8,7 @@ class CustomTextField extends StatefulWidget {
   final IconData icon;
   final Widget? suffixIcon;
   final TextEditingController controller;
+  final String? Function(String?)? validator;
 
   const CustomTextField({
     required this.label,
@@ -17,6 +17,7 @@ class CustomTextField extends StatefulWidget {
     required this.icon,
     required this.controller,
     this.suffixIcon,
+    this.validator,
   });
 
   @override
@@ -54,26 +55,28 @@ class _CustomTextFieldState extends State<CustomTextField> {
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           focusNode: _focusNode,
           controller: widget.controller,
           obscureText: widget.obscureText,
           decoration: InputDecoration(
             hintText: widget.hintText,
+            hintStyle: TextStyle(color: Colors.grey),
             prefixIcon: Icon(
               widget.icon,
               color: _isFocused ? Colors.red : Colors.grey, // Change icon color
             ),
             suffixIcon: widget.suffixIcon,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Colors.redAccent)
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.red), // Focused border color
-              borderRadius: BorderRadius.circular(10),
-            ),
+            // border: OutlineInputBorder(
+            //   borderRadius: BorderRadius.circular(10),
+            //     borderSide: const BorderSide(color: Colors.redAccent)
+            // ),
+            // focusedBorder: OutlineInputBorder(
+            //   borderSide: const BorderSide(color: Colors.red), // Focused border color
+            //   borderRadius: BorderRadius.circular(10),
+            // ),
           ),
+          validator: widget.validator, // Use validator
         ),
       ],
     );

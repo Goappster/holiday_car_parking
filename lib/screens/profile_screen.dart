@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/screens/app_setting.dart';
@@ -136,18 +137,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       title: const Text('Logout'),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () async {
-                        bool? confirmLogout = await showDialog(
+                        bool? confirmLogout = await showCupertinoDialog<bool>(
                           context: context,
                           builder: (BuildContext context) {
-                            return AlertDialog(
+                            return CupertinoAlertDialog(
                               title: const Text('Confirm Logout'),
                               content: const Text('Are you sure you want to logout?'),
                               actions: [
-                                TextButton(
+                                CupertinoDialogAction(
                                   onPressed: () => Navigator.of(context).pop(false),
                                   child: const Text('Cancel'),
                                 ),
-                                TextButton(
+                                CupertinoDialogAction(
                                   onPressed: () => Navigator.of(context).pop(true),
                                   child: const Text('Logout'),
                                 ),

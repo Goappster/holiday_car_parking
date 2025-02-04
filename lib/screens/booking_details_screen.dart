@@ -1,18 +1,15 @@
 import 'dart:convert';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_dashed_line/dotted_dashed_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart'as Material;
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http ;
 
-import 'booking_confirmation.dart';
 import '../widgets/company_logo_widget.dart';
 import '../widgets/company_details_widget.dart';
-import '../widgets/info_column_widget.dart';
-import '../services/payment_service.dart';
-
+import 'package:intl/intl.dart';
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;
   const BookingDetailsScreen({super.key, });
@@ -26,15 +23,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Map<String, dynamic>? paymentIntent;
 
   String? savedReferenceNo;
-  late PaymentService paymentService;
+
   // @override
   // void initState() {
   //   super.initState();
   //
   // }
 
-  late var confirmationSelected;
-  late var cancellationCover;
+  late var ArrivalFlightNo;
+  late var DepartureFlightNo;
   late var company;
   late var airportId;
   late var airportName;
@@ -43,24 +40,40 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   late var startTime;
   late var endTime;
   late var  totalDays;
+  late var  returnTerminal;
+  late var  deprTerminal;
   late double bookingPrice;
   late double totalPrice;
+   // Add this variable
   late String registration; late String make; late String color; late String model;
+
+  double smsFees = 1.99;
+  double cancellationFees = 1.99;
+  double bookingFees = 1.99;
+
+  bool _smsConfirmationSelected = false;
+  bool _cancellationCoverSelected = false;
+
+
+     // Ensure updatedTotal is initialized with the base totalPrice
+    // if (_smsConfirmationSelected) baseTotalPrice += smsFees;
+    // if (_cancellationCoverSelected) baseTotalPrice += cancellationFees;
+
+
 
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    paymentService = PaymentService('sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc');
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    confirmationSelected = args['ConfirmationSelected'];
-    cancellationCover = args['cancellationCover'];
+    ArrivalFlightNo = args['ArrivalFlightNo'];
+    DepartureFlightNo = args['DepartureFlightNo'];
     company = args['company'];
     airportId = args['AirportId'];
     airportName = args['AirportName'];
@@ -69,9 +82,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     startTime = args['startTime'];
     endTime = args['endTime'];
     totalDays = args['totalDays'];
-    bookingPrice = (args['totalPrice'] as num).toDouble();
-    totalPrice = bookingPrice + 1.99;
+    bookingPrice = args['totalPrice'];
+    totalPrice = bookingPrice + calculateTotalFees();
+    // baseTotalPrice = bookingPrice; // Initialize baseTotalPrice here
     registration = args['registration']; make = args['make']; color = args['color']; model = args['model'];
+    deprTerminal = args['deprTerminal'];
+    returnTerminal = args['returnTerminal'];
+
 
   }
 
@@ -85,10 +102,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       }
     });
   }
-
-
   @override
   Widget build(BuildContext context) {
+    DateTime startDateTime = DateTime.parse(startDate); // Convert String to DateTime
+    DateTime endDateTime = DateTime.parse(endDate);
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -98,7 +115,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             Navigator.pop(context);
           },
         ),
-        title:   Text('Booking Details $registration $make $model $color'),
+        title:   Text('Booking Details $deprTerminal $returnTerminal'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -144,48 +161,187 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ],
               ),
               const SizedBox(height: 22,),
-              Material.Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CompanyLogoWidget(company: company),
-                          const SizedBox(width: 10),
-                          CompanyDetailsWidget(company: company),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          InfoColumnWidget(icon: Icons.local_shipping, title: 'Drop-Off',
-                              value: '$startDate at $startTime'),
-                          InfoColumnWidget(icon: Icons.calendar_today, title: 'Return',
-                              value: '$endDate at $endTime'),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          InfoColumnWidget(icon: Icons.attach_money, title: 'Booking Price',
-                              value: '£${bookingPrice.toStringAsFixed(2)}'),
-                          InfoColumnWidget(icon: Icons.percent, title: 'Booking Fee', value: '1.99'),
-                        ],
-                      ),
-                    ],
+              SizedBox(
+                width: double.infinity,
+                child: Material.Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CompanyLogoWidget(company: company),
+                            const SizedBox(width: 10),
+                            CompanyDetailsWidget(company: company),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Drop-Off Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
+                                Row(
+                                  children: [
+                                    Container(
+                                      height: 32,
+                                      width: 32,
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(5),
+                                          color: const Color(0xFF1D9DD9)
+                                              .withOpacity(0.20)
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: SvgPicture.asset(
+                                          'assets/map_blue.svg',
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(DateFormat('dd/MM/yyyy').format(startDateTime)),
+                                        Text(
+                                          '$startTime',
+                                          style: TextStyle(color: Colors.grey),  // Change the color here
+                                        )
+                                      ],
+                                    ),
+
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(width: 0),
+
+                            Column(
+
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Return Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
+                                Row(
+                                  children: [
+                                    Container(
+                                      height: 32,
+                                      width: 32,
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(5),
+                                          color: const Color(0xFF33D91D)
+                                              .withOpacity(0.20)
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: SvgPicture.asset(
+                                          'assets/map.svg',
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 5),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(DateFormat('dd/MM/yyyy').format(endDateTime)),
+                                        Text(
+                                          "at $endTime",
+                                          style: TextStyle(color: Colors.grey, ),  // Change the color here
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: const Color(0xFFB11DB4)
+                                          .withOpacity(0.20)
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: SvgPicture.asset(
+                                      'assets/booking_price.svg',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Booking Price'),
+                                    Text(
+                                      '£$bookingPrice',
+                                      style: TextStyle(color: Colors.grey),  // Change the color here
+                                    )
+                                  ],
+                                ),
+
+                              ],
+                            ),
+                            SizedBox(width: 0),
+
+                            Row(
+                              children: [
+                                Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: const Color(0xFFED1C24)
+                                          .withOpacity(0.20)
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: SvgPicture.asset(
+                                      'assets/booking_fee.svg',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Booking Fee'),
+                                    Text(
+                                      '£1.99',
+                                      style: TextStyle(color: Colors.grey),  // Change the color here
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              // const SizedBox(height: 12),
+               _buildSectionTitle('Explore Additional Services'),
+              _buildAdditionalServices(context, totalPrice),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
                   _showBottomSheet(context);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
-                 // saveIncompleteBooking();
+                saveIncompleteBooking();
+                  postBookingData(totalPrice.toString(), '1233333');
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -199,21 +355,146 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
+
+  Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
+    return Row(
+      children: [
+        Row(
+          children: [
+            Checkbox(
+              value: _smsConfirmationSelected,
+              onChanged: (bool? value) {
+                setState(() {
+                  _smsConfirmationSelected = value ?? false;
+                  _updateTotalPrice();
+                });
+              },
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sms Confirmation',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '£${smsFees.toStringAsFixed(2)}', // Ensures two decimal places
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(width: 16), // Space between items
+        Row(
+          children: [
+            Checkbox(
+              value: _cancellationCoverSelected,
+              onChanged: (bool? value) {
+                setState(() {
+                  _cancellationCoverSelected = value ?? false;
+                  _updateTotalPrice();
+                });
+              },
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Cancellation Cover',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '£${cancellationFees.toStringAsFixed(2)}', // Correct price display
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
     try {
-      var paymentIntent = await paymentService.createPaymentIntent(price, 'GBP');
-      if (paymentIntent == null) {
-        throw Exception("Failed to create payment intent");
-      }
-      await paymentService.displayPaymentSheet(context, paymentIntent);
+      paymentIntent = await createPaymentIntent(price, 'GBP');
+
+        String paymentIntentId = paymentIntent!['id'];
+
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: paymentIntent!['client_secret'],
+            merchantDisplayName: 'Holiday Car Parking',
+            googlePay: const PaymentSheetGooglePay(
+              testEnv: true,
+              currencyCode: 'GBP',
+              merchantCountryCode: 'GB',
+            ),
+          ),
+        );
+
+        await displayPaymentSheet(context, price, paymentIntentId); // Pass intent ID
+
     } catch (e) {
-      // Handle payment exception
+      print("Exception: $e");
     }
   }
 
-  Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
-    return paymentService.createPaymentIntent(amount, currency);
+
+  displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
+    try {
+      await Stripe.instance.presentPaymentSheet();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Paid successfully")),
+      );
+
+      // Call postBookingData after successful payment
+      await postBookingData(price, paymentIntentId);
+
+      paymentIntent = null;
+    } on StripeException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Payment Cancelled")),
+      );
+    }
   }
+
+
+  createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': (double.parse(amount) * 100).round().toString(),
+        'currency': currency,
+        'payment_method_types[]': 'card',
+        // 'automatic_payment_methods[enabled]': 'true',
+      };
+      var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
+      var response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        headers: {
+          'Authorization': 'Bearer $secretKey',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body,
+      );
+      return jsonDecode(response.body);
+    } catch (err) {
+      //print('Error: ${err.toString()}');
+    }
+  }
+
 
   Future<void> postBookingData(String price, String _paymentIntentId) async {
     final url = Uri.parse('https://holidayscarparking.uk/api/booking');
@@ -228,27 +509,26 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           'last_name': '${user?['last_name']}',
           'email': '${user?['email']}',
           'contactno': '${user?['phone_number']}',
-          'deprTerminal': '509',
-          'deptFlight': 'ASD124',
-          'returnTerminal': '510',
-          'returnFlight': 'ASD125',
+          'deprTerminal': deprTerminal,
+          'deptFlight': '$DepartureFlightNo',
+          'returnTerminal': returnTerminal,
+          'returnFlight': '$ArrivalFlightNo',
           'model': model,
           'color': color,
           'make': make,
           'registration': registration,
           'payment_status': 'success',
           'booking_amount': '$bookingPrice',
-          'cancelfee': '4.99',
-          'smsfee': '1.99',
-          'booking_fee': '1.99',
+          'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
+          'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
+          'booking_fee': '$bookingFees',
           'discount_amount': '6.52',
           'total_amount': price,
-          'intent_id': _paymentIntentId,
+          'intent_id': '11111111111111111',
         },
       );
-
       if (response.statusCode == 200) {
-        // //print('Booking successful: ${response.body}');
+       print('Booking successful: ${response.body}');
         Navigator.pushNamed(context, '/PaymentConfirm',
           arguments: {
             'company': company,
@@ -260,10 +540,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           },
         );
       } else {
-        // //print('Failed to book: ${response.reasonPhrase}');
+       print('Failed to book: ${response.reasonPhrase}');
       }
     } catch (e) {
-      // //print('Error occurred while posting booking data: $e');
+      print('Error occurred while posting booking data: $e');
     }
   }
 
@@ -289,7 +569,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         'product_code': '${company['product_code']}',
         'park_api': '${company['park_api']}',
         'booking_amount': '$bookingPrice',
-        'booking_fee': '1.99',
+        'booking_fee': '$bookingFees',
         'discount_amount': '4.29',
         'total_amount': '${bookingPrice + 1.99}',
         'promo': 'HCP-APP-OXT78U',
@@ -388,17 +668,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Container(
-                decoration: const BoxDecoration(
-                  // color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -424,7 +693,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: _promoController,
-                      autofocus: true,
+                      autofocus: false,
                       decoration: InputDecoration(
                         hintText: "Promo code",
                         labelStyle: const TextStyle(color: Colors.black54),
@@ -480,9 +749,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.maybePop(context);
-                          saveCardAndMakePayment(context, totalPrice.toString());
+                          await  saveCardAndMakePayment(context, totalPrice.toString());
                         },
                         child: const Text("Proceed to Payment", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
@@ -578,5 +847,24 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ],
       ),
     );
+  }
+
+  double calculateTotalFees() {
+    double total = 0.0;
+    if (_smsConfirmationSelected) {
+      total += smsFees;
+    }
+    if (_cancellationCoverSelected) {
+      total += cancellationFees;
+    }
+    // Assuming booking fees are always applied
+    total += bookingFees;
+    return total;
+  }
+
+  void _updateTotalPrice() {
+    setState(() {
+      totalPrice = bookingPrice + calculateTotalFees();
+    });
   }
 }

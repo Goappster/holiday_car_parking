@@ -154,8 +154,23 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
     // Round the average rating and cast to int
     int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
-    DateTime startDateTime = DateTime.parse(startDate); // Convert String to DateTime
-    DateTime endDateTime = DateTime.parse(endDate);
+    // DateTime startDateTime;
+    // DateTime endDateTime;
+    //
+    // try {
+    //   startDateTime = DateTime.parse(startDate);
+    // } catch (e) {
+    //   debugPrint('Error parsing startDate: $startDate, Error: $e');
+    //   startDateTime = DateTime.now(); // Provide default value
+    // }
+    //
+    // try {
+    //   endDateTime = DateTime.parse(endDate);
+    // } catch (e) {
+    //   debugPrint('Error parsing endDate: $endDate, Error: $e');
+    //   endDateTime = DateTime.now(); // Provide default value
+    // }
+
     // DateTime departureTime = DateTime.parse(startTime);
     // DateTime returnTime = DateTime.parse(endTime);
 
@@ -234,7 +249,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(DateFormat('dd/MM/yyyy').format(startDateTime)),
+                        Text(startDate),
                         Text(
                           '$startTime',
                           style: TextStyle(color: Colors.grey),  // Change the color here
@@ -271,7 +286,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(DateFormat('dd/MM/yyyy').format(endDateTime)),
+                        Text(endDate),
                         Text(
                           endTime,
                           style: TextStyle(color: Colors.grey),  // Change the color here

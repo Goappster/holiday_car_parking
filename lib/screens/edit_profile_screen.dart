@@ -228,7 +228,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Title',
+                  'Phone Number',
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 8),
