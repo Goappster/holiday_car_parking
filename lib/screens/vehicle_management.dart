@@ -1,10 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 import '../widgets/text.dart';
 
@@ -36,7 +37,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         try {
           user = json.decode(userData);
         } catch (e) {
-          //print("Failed to parse user data: $e");
+          debugPrint("Failed to parse user data: $e");
           user = null;
         }
       }
@@ -49,7 +50,6 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      //print('Error: User data is not available.');
     }
   }
 
@@ -58,7 +58,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      //print('Error: User ID is null.');
+      debugPrint('Error: User ID is null.');
       return;
     }
 
@@ -72,15 +72,15 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      //print('Error fetching vehicles: $e');
+      debugPrint('Error fetching vehicles: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text('Vehicle Management '),
       ),
       body: _isLoading
@@ -96,7 +96,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                       _onVehicleSelected(index);
                     },
                     child: Padding(
-                      padding:  const EdgeInsets.only(left: 8.0, right: 8.0),
+                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                       child: Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -105,20 +105,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                           padding: const EdgeInsets.all(12.0),
                           child: Row(
                             children: [
-                              Container(
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Theme
-                                          .of(context)
-                                          .primaryColor
-                                          .withOpacity(0.20)
-                                  ),
-                                  child: Icon(MingCute.car_3_line, color: Theme
-                                      .of(context)
-                                      .primaryColor, size: 35,)
-                              ),
+                              Image.asset('assets/images/car.png', width: 50, height: 50, fit: BoxFit.cover,),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
@@ -126,16 +113,11 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                                   children: [
                                     Text(
                                       '${vehicle['make']}',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
                                       '${vehicle['registration']}',
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
+                                      style: const TextStyle(color: Colors.grey),
                                     ),
                                     const SizedBox(height: 8),
                                     Row(
@@ -145,47 +127,45 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                                             width: 32,
                                             decoration: BoxDecoration(
                                                 borderRadius: BorderRadius.circular(5),
-                                                color: const Color(0xFF1D9DD9)
-                                                    .withOpacity(0.20)
-                                            ),
+                                                color: const Color(0xFF1D9DD9).withOpacity(0.20)),
                                             child: Padding(
                                               padding: const EdgeInsets.all(4.0),
                                               child: SvgPicture.asset(
                                                 'assets/color.svg',
-                                                // semanticsLabel: 'My SVG Image',
-                                                // height: 10,
-                                                // width: 10,
-                                                // fit: BoxFit.fill,
                                               ),
-                                            ),
-                                        ),
+                                            )),
                                         const SizedBox(width: 6),
                                         Column(
-                                          // mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('Color',style: Theme.of(context).textTheme.labelSmall ),
+                                            Text('Color', style: Theme.of(context).textTheme.labelSmall),
                                             const SizedBox(width: 2),
                                             Text('${vehicle['color']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
                                           ],
                                         ),
                                         const Spacer(),
-                                        SvgPicture.asset(
-                                          'assets/model_no.svg',
-                                          // semanticsLabel: 'My SVG Image',
-                                          height: 30,
+                                        Container(
+                                          height: 32,
+                                          width: 32,
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(5),
+                                              color: const Color(0xFF33D91D).withOpacity(0.20)),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: SvgPicture.asset(
+                                              'assets/model.no.svg',
+                                            ),
+                                          ),
                                         ),
                                         const SizedBox(width: 6),
                                         Column(
-                                          // mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('Model No',style: Theme.of(context).textTheme.labelSmall ),
+                                            Text('Model No', style: Theme.of(context).textTheme.labelSmall),
                                             const SizedBox(width: 2),
                                             Text('${vehicle['model']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
                                           ],
                                         ),
-                    
                                       ],
                                     ),
                                   ],
@@ -194,7 +174,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                               IconButton(
                                 icon: const Icon(Icons.edit),
                                 onPressed: () {
-                                  // Handle edit action
+                                  _updateVehicle(context, '${vehicle['registration']}', '${vehicle['make']}', '${vehicle['model']}', '${vehicle['color']}', '${vehicle['id']}');
                                 },
                               ),
                             ],
@@ -207,124 +187,443 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-       shape: const CircleBorder(),
+        shape: const CircleBorder(),
         onPressed: () {
           _showVehicle(context);
         },
-        child: const Icon(Icons.add, color: Colors.white,),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+
+  void _updateVehicle(BuildContext context, String regNo, String make, String model, String color, String vehId) {
+    final _formKey = GlobalKey<FormState>();
+    final registrationController = TextEditingController(text: regNo);
+    final makeController = TextEditingController(text: make);
+    final modelController = TextEditingController(text: model);
+    final colorController = TextEditingController(text: color);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Form(
+              key: _formKey,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: Text(
+                          'Update Vehicles Details',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Vehicle Registration',
+                        hintText: 'ABC123',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: registrationController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Vehicle Registration Number';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 10),
+                      CustomTextField(
+                        label: 'Vehicle Make',
+                        hintText: 'Japan Motors',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: makeController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Vehicle Make Company';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Vehicle Model',
+                              hintText: '2019',
+                              obscureText: false,
+                              icon: Icons.person,
+                              controller: modelController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your Vehicle Model';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10), // Space between the fields
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Vehicle Color',
+                              hintText: 'Black',
+                              obscureText: false,
+                              icon: Icons.person,
+                              controller: colorController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your Vehicle Color';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Please enter your Vehicles, Registrations, Model, and color details.',
+                        style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              Navigator.pop(context);
+                              await _updateVehicleApi(registrationController.text, makeController.text, modelController.text, colorController.text, vehId);
+                            }
+                          },
+                          child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   void _onVehicleSelected(int index) {
     final selectedVehicle = _vehicles[index];
-    // // Perform actions with the selected vehicle
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => VehicleDetailScreen(vehicle: selectedVehicle),
-    //   ),
-    // );
+    // Perform actions with the selected vehicle
   }
 
-
-
   void _showVehicle(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
+    final registrationController = TextEditingController();
+    final makeController = TextEditingController();
+    final modelController = TextEditingController();
+    final colorController = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
       builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.60,
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text('Add Vehicle Details', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  CustomTextField(
-                    label: 'Vehicle Make',
-                    hintText: 'Japan Motors',
-                    obscureText: false,
-                    icon: Icons.person,
-                    controller: TextEditingController(),
-                  ),
-                  CustomTextField(
-                    label: 'Vehicle Make',
-                    hintText: 'Japan Motors',
-                    obscureText: false,
-                    icon: Icons.person,
-                    controller: TextEditingController(),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Vehicle Color',
-                          hintText: 'Black',
-                          obscureText: false,
-                          icon: Icons.person,
-                          controller: TextEditingController(),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Form(
+              key: _formKey,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 10), // Space between the fields
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Vehicle Model',
-                          hintText: '2019',
-                          obscureText: false,
-                          icon: Icons.person,
-                          controller: TextEditingController(),
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: Text(
+                          'Add Your Vehicles',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Vehicle Registration',
+                        hintText: 'ABC123',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: registrationController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Vehicle Registration Number';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 10),
+                      CustomTextField(
+                        label: 'Vehicle Make',
+                        hintText: 'Japan Motors',
+                        obscureText: false,
+                        icon: Icons.person,
+                        controller: makeController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Vehicle Make Company';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Vehicle Model',
+                              hintText: '2019',
+                              obscureText: false,
+                              icon: Icons.person,
+                              controller: modelController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your Vehicle Model';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10), // Space between the fields
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Vehicle Color',
+                              hintText: 'Black',
+                              obscureText: false,
+                              icon: Icons.person,
+                              controller: colorController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your Vehicle Color';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Please enter your Vehicles, Registrations, Model, and color details.',
+                        style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              Navigator.pop(context);
+                              await _addVehicle(
+                                registrationController.text,
+                                makeController.text,
+                                modelController.text,
+                                colorController.text,
+                                '${user?['id']}',
+                              );
+                            }
+                          },
+                          child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Please enter your email address, first name, and last name to enable the mobile number field.',
-                    style: TextStyle(fontSize: 12.0, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-                      _buildButton(context, 'Add Vehicle', Colors.red, Colors.white),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
-  Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
-    return ElevatedButton(
-      onPressed: () {
-        // Navigator.pushNamed(context, 'BookingDetails');
+
+  Future<void> _addVehicle(String registration, String make, String model, String color, String userId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CupertinoActivityIndicator());
       },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor,
-        minimumSize: const Size(150, 40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          side: const BorderSide(color: Colors.red),
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor),
-      ),
     );
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://holidayscarparking.uk/api/addVehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'registration': registration,
+          'make': make,
+          'model': model,
+          'color': color,
+          'user_id': userId,
+        }),
+      );
+
+      Navigator.of(context).pop(); // Close the loading dialog
+
+      if (response.statusCode == 200) {
+        _fetchVehicles();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: const Text('Vehicle has been added'),
+              content: const Text(
+                'You have successfully added a vehicle to your list.',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    // Refresh the list after closing the dialog
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        debugPrint(response.body);
+        _showErrorDialog('Failed to add vehicle. Please try again.');
+      }
+    } catch (e) {
+      debugPrint('$e');
+      Navigator.of(context).pop(); // Close the loading dialog
+      _showErrorDialog('An error occurred. Please check your connection.');
+    }
   }
 
+  Future<void> _updateVehicleApi(String registration, String make, String model, String color, String vehId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CupertinoActivityIndicator());
+      },
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://holidayscarparking.uk/api/updateVehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'vehId': vehId,
+          'make': make,
+          'model': model,
+          'color': color,
+          'registration': registration,
+        }),
+      );
+
+      Navigator.of(context).pop(); // Close the loading dialog
+
+      if (response.statusCode == 200) {
+        _fetchVehicles();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: const Text('Vehicle details has been Updated'),
+              content: const Text(
+                'You have successfully Updated your vehicle details.',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _fetchVehicles(); // Refresh the list after closing the dialog
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        debugPrint(response.body);
+        _showErrorDialog('Failed to add vehicle. Please try again.');
+      }
+    } catch (e) {
+      debugPrint('$e');
+      Navigator.of(context).pop(); // Close the loading dialog
+      _showErrorDialog('An error occurred. Please check your connection.');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('❌ Error'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
@@ -347,53 +646,7 @@ Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
       throw Exception('Failed to load vehicles: ${response.statusCode}');
     }
   } catch (e) {
-    //print('Error fetching vehicles: $e');
+    debugPrint('Error fetching vehicles: $e');
     return [];
-  }
-}
-
-
-class AddVehicleForm extends StatelessWidget {
-  const AddVehicleForm({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const TextField(
-            decoration: InputDecoration(labelText: 'Vehicle Registration'),
-          ),
-          const TextField(
-            decoration: InputDecoration(labelText: 'Vehicle Make'),
-          ),
-          const TextField(
-            decoration: InputDecoration(labelText: 'Vehicle Color'),
-          ),
-          const TextField(
-            decoration: InputDecoration(labelText: 'Vehicle Model'),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Handle add vehicle action
-                },
-                child: const Text('Add Vehicle'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }

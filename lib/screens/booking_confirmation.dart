@@ -57,8 +57,7 @@ class _BookingConfirmationState extends State<BookingConfirmation> {
     endDate = args['endDate'];
     startTime = args['startTime'];
     endTime = args['endTime'];
-    endTimsavedReferenceNoe = args['endTimsavedReferenceNoe'];
-
+    endTimsavedReferenceNoe = args['referenceNo'];
     bookingPrice = (args['totalPrice'] as num).toDouble();
   }
 
@@ -115,20 +114,20 @@ class _BookingConfirmationState extends State<BookingConfirmation> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '£${bookingPrice.toStringAsFixed(2)}',
+                    '£${bookingPrice.toStringAsFixed(2)?? ''}  ',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.w700, color: Colors.green),
                   ),
                   const SizedBox(height: 16),
                   ListTile(
                     leading: _buildCompanyLogo(company),
-                    title:  Text('${company['name']}'),
-                    subtitle: Text('${company['parking_type']}'),
+                    title:  Text('${company['name']?? ''}'),
+                    subtitle: Text('${company['parking_type']?? ''}'),
                   ),
                   DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
                   ListTile(
                     title: Text('Drop-Off'),
-                    trailing: Text('$startDate at $startTime'),
+                    trailing: Text('${startDate?? ''} at $startTime'),
                   ),
                   ListTile(
                     title: Text('Return'),

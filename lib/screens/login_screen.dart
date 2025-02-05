@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => Center(
         child: Container(
           width: 80.0,
@@ -63,22 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
       // _showErrorDialog('Login failed. Please check your credentials.');
     }
   }
-
-  // void _showErrorDialog(String message) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Error'),
-  //       content: Text(message),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(),
-  //           child: const Text('OK'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
@@ -192,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // TODO: Implement forgot password functionality
+                       Navigator.pushNamed(context, AppRoutes.forgetPass);
                       },
                       child: const Text('Forget Password?'),
                     ),
@@ -202,11 +187,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Login Button
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    // shape: RoundedRectangleBorder(
+                    //   borderRadius: BorderRadius.circular(10),
+                    // ),
+
                   ),
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {

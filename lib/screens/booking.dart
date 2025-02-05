@@ -198,8 +198,6 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget _selectTerminal() {
-
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -543,29 +541,34 @@ class _BookingScreenState extends State<BookingScreen> {
     // Fetch vehicles from your data source
     List vehiclesData = await fetchVehiclesByCustomer('${user?['id']}'); // Replace with actual user ID
     List<Vehicle> vehicles = vehiclesData.map((data) => Vehicle.fromMap(data)).toList();
-    showDialog(
+    showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Select a Vehicle'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: vehicles.length,
-              itemBuilder: (context, index) {
-                final vehicle = vehicles[index];
-                return ListTile(
-                  title: Text('Make: ${vehicle.make}'),
-                  subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}, registration: ${vehicle.registration}'),
-                  onTap: () {
-                    _onVehicleSelected(vehicle);
-                    // Navigator.pop(context);
-                  },
-                );
+          content: ListView.builder(
+            shrinkWrap: true,
+            itemCount: vehicles.length,
+            itemBuilder: (context, index) {
+              final vehicle = vehicles[index];
+              return ListTile(
+                title: Text('Make: ${vehicle.make}'),
+                subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}, registration: ${vehicle.registration}'),
+                onTap: () {
+                  _onVehicleSelected(vehicle);
+                  // Navigator.pop(context);
+                },
+              );
+            },
+          ),
+          actions: <Widget>[
+            CupertinoDialogAction(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context);
               },
             ),
-          ),
+          ],
         );
       },
     ).then((selectedVehicle) {

@@ -341,7 +341,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   _showBottomSheet(context);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
                 saveIncompleteBooking();
-                  postBookingData(totalPrice.toString(), '1233333');
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -430,39 +429,45 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     try {
       paymentIntent = await createPaymentIntent(price, 'GBP');
 
-        String paymentIntentId = paymentIntent!['id'];
+      if (paymentIntent == null) {
+        throw Exception("Failed to create payment intent");
+      }
 
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: paymentIntent!['client_secret'],
-            merchantDisplayName: 'Holiday Car Parking',
-            googlePay: const PaymentSheetGooglePay(
-              testEnv: true,
-              currencyCode: 'GBP',
-              merchantCountryCode: 'GB',
-            ),
+      String paymentIntentId = paymentIntent!['id'];
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntent!['client_secret'],
+          merchantDisplayName: 'Holiday Car Parking',
+          googlePay: const PaymentSheetGooglePay(
+            testEnv: true,
+            currencyCode: 'GBP',
+            merchantCountryCode: 'GB',
           ),
-        );
+        ),
+      );
 
-        await displayPaymentSheet(context, price, paymentIntentId); // Pass intent ID
+      await displayPaymentSheet(context, price, paymentIntentId);
 
     } catch (e) {
       print("Exception: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
   }
 
-
-  displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
+  Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
     try {
       await Stripe.instance.presentPaymentSheet();
+    // Call postBookingData after successful payment
+      await postBookingData(price, paymentIntentId);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Paid successfully")),
       );
 
-      // Call postBookingData after successful payment
-      await postBookingData(price, paymentIntentId);
-
+  
       paymentIntent = null;
     } on StripeException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -471,65 +476,81 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
-
-  createPaymentIntent(String amount, String currency) async {
+  Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
     try {
       Map<String, dynamic> body = {
         'amount': (double.parse(amount) * 100).round().toString(),
         'currency': currency,
         'payment_method_types[]': 'card',
-        // 'automatic_payment_methods[enabled]': 'true',
       };
+
       var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
       var response = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
         headers: {
           'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: body,
       );
-      return jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print("Stripe API Error: ${response.body}");
+        return null;
+      }
     } catch (err) {
-      //print('Error: ${err.toString()}');
+      print('Error: ${err.toString()}');
+      return null;
     }
   }
 
-
-  Future<void> postBookingData(String price, String _paymentIntentId) async {
+  Future<void> postBookingData(String price, String paymentIntentId) async {
     final url = Uri.parse('https://holidayscarparking.uk/api/booking');
+
+    Map<String, String> bookingData = {
+      'referenceNo': '$savedReferenceNo',
+      'title': '${user?['title']}',
+      'first_name': '${user?['first_name']}',
+      'last_name': '${user?['last_name']}',
+      'email': '${user?['email']}',
+      'contactno': '${user?['phone_number']}',
+      'deprTerminal': deprTerminal,
+      'deptFlight': '$DepartureFlightNo',
+      'returnTerminal': returnTerminal,
+      'returnFlight': '$ArrivalFlightNo',
+      'model': model,
+      'color': color,
+      'make': make,
+      'registration': registration,
+      'payment_status': 'success',
+      'booking_amount': '$bookingPrice',
+      'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
+      'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
+      'booking_fee': '$bookingFees',
+      'discount_amount': '6.52',
+      'total_amount': price,
+      'intent_id': paymentIntentId, // Fixed intent ID issue
+    };
+
+    print("Sending booking data: $bookingData");
 
     try {
       final response = await http.post(
         url,
-        body: {
-          'referenceNo': '$savedReferenceNo',
-          'title': '${user?['title']}',
-          'first_name': '${user?['first_name']}',
-          'last_name': '${user?['last_name']}',
-          'email': '${user?['email']}',
-          'contactno': '${user?['phone_number']}',
-          'deprTerminal': deprTerminal,
-          'deptFlight': '$DepartureFlightNo',
-          'returnTerminal': returnTerminal,
-          'returnFlight': '$ArrivalFlightNo',
-          'model': model,
-          'color': color,
-          'make': make,
-          'registration': registration,
-          'payment_status': 'success',
-          'booking_amount': '$bookingPrice',
-          'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
-          'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
-          'booking_fee': '$bookingFees',
-          'discount_amount': '6.52',
-          'total_amount': price,
-          'intent_id': '11111111111111111',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: bookingData,
       );
+
       if (response.statusCode == 200) {
-       print('Booking successful: ${response.body}');
-        Navigator.pushNamed(context, '/PaymentConfirm',
+        print('Booking successful: ${response.body}');
+
+        Navigator.pushNamed(
+          context,
+          '/PaymentConfirm',
           arguments: {
             'company': company,
             'startDate': startDate,
@@ -537,10 +558,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             'startTime': startTime,
             'endTime': endTime,
             'totalPrice': totalPrice,
+            'referenceNo': '$savedReferenceNo',
           },
         );
       } else {
-       print('Failed to book: ${response.reasonPhrase}');
+        print('Failed to book: ${response.statusCode}, Response: ${response.body}');
       }
     } catch (e) {
       print('Error occurred while posting booking data: $e');

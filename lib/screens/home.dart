@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
@@ -62,16 +63,103 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: Text('Hi, ${user?['first_name']} ${user?['last_name']}'),
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hi, ${user?['first_name']} ${user?['last_name']}!',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
+            ),
+            Text(
+              DateFormat('dd MMM, yyyy').format(DateTime.now()), // Formats current date
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
-            },
+          Container(
+            width: 40,
+            height: 40,
+            margin: EdgeInsets.only( right: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12), // Rounded corners
+              border: Border.all(
+                color: Colors.grey, // Stroke color
+                width: 1, // Stroke width
+              ),
+            ),
+            child: Center(
+              child:  IconButton(
+                icon: Icon(MingCute.notification_line, size: 20,),
+                onPressed: () {
+                  // CupertinoAlertDialog(
+                  //   title: const Text('Confirm Logout'),
+                  //   content: const Text('Are you sure you want to logout?'),
+                  //   actions: [
+                  //     CupertinoDialogAction(
+                  //       onPressed: () => Navigator.of(context).pop(false),
+                  //       child: const Text('Cancel'),
+                  //     ),
+                  //     CupertinoDialogAction(
+                  //       onPressed: () => Navigator.of(context).pop(true),
+                  //       child: const Text('Logout'),
+                  //     ),
+                  //   ],
+                  // );
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return CupertinoAlertDialog(
+                        title: const Text('Release Notes.'),
+                        content: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('🌟 Key Features'),
+                            Text('🔐 User Authentication'),
+                            Text('📅 Booking Management'),
+                            Text('💳 Payment Processing'),
+                            Text('🎁 Promotional Offers'),
+                            SizedBox(height: 8), // Spacing
+
+                            Text('⏰ Time Display'),
+                            Text('🚀 Improvements'),
+                            Text('• Faster data retrieval for a smoother experience.'),
+                            Text('• Enhanced UI/UX for a user-friendly interface.'),
+                            SizedBox(height: 8), // Spacing
+
+                            Text('⚠️ Known Issues'),
+                            Text('• Minor UI glitches on certain devices. We\'re working on it!'),
+                            SizedBox(height: 8), // Spacing
+
+                            Text('🔮 Coming Soon'),
+                            Text('• More payment options.'),
+                            Text('• Improved user profile features.'),
+                          ],
+                        ),
+                        actions: [
+                          CupertinoDialogAction(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                },
+              ),
+
+            ),
           ),
         ],
       ),
+
       body: _isShimmerVisible
           ? Shimmer.fromColors(
         baseColor: baseColor,
@@ -82,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
+                // const SizedBox(height: 10),
                 const DateTimePickerSection(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
+
               const DateTimePickerSection(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -279,58 +367,68 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                       return const Text('No airports available');
                     } else {
                       final airports = snapshot.data!;
-                      return DropdownButtonFormField<Map<String, dynamic>>(
-                        // value: airports.firstWhere(
-                        //       (airport) => airport['id'] == 20,
-                        //   orElse: () => airports.isNotEmpty ? airports[0] : {'id': 0, 'name': 'Unknown'}, // Ensures a valid fallback
-                        // ),
-                        // value: airports.isNotEmpty ? airports[0] : null,
-                        // decoration: InputDecoration(
-                        //   // hintText: 'Select Airport',
-                        //   // labelText: 'Select Airport',
-                        //   hintText: 'Select Airport',
-                        //   //
-                        //   border: OutlineInputBorder(
-                        //     borderRadius: BorderRadius.circular(50),
-                        //     borderSide: const BorderSide(
-                        //       color: Colors.grey,
-                        //       width: 1,
-                        //     ),
-                        //   ),
-                        // ),
-
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.person,
-                            color:  Colors.red,
+                      return InkWell(
+                        child: Container(
+                          width: double.infinity,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12), // Rounded corners
+                            border: Border.all(
+                              color: Colors.grey, // Stroke color
+                              width: 1, // Stroke width
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50), // Rounded corners
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50),
-                            // borderSide: BorderSide(color: Colors.grey, width: 1.0), // Default border
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50),
-                            // borderSide: BorderSide(color: Colors.blue, width: 2.0), // When focused
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Center(
+                              child: Row(
+                                children: [
+                                  const Icon(MingCute.airplane_line, color: Colors.red),
+                                  const SizedBox(width: 5,),
+                                  Flexible(
+                                    child:  Text(
+                                      _selectedAirportName ?? "Select Airport",
+                                      // style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        hint: Text("Select title",style: Theme.of(context).textTheme.titleMedium,),
 
-                        items: airports.map((airport) {
-                          return DropdownMenuItem<Map<String, dynamic>>(
-                            value: airport,
-                            child: Text(airport['name']),
+                        onTap: () {
+                          showCupertinoModalPopup(
+                            context: context,
+                            builder: (_) => CupertinoActionSheet(
+                              title: Text("Select Airport"),
+                              actions: [
+                                Container(
+                                  height: 200,
+                                  child: CupertinoPicker(
+                                    itemExtent: 60.0,
+                                    onSelectedItemChanged: (int index) {
+                                      setState(() {
+                                        _selectedAirportId = airports[index]['id'];
+                                        _selectedAirportName = airports[index]['name'];
+                                      });
+                                    },
+                                    children: airports.map((airport) {
+                                      return Center(
+                                        child: Text(airport['name']),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                              cancelButton: CupertinoActionSheetAction(
+                                child: Text("Done"),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ),
                           );
-                        }).toList(),
-                        onChanged: (selectedAirport) {
-                          setState(() {
-                            _selectedAirportId = selectedAirport?['id'];
-                            _selectedAirportName = selectedAirport?['name'];
-                          });
                         },
                       );
-
                     }
                   },
                 ),
@@ -341,7 +439,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     width: double.infinity,
                     height: 56,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(50), // Rounded corners
+                      borderRadius: BorderRadius.circular(12), // Rounded corners
                       border: Border.all(
                         color: Colors.grey, // Stroke color
                         width: 1, // Stroke width
@@ -352,7 +450,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                       child: Center(
                         child: Row(
                           children: [
-                            const Icon(MingCute.calendar_fill, color: Colors.red),
+                            const Icon(MingCute.calendar_2_line, color: Colors.red),
                             const SizedBox(width: 5,),
                             Flexible(
                               child: Text(
@@ -368,6 +466,40 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     ),
                   ),
                 ),
+                // const SizedBox(height: 16),
+                // InkWell(
+                //   onTap: () => _showDatePickerDialog(context),
+                //   child: Container(
+                //     width: double.infinity,
+                //     height: 56,
+                //     decoration: BoxDecoration(
+                //       borderRadius: BorderRadius.circular(12), // Rounded corners
+                //       border: Border.all(
+                //         color: Colors.grey, // Stroke color
+                //         width: 1, // Stroke width
+                //       ),
+                //     ),
+                //     child: Padding(
+                //       padding: const EdgeInsets.all(16.0),
+                //       child: Center(
+                //         child: Row(
+                //           children: [
+                //             const Icon(MingCute.calendar_2_line, color: Colors.red),
+                //             const SizedBox(width: 5,),
+                //             Flexible(
+                //               child: Text(
+                //                 _getValueText(
+                //                   CalendarDatePicker2Type.range,
+                //                   _rangeDatePickerWithActionButtonsWithValue,
+                //                 ), // Display the date range or default text
+                //               ),
+                //             )
+                //           ],
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -378,7 +510,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.grey,
                               width: 1,
@@ -414,7 +546,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.grey,
                               width: 1,
