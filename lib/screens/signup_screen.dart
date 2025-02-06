@@ -283,7 +283,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           ),
           controller: phoneNumberController,
           initialCountryCode: 'GB',
-          disableLengthCounter: true,
+          // disableLengthCounter: true,
           languageCode: "en",
           validator: (value) {
             if (value == null ) {

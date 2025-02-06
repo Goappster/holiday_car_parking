@@ -66,7 +66,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           width: 80.0,
           height: 80.0,
           decoration: BoxDecoration(
-
             borderRadius: BorderRadius.circular(4.0),
           ),
           child: Padding(

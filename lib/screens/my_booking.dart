@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:holidayscar/screens/support_ticket.dart';
 import 'package:http/http.dart' as http;
 import 'package:holidayscar/models/booking.dart';
 import 'package:intl/intl.dart';
@@ -111,7 +112,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 },
               ),
             ),
-            Center(child: Text('Create New Ticket')), 
+
           ],
         ),
       ),

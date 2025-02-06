@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/edit_profile_screen.dart';
 import 'package:holidayscar/screens/forget_pass.dart';
+import 'package:holidayscar/screens/getsupport_ticket.dart';
 import 'package:holidayscar/screens/my_booking.dart';
 import 'package:holidayscar/screens/splash.dart';
+import 'package:holidayscar/screens/support_ticket.dart';
 import 'main.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
@@ -17,6 +19,8 @@ class AppRoutes {
   static const String myBooking = '/myBooking';
   static const String editProfile = '/editProfile';
   static const String forgetPass = '/forgetPass';
+  static const String createSupportTicket = '/supportTicket';
+  static const String manageTicketScreen = '/manageTicketScreen';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -34,6 +38,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) =>  const EditProfileScreen());
       case forgetPass:
         return MaterialPageRoute(builder: (_) =>  ForgotPasswordScreen());
+      case createSupportTicket:
+        return MaterialPageRoute(builder: (_) =>  SupportTicketForm());
+      case manageTicketScreen:
+        return MaterialPageRoute(builder: (_) =>  SupportTicketScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginScreen()); // Fallback
     }

@@ -43,6 +43,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
         title: const Text('User Profile'),
         centerTitle: true,
       ),
@@ -128,7 +129,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       leading: const Icon(Icons.support, color: Colors.red),
                       title: const Text('Customer Support'),
                       trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.manageTicketScreen);
+
+                      },
                     ),
                   ),
                   Card(

@@ -601,6 +601,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (responseData['success'] == true) {
+        print(response.body);
         savedReferenceNo = responseData['booking']['referenceNo']; // Store reference number
         //print('Reference No: $responseData');
       }
