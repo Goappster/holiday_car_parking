@@ -238,33 +238,86 @@ class DateTimePickerSection extends StatefulWidget {
 }
 
 class _DateTimePickerSectionState extends State<DateTimePickerSection> {
-  List<DateTime?> _rangeDatePickerWithActionButtonsWithValue = [null, null]; // Initially no date selected
+
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
 
-  Future<void> _showDatePickerDialog(BuildContext context) async {
-    final config = CalendarDatePicker2WithActionButtonsConfig(
-      calendarType: CalendarDatePicker2Type.range,
-      // disableModePicker: true,
-      // rangeBidirectional: true,
-      firstDate: DateTime.now(),
-    );
+  DateTime? _pickupDate;
+  DateTime? _dropOffDate;
 
-    final values = await showCalendarDatePicker2Dialog(
-      context: context,
-      config: config,
-      dialogSize: const Size(325, 370),
-      borderRadius: BorderRadius.circular(15),
-      value: _rangeDatePickerWithActionButtonsWithValue,
-    );
+  void _showCupertinoDatePicker(BuildContext context, bool isPickup) {
+    DateTime now = DateTime.now();
+    DateTime initialDate = DateTime(now.year, now.month, now.day);
+    DateTime minimumDate = isPickup ? initialDate : (_pickupDate ?? initialDate);
 
-    if (values != null) {
-      setState(() {
-        _rangeDatePickerWithActionButtonsWithValue = values;
-      });
+    DateTime selectedDate = isPickup
+        ? (_pickupDate ?? initialDate)
+        : (_dropOffDate ?? minimumDate.add(Duration(days: 1)));
+
+    // Ensure initialDateTime is never before minimumDate
+    if (selectedDate.isBefore(minimumDate)) {
+      selectedDate = minimumDate;
     }
-  }
 
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => Container(
+        height: 300,
+        padding: EdgeInsets.only(top: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setModalState) {
+            return Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  height: 50,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        child: Text("Cancel", style: TextStyle(color: Colors.red)),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      CupertinoButton(
+                        child: Text("Done", style: TextStyle(color: Colors.blue)),
+                        onPressed: () {
+                          setState(() {
+                            if (isPickup) {
+                              _pickupDate = selectedDate;
+                            } else {
+                              _dropOffDate = selectedDate;
+                            }
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.date,
+                    initialDateTime: selectedDate,
+                    minimumDate: minimumDate,
+                    maximumDate: DateTime(2100),
+                    onDateTimeChanged: (DateTime newDate) {
+                      setModalState(() {
+                        selectedDate = newDate;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
   void _selectTime(BuildContext context, bool isStartTime) async {
     final picked = await showTimePicker(
       context: context,
@@ -434,7 +487,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 ),
                 const SizedBox(height: 16),
                 InkWell(
-                  onTap: () => _showDatePickerDialog(context),
+                  onTap: () => _showCupertinoDatePicker(context, false),
                   child: Container(
                     width: double.infinity,
                     height: 56,
@@ -454,10 +507,9 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                             const SizedBox(width: 5,),
                             Flexible(
                               child: Text(
-                                _getValueText(
-                                  CalendarDatePicker2Type.range,
-                                  _rangeDatePickerWithActionButtonsWithValue,
-                                ), // Display the date range or default text
+                                _dropOffDate != null
+                                    ? DateFormat('EEE, dd MMM yyyy').format(_dropOffDate!)
+                                    : 'Drop-off Date',
                               ),
                             )
                           ],
@@ -466,40 +518,39 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     ),
                   ),
                 ),
-                // const SizedBox(height: 16),
-                // InkWell(
-                //   onTap: () => _showDatePickerDialog(context),
-                //   child: Container(
-                //     width: double.infinity,
-                //     height: 56,
-                //     decoration: BoxDecoration(
-                //       borderRadius: BorderRadius.circular(12), // Rounded corners
-                //       border: Border.all(
-                //         color: Colors.grey, // Stroke color
-                //         width: 1, // Stroke width
-                //       ),
-                //     ),
-                //     child: Padding(
-                //       padding: const EdgeInsets.all(16.0),
-                //       child: Center(
-                //         child: Row(
-                //           children: [
-                //             const Icon(MingCute.calendar_2_line, color: Colors.red),
-                //             const SizedBox(width: 5,),
-                //             Flexible(
-                //               child: Text(
-                //                 _getValueText(
-                //                   CalendarDatePicker2Type.range,
-                //                   _rangeDatePickerWithActionButtonsWithValue,
-                //                 ), // Display the date range or default text
-                //               ),
-                //             )
-                //           ],
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                const SizedBox(height: 16),
+                InkWell(
+                  onTap: () => _showCupertinoDatePicker(context, true),
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12), // Rounded corners
+                      border: Border.all(
+                        color: Colors.grey, // Stroke color
+                        width: 1, // Stroke width
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Row(
+                          children: [
+                            const Icon(MingCute.calendar_2_line, color: Colors.red),
+                            const SizedBox(width: 5,),
+                            Flexible(
+                              child: Text(
+                                _pickupDate != null
+                                    ? DateFormat('EEE, dd MMM yyyy').format(_pickupDate!)
+                                    : 'Pickup Date',
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -584,16 +635,16 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     onPressed: () {
                       if (_selectedStartTime == null ||
                           _selectedEndTime == null ||
-                          _rangeDatePickerWithActionButtonsWithValue[0] == null ||
-                          _rangeDatePickerWithActionButtonsWithValue[1] == null) {
+                          _pickupDate == null ||
+                          _dropOffDate == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please select all inputs.')),
                         );
                         return;
                       }
                       // Combine and format date and time
-                      final startDate = _formatDate(_rangeDatePickerWithActionButtonsWithValue[0]);
-                      final endDate = _formatDate(_rangeDatePickerWithActionButtonsWithValue[1]);
+                      final startDate = _formatDate(_dropOffDate);
+                      final endDate = _formatDate(_pickupDate);
                       final startTime = _formatTime(_selectedStartTime);
                       final endTime = _formatTime(_selectedEndTime);
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';  // To decode JSON
 import 'package:http/http.dart' as http;
 
+import '../Code/chatui.dart';
 import '../routes.dart';
 
 // void main() {
@@ -51,14 +52,25 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Support Tickets')),
+      appBar: AppBar(
+          surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+          title: Text('Support Tickets')),
       body: tickets.isEmpty
           ? Center(child: CircularProgressIndicator())  // Loading indicator
           : ListView.builder(
         itemCount: tickets.length,
         itemBuilder: (context, index) {
           var ticket = tickets[index];
-          return CustomTicketCard(ticket: ticket);
+          return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TicketDetailsPage(ticketRef: '${ticket['ticket_id']}'),
+                  ),
+                );
+              },
+              child: CustomTicketCard(ticket: ticket));
         },
       ),
       floatingActionButton: FloatingActionButton(
