@@ -9,13 +9,15 @@ import 'package:holidayscar/screens/my_booking.dart';
 import 'package:holidayscar/screens/paymetn_receipt.dart';
 import 'package:holidayscar/screens/profile_screen.dart';
 import 'package:holidayscar/screens/show_result_screeen.dart';
+import 'package:holidayscar/services/Notifactions.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:holidayscar/routes.dart';
-void main() {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
    Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
   runApp(
     ChangeNotifierProvider(

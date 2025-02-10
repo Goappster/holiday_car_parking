@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/material.dart'as Material;
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http ;
 
+import '../services/Notifactions.dart';
 import '../widgets/company_logo_widget.dart';
 import '../widgets/company_details_widget.dart';
 import 'package:intl/intl.dart';
@@ -54,11 +56,48 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   bool _smsConfirmationSelected = false;
   bool _cancellationCoverSelected = false;
 
+  final NotificationService _notificationService = NotificationService();
+  String _permissionStatus = "Unknown";
 
-     // Ensure updatedTotal is initialized with the base totalPrice
-    // if (_smsConfirmationSelected) baseTotalPrice += smsFees;
-    // if (_cancellationCoverSelected) baseTotalPrice += cancellationFees;
 
+  void _updatePermissionStatus() async {
+    String status = await _notificationService.checkPermissionStatus();
+    setState(() {
+      _permissionStatus = status;
+    });
+
+    if (status == "Permanently Denied") {
+      _showSettingsDialog();
+    }
+    if (status == "Denied") {
+      _showSettingsDialog();
+    }
+  }
+
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Notification Permission Required"),
+        content: Text(
+          "Notifications are permanently denied. Please enable them from settings.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await openAppSettings();
+            },
+            child: Text("Open Settings"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
 
 
 
@@ -66,6 +105,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+    _updatePermissionStatus();
   }
 
   @override
@@ -115,7 +155,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             Navigator.pop(context);
           },
         ),
-        title:   Text('Booking Details $deprTerminal $returnTerminal'),
+        title:   Text('Booking Details'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -546,8 +586,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
 
       if (response.statusCode == 200) {
-        print('Booking successful: ${response.body}');
 
+        _notificationService.showNotification('$savedReferenceNo');
         Navigator.pushNamed(
           context,
           '/PaymentConfirm',

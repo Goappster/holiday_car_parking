@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../routes.dart';
 
@@ -10,15 +11,22 @@ class AppSetting extends StatelessWidget {
   const AppSetting({super.key});
 
   void _shareApp() {
-    Share.share('Check out this amazing app: https://yourapp.com');
+    Share.share('Check out this amazing app: https://play.google.com/store/apps/details?id=com.holiday.car.parking.uk');
+  }
+
+  void _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
   }
 
   void _privacy() {
-    Share.share('https://holidayscarparking.uk/privacy-policy');
+    _launchURL('https://holidayscarparking.uk/privacy-policy');
   }
 
   void _termsApp() {
-    Share.share('https://holidayscarparking.uk/terms-and-conditions');
+    _launchURL('https://holidayscarparking.uk/terms-and-conditions');
   }
 
   @override
@@ -58,7 +66,7 @@ class AppSetting extends StatelessWidget {
                   // svgSrc: disclaimerIconSvg,
                   title: "terms & conditions",
                   subTitle: "terms-and-conditions",
-                  press: () => _termsApp,
+                  press: _termsApp,
                   icon: Icons.help,
                 ),
                 ProfileMenuCard(
@@ -115,7 +123,7 @@ class ProfileMenuCard extends StatelessWidget {
                       maxLines: 1,
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     Text(
                       subTitle,
                       maxLines: 1,

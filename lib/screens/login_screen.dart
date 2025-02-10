@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
-import '../Code/another_screen.dart';
-import '../main.dart';
 import '../services/login_api.dart';
 import '../widgets/text.dart';
 

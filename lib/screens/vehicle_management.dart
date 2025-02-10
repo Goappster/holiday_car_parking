@@ -174,7 +174,33 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                               IconButton(
                                 icon: const Icon(Icons.edit),
                                 onPressed: () {
-                                  _updateVehicle(context, '${vehicle['registration']}', '${vehicle['make']}', '${vehicle['model']}', '${vehicle['color']}', '${vehicle['id']}');
+                                  //
+                                  showCupertinoModalPopup(
+                                    context: context,
+                                    builder: (context) => CupertinoActionSheet(
+                                      actions: [
+                                        CupertinoActionSheetAction(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            _updateVehicle(context, '${vehicle['registration']}', '${vehicle['make']}', '${vehicle['model']}', '${vehicle['color']}', '${vehicle['id']}');
+                                          },
+                                          child: const Text("Update", style: TextStyle(color: Colors.blue),),
+                                        ),
+                                        CupertinoActionSheetAction(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            deleteVehicle('${vehicle['id']}');
+                                          },
+                                          isDestructiveAction: true,
+                                          child: const Text("Delete"),
+                                        ),
+                                      ],
+                                      cancelButton: CupertinoActionSheetAction(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text("Cancel"),
+                                      ),
+                                    ),
+                                  );
                                 },
                               ),
                             ],
@@ -195,6 +221,72 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       ),
     );
   }
+
+
+  Future<void> deleteVehicle(String vehId) async {
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(child: CupertinoActivityIndicator());
+      },
+    );
+
+    final String url = 'https://holidayscarparking.uk/api/deleteVehicle';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'vehId': vehId, // Passing vehId as a parameter
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.of(context).pop(); // Close the loading dialog
+        _fetchVehicles();
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: const Text('Vehicle details has been Deleted.'),
+              content: const Text(
+                'You have successfully Deleted your vehicle details.',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _fetchVehicles(); // Refresh the list after closing the dialog
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        Navigator.of(context).pop(); // Close the loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                backgroundColor: Colors.redAccent,
+                content: Text('Failed to delete vehicle. Status code:${response.statusCode}')),
+          );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text('Error deleting vehicle: $e')),
+      );
+
+    }
+  }
+
 
   void _updateVehicle(BuildContext context, String regNo, String make, String model, String color, String vehId) {
     final _formKey = GlobalKey<FormState>();
@@ -634,7 +726,6 @@ Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
       url,
       body: {'user_id': userId},
     );
-
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseBody = json.decode(response.body);
       if (responseBody['success']) {
