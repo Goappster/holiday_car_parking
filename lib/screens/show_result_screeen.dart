@@ -1,13 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/screens/booking.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:marquee/marquee.dart';
+import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
+
+import '../widgets/tab_bar.dart';
 class ShowResultsScreen extends StatefulWidget {
   const ShowResultsScreen({super.key});
   @override
@@ -16,7 +21,7 @@ class ShowResultsScreen extends StatefulWidget {
 
 class _ShowResultsScreenState extends State<ShowResultsScreen> {
   String? _selectedOption = 'Low to High';
-  final List<String> _filterOptions = ['Low to High', 'High to Low'];
+  final List<String> _filterOptions = ['Low to High', 'High to Low',];
   Future<Map<String, dynamic>>? _quotes; // Nullable Future
   late ApiService _apiService;
 
@@ -55,13 +60,30 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
           promo: 'HCP-APP-OXT78U',
         ).then((data) {
           final companies = data['companies'] as List<dynamic>;
+
+          // Separate recommended and non-recommended companies
+          final recommendedCompanies = companies.where((a) => a['recommended'] == "Yes").toList();
+          final otherCompanies = companies.where((a) => a['recommended'] != "Yes").toList();
+
+          // Apply sorting based on the selected filter
           if (_selectedOption == 'Low to High') {
-            companies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+            recommendedCompanies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+            otherCompanies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
           } else if (_selectedOption == 'High to Low') {
-            companies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+            recommendedCompanies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+            otherCompanies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+          } else if (_selectedOption == 'Recommended') {
+            // Show only recommended companies if "Recommended" is selected
+            data['companies'] = recommendedCompanies;
+            return data;
           }
+
+          // Combine lists, placing recommended companies first
+          data['companies'] = [...recommendedCompanies, ...otherCompanies];
           return data;
         });
+
+
       });
     });
   }
@@ -75,7 +97,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,14 +168,14 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     final List<Map<String, dynamic>> reviews = (offer['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     // Calculate average rating
-    double averageRating = reviews.isNotEmpty
-        ? reviews
-        .map((review) => review['rating'] ?? 0)
-        .fold(0.0, (sum, rating) => sum + (rating as double)) / reviews.length
-        : 0.0;
+    // double averageRating = reviews.isNotEmpty
+    //     ? reviews
+    //     .map((review) => review['rating']. ?? 0)
+    //     .fold(0.0, (sum, rating) => sum + (rating as double)) / reviews.length
+    //     : 0.0;
 
     // Round the average rating and cast to int
-    int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
+    // int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
     // DateTime startDateTime;
     // DateTime endDateTime;
     //
@@ -308,6 +330,12 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
 
   Widget _buildOffersList(BuildContext context, String startDate, String endDate, String startTime, String endTime,) {
+
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    double aspectRatio = screenWidth < 600
+        ? 0.5  // For smaller screens (mobile)
+        : 0.7; // For larger screens (tablet, desktop)
     return FutureBuilder<Map<String, dynamic>>(
       future: _quotes, // The Future to wait for (which returns a Map)
       builder: (context, snapshot) {
@@ -348,39 +376,21 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
           return GridView.builder(
              shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, // Number of columns
-              childAspectRatio: 0.60,
+              childAspectRatio: aspectRatio,
             ),
             itemCount: companies.length, // Using the length of the companies list
             itemBuilder: (context, index) {
               final company = companies[index]; // Access each offer in the companies list
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>  BookingScreen(
-                        company: company,
-                        totalDays: totalDays.toString(),
-                        startDate: startDate,
-                        endDate: endDate,
-                        startTime: startTime,
-                        endTime: endTime,
-                        airportId: airportId!,
-                      ),
-                    ),
-                  );
-                },
-                child: _buildOfferCard(company, context), // Build your offer card
-              );
+              return _buildOfferCard(company, context, totalDays!);
             },
           );
         }
       },
     );
   }
-  Widget _buildOfferCard(dynamic offer, BuildContext context,) {
+  Widget _buildOfferCard(dynamic offer, BuildContext context, String totalDays) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -392,33 +402,40 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  child: offer['park_api'] == 'DB'
-                      ? CachedNetworkImage(
-                          imageUrl:
-                          'https://airportparkbooking.uk/storage/${offer['logo']}',
-                          height: 100,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          // placeholder: (context, url) =>
-                          //     const CircularProgressIndicator(),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                        )
-                      : offer['park_api'] == 'holiday'
-                      ? CachedNetworkImage(
-                    imageUrl:
-                    offer['logo'],
-                    height: 100,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    // placeholder: (context, url) =>
-                    // const CircularProgressIndicator(),
-                    errorWidget: (context, url, error) =>
-                    const Icon(Icons.error),
-                  )
-                      : _errorImageWidget(), // Optional: you can return an error widget if the condition doesn't match
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      child: _buildImage(offer),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: offer['recommended'] == 'Yes'
+                          ? Container(
+                        height: 20, // Fixed height for the banner
+                        color: Colors.red.withOpacity(0.9),
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Marquee(
+                          text: '🔥 Recommended 🔥  Limited Time Offer!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          scrollAxis: Axis.horizontal, // Scroll left to right
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          blankSpace: 50.0, // Space between repeats
+                          velocity: 30.0, // Speed of scrolling
+                          pauseAfterRound: Duration(seconds: 1), // Pause before repeating
+                          startPadding: 10.0,
+                        ),
+                      )
+                          : SizedBox(), // Empty widget if the condition is false
+                    ),
+
+                  ],
                 ),
 
                 const SizedBox(height: 8),
@@ -438,6 +455,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
+
                     Text(
                       (offer['reviews'] != null &&
                           offer['reviews'] is List &&
@@ -452,31 +470,235 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                         (offer['reviews'] as List).isNotEmpty &&
                         offer['reviews'][0]['rating'] != null) ...[
                       const SizedBox(width: 4),
-                      for (int i = 0; i < offer['reviews'][0]['rating']; i++) // Dynamically generate stars
-                        const Icon(Icons.star, color: Colors.yellow, size: 20),
+                      for (int i = 0; i < offer['reviews'][0]['rating']; i++)
+                        InkWell(
+                          onTap: () {
+                            _showRatingDialog(offer);
+                          },
+                            child: const Icon(Icons.star, color: Colors.yellow, size: 20)),
                     ],
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.01),
+                    if (offer['reviews'] != null &&
+                        offer['reviews'] is List &&
+                        (offer['reviews'] as List).isNotEmpty &&
+                        offer['reviews'][0]['rating'] != null)
+                      ...[
+                        Text(
+                          '(${offer['reviews'].length ?? ''} )',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+                        ),
+                      ],
+
                   ],
                 ),
                 const SizedBox(height: 8),
-                InkWell(
-                  onTap: () {
-                    //print(offer); // To see the complete structure
-                    //print(offer['reviews']);
+                OutlinedButton(
+                  onPressed: () {
+                   Navigator.push(context, MaterialPageRoute(builder: (context)=> ViewDeatils(company: offer,)));
                   },
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '£ ${offer['price'].toString().replaceAll(',', '')}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.red),
-                    ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 30),
+                    // padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+
+                    side: BorderSide(color: Colors.red, width:1), // Red border
+                  ),
+                  child: Text(
+                    'View Details',
                   ),
                 ),
+                Stack(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>  BookingScreen(
+                              company: offer,
+                              totalDays: totalDays.toString(),
+                              startDate: startDate,
+                              endDate: endDate,
+                              startTime: startTime,
+                              endTime: endTime,
+                              airportId: airportId!,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 35),
+                        backgroundColor: Colors.red, // Button background color
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          double originalPrice = double.tryParse(offer['price'] ?? '0') ?? 0; // Convert price safely
+                          double increasedPrice = originalPrice + 10; // Add £10
+                          double discountedPrice = increasedPrice * 0.9; // Apply 10% discount
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Discounted Price (Final Price After Add & Discount)
+                            Text(
+                                '£${originalPrice.toStringAsFixed(2)}',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: MediaQuery.of(context).size.width * 0.05,
+                                  color: Colors.white, // White text for contrast
+                                ),
+                              ),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.01, // Adjust width dynamically
+                              ),
+                              Visibility(
+                                visible: offer['park_api'] == 'DB',
+                                child: Text(
+                                  '£${increasedPrice.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: MediaQuery.of(context).size.width * 0.03, // Adjust font size dynamically
+                                    color: Colors.white.withOpacity(0.7), // Faded text color
+                                    decoration: TextDecoration.lineThrough, // Strikethrough effect
+                                  ),
+                                ),
+                              )
+
+
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    if (offer['recommended'] == 'Yes')
+                      Positioned(
+                        top: -2,
+                        right: 10,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Best Value',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                )
               ],
             ),
           ),
         ],
       ),
     );
+  }
+  void _showRatingDialog(offer) {
+
+    dynamic reviews = offer['reviews'];
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: double.maxFinite,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("User Ratings", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: reviews.length,
+                    itemBuilder: (context, index) {
+                      final user = reviews[index];
+                      // Handle null values by providing default values
+                      final String? name = user["first_name"];
+                      final String? lastName = user["last_name"];
+                      final int? rating = user["rating"];
+                      final double? ratingDouble = rating?.toDouble();
+                      final String? comment = user["comments"];
+
+                      return Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300, width: 1),
+                        ),
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.blueAccent,
+                                    child: Text(
+                                      name![0], // Use first letter, safe due to default value
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text('$name $lastName', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              RatingBarIndicator(
+                                rating: ratingDouble!,
+                                itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                                itemCount: 5,
+                                itemSize: 20.0,
+                                direction: Axis.horizontal,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                comment!,
+                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  Widget _buildImage( offer) {
+    if (offer['park_api'] == 'DB') {
+      return CachedNetworkImage(
+        imageUrl: 'https://airportparkbooking.uk/storage/${offer['logo']}',
+        height: 100,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorWidget: (context, url, error) => Icon(Icons.error),
+      );
+    } else if (offer['park_api'] == 'holiday') {
+      return CachedNetworkImage(
+        imageUrl: offer['logo'],
+        height: 100,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorWidget: (context, url, error) => Icon(Icons.error),
+      );
+    } else {
+      return _errorImageWidget();
+    }
   }
 
   Widget _errorImageWidget() {
@@ -489,4 +711,6 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       ),
     );
   }
+
+
 }
