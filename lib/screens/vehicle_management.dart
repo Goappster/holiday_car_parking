@@ -37,7 +37,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         try {
           user = json.decode(userData);
         } catch (e) {
-          debugPrint("Failed to parse user data: $e");
+          //print("Failed to parse user data: $e");
           user = null;
         }
       }
@@ -58,7 +58,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      debugPrint('Error: User ID is null.');
+      //print('Error: User ID is null.');
       return;
     }
 
@@ -72,7 +72,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      debugPrint('Error fetching vehicles: $e');
+      //print('Error fetching vehicles: $e');
     }
   }
 
@@ -630,11 +630,11 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           },
         );
       } else {
-        debugPrint(response.body);
+       //debug//print(response.body);
         _showErrorDialog('Failed to add vehicle. Please try again.');
       }
     } catch (e) {
-      debugPrint('$e');
+     //debug//print('$e');
       Navigator.of(context).pop(); // Close the loading dialog
       _showErrorDialog('An error occurred. Please check your connection.');
     }
@@ -689,11 +689,11 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           },
         );
       } else {
-        debugPrint(response.body);
+       //debug//print(response.body);
         _showErrorDialog('Failed to add vehicle. Please try again.');
       }
     } catch (e) {
-      debugPrint('$e');
+     //debug//print('$e');
       Navigator.of(context).pop(); // Close the loading dialog
       _showErrorDialog('An error occurred. Please check your connection.');
     }
@@ -737,7 +737,7 @@ Future<List<dynamic>> fetchVehiclesByCustomer(String userId) async {
       throw Exception('Failed to load vehicles: ${response.statusCode}');
     }
   } catch (e) {
-    debugPrint('Error fetching vehicles: $e');
+   //debug//print('Error fetching vehicles: $e');
     return [];
   }
 }

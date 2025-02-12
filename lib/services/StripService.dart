@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      debugShowCheckedModeBanner: false,
+     //debugShowCheckedModeBanner: false,
       title: 'Stripe Payment',
       home: StripePaymentScreen(),
     );
@@ -67,7 +67,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       await displayPaymentSheet();
 
     } catch (e) {
-      //print("exception $e");
+      ////print("exception $e");
     }
   }
 
@@ -79,7 +79,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       );
       paymentIntent = null;
     } on StripeException catch (e) {
-      //print('Error: $e');
+      ////print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text(" Payment Cancelled")),
       );
@@ -105,7 +105,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
       );
       return jsonDecode(response.body);
     } catch (err) {
-      //print('Error: ${err.toString()}');
+      ////print('Error: ${err.toString()}');
     }
   }
 }
@@ -128,7 +128,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //   @override
 //   Widget build(BuildContext context) {
 //     return const MaterialApp(
-//       debugShowCheckedModeBanner: false,
+//      //debugShowCheckedModeBanner: false,
 //       title: 'Stripe Payment',
 //       home: StripeCardInputScreen(),
 //     );
@@ -206,12 +206,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //
 //       paymentIntent = null;
 //     } on StripeException catch (e) {
-//       //print('StripeException: $e');
+//       ////print('StripeException: $e');
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         const SnackBar(content: Text("Payment failed or cancelled")),
 //       );
 //     } catch (e) {
-//       //print('Error: $e');
+//       ////print('Error: $e');
 //     }
 //   }
 //
@@ -232,9 +232,9 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //         body: body,
 //       );
 //       return jsonDecode(response.body);
-//       //print(response.body);
+//       ////print(response.body);
 //     } catch (err) {
-//       //print('Error creating Payment Intent: ${err.toString()}');
+//       ////print('Error creating Payment Intent: ${err.toString()}');
 //       rethrow;
 //     }
 //   }
@@ -259,7 +259,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //   @override
 //   Widget build(BuildContext context) {
 //     return const MaterialApp(
-//       debugShowCheckedModeBanner: false,
+//      //debugShowCheckedModeBanner: false,
 //       title: 'Stripe Payment',
 //       home: StripeCardInputScreen(),
 //     );
@@ -380,12 +380,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //
 //       paymentIntent = null;
 //     } on StripeException catch (e) {
-//       //print('StripeException: $e');
+//       ////print('StripeException: $e');
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         const SnackBar(content: Text("Payment failed or cancelled")),
 //       );
 //     } catch (e) {
-//       //print('Error: $e');
+//       ////print('Error: $e');
 //     } finally {
 //       setState(() {
 //         _isProcessing = false; // Hide loader
@@ -411,7 +411,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //       );
 //       return jsonDecode(response.body);
 //     } catch (err) {
-//       //print('Error creating Payment Intent: ${err.toString()}');
+//       ////print('Error creating Payment Intent: ${err.toString()}');
 //       rethrow;
 //     }
 //   }
@@ -438,7 +438,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //   @override
 //   Widget build(BuildContext context) {
 //     return const MaterialApp(
-//       debugShowCheckedModeBanner: false,
+//      //debugShowCheckedModeBanner: false,
 //       title: 'Stripe Payment',
 //       home: StripeCardInputScreen(),
 //     );
@@ -609,12 +609,12 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //       );
 //
 //     } on StripeException catch (e) {
-//       //print('StripeException: $e');
+//       ////print('StripeException: $e');
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         const SnackBar(content: Text("Payment failed or cancelled")),
 //       );
 //     } catch (e) {
-//       //print('Error: $e');
+//       ////print('Error: $e');
 //       ScaffoldMessenger.of(context).showSnackBar(
 //         SnackBar(content: Text(e.toString())),
 //       );
@@ -654,7 +654,7 @@ class _StripePaymentScreenState extends State<StripePaymentScreen> {
 //       );
 //       return jsonDecode(response.body);
 //     } catch (err) {
-//       //print('Error creating Payment Intent: ${err.toString()}');
+//       ////print('Error creating Payment Intent: ${err.toString()}');
 //       rethrow;
 //     }
 //   }

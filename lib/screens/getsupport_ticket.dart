@@ -43,9 +43,9 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
         });
       }
     } else {
-      print('Error: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      print('Failed to fetch tickets');
+      //print('Error: ${response.statusCode}');
+      //print('Response body: ${response.body}');
+      //print('Failed to fetch tickets');
     }
   }
 

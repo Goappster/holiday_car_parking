@@ -41,16 +41,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           firstNameController.text = user?['first_name'] ?? '';
           lastNameController.text = user?['last_name'] ?? '';
           phoneNumberController.text = user?['phone_number'] ?? '';
-          print('User data loaded successfully: $user'); // Log successful data load
+
         });
       } catch (e) {
-        print('Failed to parse user data: $e'); // Log parsing error
         setState(() {
           user = null;
         });
       }
     } else {
-      print('No user data found in SharedPreferences'); // Log if no data is found
     }
   }
 

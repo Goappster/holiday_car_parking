@@ -21,7 +21,7 @@ class BookingDatabase {
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
+      //print(response.body);
       final List<dynamic> data = jsonDecode(response.body)['data'];
       return data.map((json) => Booking.fromJson(json)).toList();
     } else {
@@ -50,7 +50,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching bookings: $e');
+      //print('Error fetching bookings: $e');
     }
   }
 

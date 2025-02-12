@@ -64,7 +64,7 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //print("Building card for $title"); // Debugging output
+    ////print("Building card for $title"); ////debugging output
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: SizedBox(
@@ -90,7 +90,7 @@ class OfferCard extends StatelessWidget {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                         //print("Image load error: $error"); // Debugging output
+                         ////print("Image load error: $error"); ////debugging output
                           return Container(
                             height: 100,
                             width: double.infinity,

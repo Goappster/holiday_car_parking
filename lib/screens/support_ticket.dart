@@ -47,7 +47,7 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
         try {
           user = json.decode(userData);
         } catch (e) {
-          //print("Failed to parse user data: $e");
+          ////print("Failed to parse user data: $e");
           user = null;
         }
       }
@@ -257,7 +257,7 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
                         style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                         recognizer: TapGestureRecognizer()..onTap = () {
                           // Handle tap on the Terms & Conditions link
-                          print('Tapped Terms & Conditions');
+                          //print('Tapped Terms & Conditions');
                         },
                       ),
                     ],

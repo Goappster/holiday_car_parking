@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:holidayscar/screens/ui_helper.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +13,6 @@ import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 import '../services/get_airports.dart';
 import '../theme/app_theme.dart';
-import 'booking_confirmation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -230,95 +230,100 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 class DateTimePickerSection extends StatefulWidget {
   const DateTimePickerSection({super.key});
+
   @override
   _DateTimePickerSectionState createState() => _DateTimePickerSectionState();
 }
 
 class _DateTimePickerSectionState extends State<DateTimePickerSection> {
 
-  TimeOfDay? _selectedStartTime;
-  TimeOfDay? _selectedEndTime;
-
+  TimeOfDay? _selectedStartTime, _selectedEndTime;
   DateTime? _pickupDate;
   DateTime? _dropOffDate;
-
-  void _showCupertinoDatePicker(BuildContext context, bool isPickup) {
+  void _showDatePicker(BuildContext context, bool isPickup) {
     DateTime now = DateTime.now();
     DateTime initialDate = DateTime(now.year, now.month, now.day);
-    DateTime minimumDate = isPickup ? initialDate : (_pickupDate ?? initialDate);
-
-    DateTime selectedDate = isPickup
-        ? (_pickupDate ?? initialDate)
-        : (_dropOffDate ?? minimumDate.add(Duration(days: 1)));
-
-    // Ensure initialDateTime is never before minimumDate
-    if (selectedDate.isBefore(minimumDate)) {
-      selectedDate = minimumDate;
-    }
+    DateTime selectedDate = isPickup ? (_pickupDate ?? initialDate) : (_dropOffDate ?? initialDate);
 
     showCupertinoModalPopup(
       context: context,
-      builder: (_) => Container(
-        height: 300,
-        padding: EdgeInsets.only(top: 10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-        ),
-        child: StatefulBuilder(
-          builder: (context, setModalState) {
-            return Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  height: 50,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        child: Text("Cancel", style: TextStyle(color: Colors.red)),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      CupertinoButton(
-                        child: Text("Done", style: TextStyle(color: Colors.blue)),
-                        onPressed: () {
-                          setState(() {
-                            if (isPickup) {
-                              _pickupDate = selectedDate;
-                            } else {
-                              _dropOffDate = selectedDate;
-                            }
-                          });
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateModal) => Container(
+          height: 300,
+          padding: const EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+          ),
+          child: Column(
+            children: [
+              _buildCupertinoToolbar(context, isPickup, selectedDate),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: selectedDate, // ✅ Ensure selected date is used
+                  minimumDate: initialDate,
+                  maximumDate: DateTime(2100),
+                  onDateTimeChanged: (DateTime newDate) {
+                    setStateModal(() {
+                      selectedDate = newDate;
+                    });
+                  },
                 ),
-                Expanded(
-                  child: CupertinoDatePicker(
-                    mode: CupertinoDatePickerMode.date,
-                    initialDateTime: selectedDate,
-                    minimumDate: minimumDate,
-                    maximumDate: DateTime(2100),
-                    onDateTimeChanged: (DateTime newDate) {
-                      setModalState(() {
-                        selectedDate = newDate;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    if (isPickup) {
+                      _pickupDate = selectedDate;
+                    } else {
+                      _dropOffDate = selectedDate;
+                    }
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text("Confirm"),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-  void _selectTime(BuildContext context, bool isStartTime) async {
+
+
+  Widget _buildCupertinoToolbar(BuildContext context, bool isPickup, DateTime selectedDate) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CupertinoButton(
+            child: const Text("Cancel", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoButton(
+            child: const Text("Done", style: TextStyle(color: Colors.blue)),
+            onPressed: () {
+              setState(() {
+                if (isPickup) {
+                  _pickupDate = selectedDate;
+                } else {
+                  _dropOffDate = selectedDate;
+                }
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -334,68 +339,53 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
     }
   }
 
-  String _formatTimeOfDay(TimeOfDay? time) {
-    if (time == null) return '';
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    final format = DateFormat.jm(); // Format time
-    return format.format(dt);
-  }
-
-  String _getValueText(CalendarDatePicker2Type datePickerType, List<DateTime?> values) {
-    if (values.length < 2 || (values[0] == null && values[1] == null)) {
-      return 'Drop-off Date - Pick-Up Date';
+  void _onFindParkingPressed() {
+    if (_selectedStartTime == null || _selectedEndTime == null || _pickupDate == null || _dropOffDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select all inputs.')));
+      return;
     }
-    values = values.map((e) => e != null ? DateUtils.dateOnly(e) : null).toList();
-    if (datePickerType == CalendarDatePicker2Type.range) {
-      final startDate = values[0]?.toString().replaceAll('00:00:00.000', '') ?? '';
-      final endDate = values[1]?.toString().replaceAll('00:00:00.000', '') ?? '';
-      return '$startDate to $endDate';
-    }
-    return 'Invalid';
+    // Navigator.pushNamed(context, '/ShowResult', arguments: {
+    //   'startDate': UiHelper.formatDate(_dropOffDate),
+    //   'endDate': UiHelper.formatDate(_pickupDate),
+    //   'startTime': UiHelper.formatTime(_selectedStartTime),
+    //   'endTime': UiHelper.formatTime(_selectedEndTime),
+    // });
+
+    Navigator.pushNamed(context, '/ShowResult',
+      arguments: {
+        'startDate': UiHelper.formatDate(_dropOffDate),
+        'endDate': UiHelper.formatDate(_pickupDate),
+        'startTime': UiHelper.formatTime(_selectedStartTime),
+        'endTime': UiHelper.formatTime(_selectedEndTime),
+        'AirportId': _selectedAirportId.toString(),
+        'AirportName': _selectedAirportName,
+      },
+    );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    return DateFormat('yyyy-MM-dd').format(date);
-  }
-
-  // Helper method to format TimeOfDay as "19:15"
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return '';
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
 
   late Future<List<Map<String, dynamic>>> _airportData;
+  int? _selectedAirportId;
+  String? _selectedAirportName;
 
   @override
   void initState() {
     super.initState();
-    _airportData = GetAirports.fetchAirports(); // Fetch data only once
+    _airportData = GetAirports.fetchAirports(); // Fetch airport data once
   }
-
-
-  int? _selectedAirportId; // Variable to store selected airport ID
-  String? _selectedAirportName; // Variable to store selected airport name
-
 
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
     final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Card(
           elevation: 4,
           margin: const EdgeInsets.symmetric(vertical: 8.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -405,7 +395,8 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Shimmer.fromColors(
-                          baseColor: baseColor, highlightColor: highlightColor,
+                          baseColor: baseColor,
+                          highlightColor: highlightColor,
                           child: Container(
                             width: double.infinity,
                             height: 50.0,
@@ -425,7 +416,8 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12), // Rounded corners
+                            borderRadius: BorderRadius.circular(12),
+                            // Rounded corners
                             border: Border.all(
                               color: Colors.grey, // Stroke color
                               width: 1, // Stroke width
@@ -436,10 +428,13 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                             child: Center(
                               child: Row(
                                 children: [
-                                  const Icon(MingCute.airplane_line, color: Colors.red),
-                                  const SizedBox(width: 5,),
+                                  const Icon(MingCute.airplane_line,
+                                      color: Colors.red),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
                                   Flexible(
-                                    child:  Text(
+                                    child: Text(
                                       _selectedAirportName ?? "Select Airport",
                                       // style: Theme.of(context).textTheme.titleMedium,
                                     ),
@@ -449,7 +444,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                             ),
                           ),
                         ),
-
                         onTap: () {
                           showCupertinoModalPopup(
                             context: context,
@@ -462,8 +456,10 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                                     itemExtent: 60.0,
                                     onSelectedItemChanged: (int index) {
                                       setState(() {
-                                        _selectedAirportId = airports[index]['id'];
-                                        _selectedAirportName = airports[index]['name'];
+                                        _selectedAirportId =
+                                            airports[index]['id'];
+                                        _selectedAirportName =
+                                            airports[index]['name'];
                                       });
                                     },
                                     children: airports.map((airport) {
@@ -485,144 +481,40 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     }
                   },
                 ),
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () => _showCupertinoDatePicker(context, false),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12), // Rounded corners
-                      border: Border.all(
-                        color: Colors.grey, // Stroke color
-                        width: 1, // Stroke width
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Row(
-                          children: [
-                            const Icon(MingCute.calendar_2_line, color: Colors.red),
-                            const SizedBox(width: 5,),
-                            Flexible(
-                              child: Text(
-                                _dropOffDate != null
-                                    ? DateFormat('EEE, dd MMM yyyy').format(_dropOffDate!)
-                                    : 'Drop-off Date',
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                UiHelper.buildContainer(
+                  label: "Drop-off Date",
+                  value: UiHelper.formatDate(_dropOffDate),
+                  onTap: () => _showDatePicker(context, false),
+                  icon: Icons.event,
+                  context: context,
                 ),
                 const SizedBox(height: 16),
-                InkWell(
-                  onTap: () => _showCupertinoDatePicker(context, true),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12), // Rounded corners
-                      border: Border.all(
-                        color: Colors.grey, // Stroke color
-                        width: 1, // Stroke width
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Row(
-                          children: [
-                            const Icon(MingCute.calendar_2_line, color: Colors.red),
-                            const SizedBox(width: 5,),
-                            Flexible(
-                              child: Text(
-                                _pickupDate != null
-                                    ? DateFormat('EEE, dd MMM yyyy').format(_pickupDate!)
-                                    : 'Pickup Date',
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                UiHelper.buildContainer(
+                  label: "Pickup Date",
+                  value: UiHelper.formatDate(_pickupDate),
+                  onTap: () => _showDatePicker(context, true),
+                  icon: Icons.calendar_today,
+                  context: context,
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
-                      child: InkWell(
+                      child: UiHelper.buildContainer(
+                        label: "Drop-Off Time",
+                        value: UiHelper.formatTimeOfDay(_selectedStartTime),
                         onTap: () => _selectTime(context, true),
-                        child: Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 1,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Center(
-                              child: Row(
-                                children: [
-                                  const Icon(MingCute.clock_2_line, color: Colors.red),
-                                  const SizedBox(width: 5,),
-                                  Flexible(
-                                    child: Text(
-                                      style: Theme.of(context).textTheme.labelMedium,
-                                      _selectedStartTime != null
-                                        ? _formatTimeOfDay(_selectedStartTime)
-                                        : 'Drop-Off Time',
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        icon: Icons.access_time, context: context,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: InkWell(
+                      child: UiHelper.buildContainer(
+                        label: "Pick-up Time",
+                        value: UiHelper.formatTimeOfDay(_selectedEndTime),
                         onTap: () => _selectTime(context, false),
-                        child: Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 1,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Center(
-                              child: Row(
-                                children: [
-                                  const Icon(MingCute.clock_2_line, color: Colors.red),
-                                  const SizedBox(width: 5,),
-                                  Flexible(
-                                    child: Text(
-                                      style: Theme.of(context).textTheme.labelMedium,
-                                      _selectedEndTime != null
-                                        ? _formatTimeOfDay(_selectedEndTime)
-                                        : 'Pick-up Time',
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        icon: Icons.timer,
+                        context: context,
                       ),
                     ),
                   ],
@@ -632,33 +524,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   width: double.infinity,
                   height: 49,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_selectedStartTime == null ||
-                          _selectedEndTime == null ||
-                          _pickupDate == null ||
-                          _dropOffDate == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select all inputs.')),
-                        );
-                        return;
-                      }
-                      // Combine and format date and time
-                      final startDate = _formatDate(_dropOffDate);
-                      final endDate = _formatDate(_pickupDate);
-                      final startTime = _formatTime(_selectedStartTime);
-                      final endTime = _formatTime(_selectedEndTime);
-
-                      Navigator.pushNamed(context, '/ShowResult',
-                        arguments: {
-                          'startDate': startDate,
-                          'endDate': endDate,
-                          'startTime': startTime,
-                          'endTime': endTime,
-                          'AirportId': _selectedAirportId.toString(),
-                          'AirportName': _selectedAirportName,
-                        },
-                      );
-                    },
+                    onPressed: _onFindParkingPressed,
                     child: const Text('Find Parking'),
                   ),
                 ),

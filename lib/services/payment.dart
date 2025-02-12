@@ -63,7 +63,7 @@ class PaymentWidget extends StatelessWidget {
         );
         await displayPaymentSheet(context);
       } catch (e) {
-        //print("Exception: $e");
+        ////print("Exception: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Payment failed")),
         );
@@ -88,7 +88,7 @@ class PaymentWidget extends StatelessWidget {
         const SnackBar(content: Text("Paid successfully")),
       );
     } on StripeException catch (e) {
-      //print('Error: $e');
+      ////print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Payment cancelled")),
       );
@@ -114,7 +114,7 @@ class PaymentWidget extends StatelessWidget {
       );
       return jsonDecode(response.body);
     } catch (err) {
-      //print('Error: ${err.toString()}');
+      ////print('Error: ${err.toString()}');
       return null;
     }
   }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:intl_mobile_field/intl_mobile_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/booking_api.dart';
 import '../widgets/text.dart';
@@ -41,8 +42,6 @@ class _BookingScreenState extends State<BookingScreen> {
   bool _hasTravelDetails = false;
   String? _flightNumber;
   String? _flightName;
-  String _departureTime = '';
-  String _arrivalTime = '';
   Vehicle? _selectedVehicle;
 
   double smsFees = 1.99;
@@ -93,9 +92,6 @@ class _BookingScreenState extends State<BookingScreen> {
   int? selectedPickupTerminalId;
 
 
-
-
-
   @override
   void initState() {
     super.initState();
@@ -126,22 +122,32 @@ class _BookingScreenState extends State<BookingScreen> {
       if (userData != null) {
         try {
           user = json.decode(userData);
+          selectedTitle = user?['title'];
+          firstNameController.text = user?['first_name'];
+          lastNameController.text = user?['last_name'];
+          phoneNumberController.text = user?['phone_number'];
+
         } catch (e) {
-          //print("Failed to parse user data: $e");
+          ////print("Failed to parse user data: $e");
           user = null;
         }
       }
     });
   }
 
-  final TextEditingController emailController = TextEditingController();
+  String? selectedTitle;
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController passengersController = TextEditingController();
 
-
+  //// Flight details
   final TextEditingController depFlightController = TextEditingController();
   final TextEditingController arrivalFlightController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+
     double companyPrice = double.tryParse(widget.company['price'].toString()) ?? 0.0;
 
     return Scaffold(
@@ -210,7 +216,6 @@ class _BookingScreenState extends State<BookingScreen> {
               children: [
                 Text(
                   'Drop-off Terminal', // Text label
-
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
@@ -248,7 +253,6 @@ class _BookingScreenState extends State<BookingScreen> {
               children: [
                 Text(
                   'Pickup Terminal', // Text label
-
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
@@ -450,7 +454,6 @@ class _BookingScreenState extends State<BookingScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 15),
                           ),
                           onPressed: () {
-
                             if (_formKey.currentState!.validate()) {
                               Navigator.maybePop(context);
                             }
@@ -524,7 +527,7 @@ class _BookingScreenState extends State<BookingScreen> {
         width: double.infinity,
         child: OutlinedButton(
           onPressed: () {
-            //print('Selected Vehicle: $_selectedVehicle');
+            ////print('Selected Vehicle: $_selectedVehicle');
             _selectVehicle(context);
           },
           style: OutlinedButton.styleFrom(
@@ -609,6 +612,10 @@ class _BookingScreenState extends State<BookingScreen> {
                   'model': vehicle.model!,
                   'deprTerminal': selectedDropoffTerminalId.toString(),
                   'returnTerminal': selectedPickupTerminalId.toString(),
+                  'firstName': firstNameController.text,
+                  'lastName': lastNameController.text, 
+                  'phoneNumber': phoneNumberController.text,
+                  'title': selectedTitle.toString(),
                 },
               );
             } else {
@@ -632,113 +639,217 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   void _showUserInformation(BuildContext context) {
+    late FocusNode _focusNode;
+    bool _isFocused = false;
+
+    @override
+    void initState() {
+      super.initState();
+      _focusNode = FocusNode();
+      _focusNode.addListener(() {
+        setState(() {
+          _isFocused = _focusNode.hasFocus;
+        });
+      });
+    }
+
+    @override
+    void dispose() {
+      _focusNode.dispose();
+      super.dispose();
+    }
+
+    final _formKey = GlobalKey<FormState>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: true,
       builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.70,
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text('Add Personal Information', style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Title',
-                          hintText: 'Mr/Ms',
+        return SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
+              return Form(
+                key: _formKey,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Center(
+                          child: Text(
+                            'Add User Information',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Title',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                prefixIcon: Icon(Icons.person,
+                                  color: _isFocused ? Colors.red : Colors.grey,
+                                ),
+                              ),
+                              hint: Text("Select title"),
+                              style: Theme.of(context).textTheme.labelLarge,
+                              value: selectedTitle,
+                              items: ['Mr', 'Ms', 'Mrs', 'Dr']
+                                  .map((title) => DropdownMenuItem(
+                                value: title,
+                                child: Text(title),
+                              ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedTitle = value;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a title';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CustomTextField(
+                                label: 'First Name',
+                                hintText: 'First Name',
+                                obscureText: false,
+                                icon: Icons.person,
+                                controller: firstNameController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your first name';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: CustomTextField(
+                                label: 'Last Name',
+                                hintText: 'Last Name',
+                                obscureText: false,
+                                icon: Icons.person,
+                                controller: lastNameController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your Last name';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          label: 'Passengers',
+                          hintText: 'Enter Total Passengers',
                           obscureText: false,
                           icon: Icons.person,
-                          controller: emailController,
+                          controller: passengersController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter Total Passengers';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 10), // Space between the fields
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'First Name',
-                          hintText: 'First Name',
-                          obscureText: false,
-                          icon: Icons.person,
-                          controller: emailController,
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Phone Number',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            IntlMobileField(
+                              decoration: InputDecoration(
+                                // labelText: 'Mobile Number',
+                                hintText: 'Phone Number',
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(color: Colors.redAccent)
+                                ),
+                              ),
+                              controller: phoneNumberController,
+                              initialCountryCode: 'GB',
+                              // disableLengthCounter: true,
+                              languageCode: "en",
+                              validator: (value) {
+                                if (value == null ) {
+                                  return 'Please enter your phone number';
+                                }
+                                if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(value as String)) {
+                                  return 'Please enter a valid phone number';
+                                }
+                                return null;
+                              },
+                            )
+                          ],
                         ),
-                      ),
-                    ],
+                        // if (_promoState == "expired") promoCodeExpired(),
+                        // if (_promoState == "removed") promoCodeRemoved(),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            onPressed: () {
+          
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.maybePop(context);
+                              }
+                            },
+                            child: const Text("Add", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  CustomTextField(
-                    label: 'Last Name',
-                    hintText: 'Last Name',
-                    obscureText: false,
-                    icon: Icons.person,
-                    controller: emailController,
-                  ),
-                  const SizedBox(height: 10),
-                  // Email Field
-                  CustomTextField(
-                    label: 'Email',
-                    hintText: 'Email',
-                    obscureText: false,
-                    icon: Icons.email,
-                    controller: emailController,
-                  ),
-                  // const SizedBox(height: 20),
-                  const SizedBox(height: 10),
-                  // Phone Number Field
-                  CustomTextField(
-                    label: 'Phone Number',
-                    hintText: 'Phone Number',
-                    obscureText: false,
-                    icon: Icons.phone,
-                    controller: emailController,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Please enter your email address, first name, and last name to enable the mobile number field.',
-                    style: TextStyle(fontSize: 12.0, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildButton(context, 'Cancel', Theme.of(context).colorScheme.surface, Colors.red),
-                      _buildButton(context, 'Save Information', Colors.red, Colors.white),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         );
       },
     );
   }
 
-  Widget _buildButton(BuildContext context, String text, Color bgColor, Color textColor) {
-    return ElevatedButton(
-      onPressed: () {
-        // saveBookingDetails();
-       Navigator.pushNamed(context, 'BookingDetails',);
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor,
-        minimumSize: const Size(150, 40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          side: const BorderSide(color: Colors.red),
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor),
-      ),
-    );
-  }
 }

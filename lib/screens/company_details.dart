@@ -2,21 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
-// void main() {
-//   runApp(MyApp());
-// }
-//
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Buttons TabBar Example',
-//       theme: ThemeData(primarySwatch: Colors.blue),
-//       home: ViewDeatils(),
-//     );
-//   }
-// }
-
 class ViewDeatils extends StatefulWidget {
   final dynamic company;
    ViewDeatils({super.key, this.company, });

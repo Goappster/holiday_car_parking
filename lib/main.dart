@@ -18,7 +18,7 @@ import 'package:holidayscar/routes.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
-   Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
+   Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          debugShowCheckedModeBanner: false,
+         //debugShowCheckedModeBanner: false,
           title: 'Holidays Car',
           initialRoute: AppRoutes.splash,
           routes: {

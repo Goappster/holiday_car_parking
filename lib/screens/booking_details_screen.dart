@@ -48,6 +48,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   late double totalPrice;
    // Add this variable
   late String registration; late String make; late String color; late String model;
+  
+  // user details
+  
+  late String firstName; late String lastName; late String phoneNumber; late String title;
 
   double smsFees = 1.99;
   double cancellationFees = 1.99;
@@ -128,8 +132,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     registration = args['registration']; make = args['make']; color = args['color']; model = args['model'];
     deprTerminal = args['deprTerminal'];
     returnTerminal = args['returnTerminal'];
-
-
+    
+    // user info
+    firstName = args['firstName']; lastName = args['lastName']; phoneNumber = args['phoneNumber']; title = args['title'];
   }
 
   Future<void> _loadUserData() async {
@@ -144,8 +149,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    DateTime startDateTime = DateTime.parse(startDate); // Convert String to DateTime
-    DateTime endDateTime = DateTime.parse(endDate);
+
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -242,10 +246,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       ),
                                     ),
                                     SizedBox(width: 5),
+                               /*     DateFormat('dd/MM/yyyy').format(startDateTime)*/
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(DateFormat('dd/MM/yyyy').format(startDateTime)),
+                                        Text('$startDate'),
                                         Text(
                                           '$startTime',
                                           style: TextStyle(color: Colors.grey),  // Change the color here
@@ -285,7 +290,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(DateFormat('dd/MM/yyyy').format(endDateTime)),
+                                        Text('$endDate'),
                                         Text(
                                           "at $endTime",
                                           style: TextStyle(color: Colors.grey, ),  // Change the color here
@@ -480,7 +485,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           paymentIntentClientSecret: paymentIntent!['client_secret'],
           merchantDisplayName: 'Holiday Car Parking',
           googlePay: const PaymentSheetGooglePay(
-            testEnv: true,
+            testEnv: false,
             currencyCode: 'GBP',
             merchantCountryCode: 'GB',
           ),
@@ -490,7 +495,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       await displayPaymentSheet(context, price, paymentIntentId);
 
     } catch (e) {
-      print("Exception: $e");
+      //print("Exception: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -524,7 +529,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         'payment_method_types[]': 'card',
       };
 
-      var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
+      var secretKey = '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';
       var response = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
         headers: {
@@ -537,11 +542,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        print("Stripe API Error: ${response.body}");
+        //print("Stripe API Error: ${response.body}");
         return null;
       }
     } catch (err) {
-      print('Error: ${err.toString()}');
+      //print('Error: ${err.toString()}');
       return null;
     }
   }
@@ -551,11 +556,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
     Map<String, String> bookingData = {
       'referenceNo': '$savedReferenceNo',
-      'title': '${user?['title']}',
-      'first_name': '${user?['first_name']}',
-      'last_name': '${user?['last_name']}',
+      'title': title,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': '${user?['email']}',
-      'contactno': '${user?['phone_number']}',
+      'contactno': phoneNumber,
       'deprTerminal': deprTerminal,
       'deptFlight': '$DepartureFlightNo',
       'returnTerminal': returnTerminal,
@@ -574,7 +579,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       'intent_id': paymentIntentId, // Fixed intent ID issue
     };
 
-    print("Sending booking data: $bookingData");
+    //print("Sending booking data: $bookingData");
 
     try {
       final response = await http.post(
@@ -602,27 +607,31 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           },
         );
       } else {
-        print('Failed to book: ${response.statusCode}, Response: ${response.body}');
       }
     } catch (e) {
-      print('Error occurred while posting booking data: $e');
     }
   }
 
 
   Future<void> saveIncompleteBooking( ) async {
+    DateFormat format = DateFormat("EEE, dd MMM yyyy");
+    DateTime parsedStartDate = format.parse(startDate);
+    DateTime parsedEndDate = format.parse(endDate);
+
+    String formattedStartDate = DateFormat('yyyy-MM-dd').format(parsedStartDate);
+    String formattedEndDate = DateFormat('yyyy-MM-dd').format(parsedEndDate);
     final url = Uri.parse('https://holidayscarparking.uk/api/saveIncompleteBooking');
     final response = await http.post(
       url,
       body: {
-        'title': '${user?['title']}',
-        'first_name': '${user?['first_name']}',
-        'last_name': '${user?['last_name']}',
+        'title': title,
+        'first_name': firstName,
+        'last_name': lastName,
         'email': '${user?['email']}',
-        'contactno': '${user?['phone_number']}',
+        'contactno': phoneNumber,
         'parking_type': '${company['parking_type']}',
-        'drop_date': '$startDate',
-        'drop_time': '$startTime',
+        'drop_date': formattedStartDate,
+        'drop_time': formattedEndDate,
         'pick_date':' $endDate',
         'pick_time': '$endTime',
         'total_days': '$totalDays',
@@ -641,15 +650,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (responseData['success'] == true) {
-        print(response.body);
         savedReferenceNo = responseData['booking']['referenceNo']; // Store reference number
-        //print('Reference No: $responseData');
+        ////print('Reference No: $responseData');
       }
       // ('Booking successful: ${response.body}');
 
 
     } else {
-      //print('Failed to book: ${response.reasonPhrase}');
+      ////print('Failed to book: ${response.reasonPhrase}');
     }
   }
 

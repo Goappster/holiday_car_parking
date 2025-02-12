@@ -34,9 +34,9 @@ Future<void> handlePaymentSuccess(String paymentIntentId) async {
     // Parse the JSON response
     var jsonResponse = jsonDecode(response.body);
     // Handle success
-    //print('Booking successful: ${jsonResponse['message']}');
+    ////print('Booking successful: ${jsonResponse['message']}');
   } else {
     // Handle error
-    //print('Failed to book: ${response.reasonPhrase}');
+    ////print('Failed to book: ${response.reasonPhrase}');
   }
 }

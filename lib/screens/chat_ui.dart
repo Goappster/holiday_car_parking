@@ -41,11 +41,11 @@ Future<void> postReply(String ticketRef, String message, File? imageFile) async 
 
 
     if (response.statusCode != 200) {
-      print(imageFile);
+      //print(imageFile);
       throw Exception("Failed to send reply: ${response.data}");
     }
   } catch (e) {
-    print("Error: $e");
+    //print("Error: $e");
     throw Exception("Error sending reply: $e");
   }
 }

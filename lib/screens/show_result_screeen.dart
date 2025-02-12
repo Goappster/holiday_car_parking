@@ -1,18 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/screens/booking.dart';
+import 'package:holidayscar/screens/ui_helper.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:marquee/marquee.dart';
-import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:shimmer/shimmer.dart';
-
 import '../services/api_service.dart';
-import 'package:intl/intl.dart';
+import '../services/get_airports.dart';
+import 'company_details.dart';
 
-import '../widgets/tab_bar.dart';
 class ShowResultsScreen extends StatefulWidget {
   const ShowResultsScreen({super.key});
   @override
@@ -32,11 +32,14 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
   String endDate = 'defaultEndDate';
   String startTime = 'defaultStartTime';
   String endTime = 'defaultEndTime';
+  late Future<List<Map<String, dynamic>>> _airportData;
+  int? _selectedAirportId;
+  String? _selectedAirportName;
 
   @override
   void initState() {
     super.initState();
-
+    _airportData = GetAirports.fetchAirports();
     // Initialize the API service
     _apiService = ApiService();
 
@@ -166,37 +169,6 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       ) {
     // Extract reviews from the offer
     final List<Map<String, dynamic>> reviews = (offer['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-
-    // Calculate average rating
-    // double averageRating = reviews.isNotEmpty
-    //     ? reviews
-    //     .map((review) => review['rating']. ?? 0)
-    //     .fold(0.0, (sum, rating) => sum + (rating as double)) / reviews.length
-    //     : 0.0;
-
-    // Round the average rating and cast to int
-    // int roundedRating = averageRating.isNaN ? 0 : averageRating.round();
-    // DateTime startDateTime;
-    // DateTime endDateTime;
-    //
-    // try {
-    //   startDateTime = DateTime.parse(startDate);
-    // } catch (e) {
-    //   debugPrint('Error parsing startDate: $startDate, Error: $e');
-    //   startDateTime = DateTime.now(); // Provide default value
-    // }
-    //
-    // try {
-    //   endDateTime = DateTime.parse(endDate);
-    // } catch (e) {
-    //   debugPrint('Error parsing endDate: $endDate, Error: $e');
-    //   endDateTime = DateTime.now(); // Provide default value
-    // }
-
-    // DateTime departureTime = DateTime.parse(startTime);
-    // DateTime returnTime = DateTime.parse(endTime);
-
-
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -230,8 +202,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                 ),
                 IconButton(
                   onPressed: () {
-                    // Navigator.pushNamed(context, '/Booking');
-                    print(endTime);
+                    _showSetupDialog(context);
                   },
                   icon: Icon(
                     Icons.edit,
@@ -362,7 +333,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
             ),
           );
         } else if (snapshot.hasError) {
-          //print(snapshot.error);
+          ////print(snapshot.error);
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No data available.'));
@@ -473,7 +444,7 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                       for (int i = 0; i < offer['reviews'][0]['rating']; i++)
                         InkWell(
                           onTap: () {
-                            _showRatingDialog(offer);
+                            _showCupertinoRatingDialog(context, offer);
                           },
                             child: const Icon(Icons.star, color: Colors.yellow, size: 20)),
                     ],
@@ -597,88 +568,86 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
       ),
     );
   }
-  void _showRatingDialog(offer) {
 
+  void _showCupertinoRatingDialog(BuildContext context, dynamic offer) {
     dynamic reviews = offer['reviews'];
-    showDialog(
+
+    showCupertinoDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Container(
-            width: double.maxFinite,
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("User Ratings", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                SizedBox(height: 10),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: reviews.length,
-                    itemBuilder: (context, index) {
-                      final user = reviews[index];
-                      // Handle null values by providing default values
-                      final String? name = user["first_name"];
-                      final String? lastName = user["last_name"];
-                      final int? rating = user["rating"];
-                      final double? ratingDouble = rating?.toDouble();
-                      final String? comment = user["comments"];
+        return CupertinoAlertDialog(
+          title: Text("User Ratings"),
+          content: Container(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: CupertinoScrollbar(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  final user = reviews[index];
+                  final String name = user["first_name"] ?? "N/A";
+                  final String lastName = user["last_name"] ?? "";
+                  final int rating = user["rating"] ?? 0;
+                  final double ratingDouble = rating.toDouble();
+                  final String comment = user["comments"] ?? "No comment";
 
-                      return Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.grey.shade300, width: 1),
-                        ),
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  return  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey.shade300, width: .5),
+                    ),
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.blueAccent,
-                                    child: Text(
-                                      name![0], // Use first letter, safe due to default value
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Text('$name $lastName', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                ],
+                              CircleAvatar(
+                                backgroundColor: Colors.blueAccent,
+                                child: Text(
+                                  name![0], // Use first letter, safe due to default value
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
-                              SizedBox(height: 8),
-                              RatingBarIndicator(
-                                rating: ratingDouble!,
-                                itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
-                                itemCount: 5,
-                                itemSize: 20.0,
-                                direction: Axis.horizontal,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                comment!,
-                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                              ),
+                              SizedBox(width: 10),
+                              Text('$name $lastName', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                          SizedBox(height: 8),
+                          RatingBarIndicator(
+                            rating: ratingDouble!,
+                            itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                            itemCount: 5,
+                            itemSize: 20.0,
+                            direction: Axis.horizontal,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            comment!,
+                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
+          actions: [
+            CupertinoDialogAction(
+              child: Text("Close"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
         );
       },
     );
   }
+
   Widget _buildImage( offer) {
     if (offer['park_api'] == 'DB') {
       return CachedNetworkImage(
@@ -713,4 +682,333 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
   }
 
 
+  TimeOfDay? _selectedStartTime, _selectedEndTime;
+  DateTime? _pickupDate;
+  DateTime? _dropOffDate;
+  void _showDatePicker(BuildContext context, bool isPickup) {
+    DateTime now = DateTime.now();
+    DateTime initialDate = DateTime(now.year, now.month, now.day);
+    DateTime selectedDate = isPickup ? (_pickupDate ?? initialDate) : (_dropOffDate ?? initialDate);
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateModal) => Container(
+          height: 300,
+          padding: const EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+          ),
+          child: Column(
+            children: [
+              _buildCupertinoToolbar(context, isPickup, selectedDate),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: selectedDate, // 
+                  minimumDate: initialDate,
+                  maximumDate: DateTime(2100),
+                  onDateTimeChanged: (DateTime newDate) {
+                    setStateModal(() {
+                      selectedDate = newDate;
+                    });
+                  },
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    if (isPickup) {
+                      _pickupDate = selectedDate;
+                    } else {
+                      _dropOffDate = selectedDate;
+                    }
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text("Confirm"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildCupertinoToolbar(BuildContext context, bool isPickup, DateTime selectedDate) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CupertinoButton(
+            child: const Text("Cancel", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoButton(
+            child: const Text("Done", style: TextStyle(color: Colors.blue)),
+            onPressed: () {
+              setState(() {
+                if (isPickup) {
+                  _pickupDate = selectedDate;
+                } else {
+                  _dropOffDate = selectedDate;
+                }
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStartTime) {
+          _selectedStartTime = picked;
+        } else {
+          _selectedEndTime = picked;
+        }
+      });
+    }
+  }
+
+  void _onFindParkingPressed() {
+    Navigator.pop(context);
+    if (_selectedStartTime == null || _selectedEndTime == null || _pickupDate == null || _dropOffDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select all inputs.')));
+      return;
+    }
+
+
+
+    _quotes = _apiService.fetchQuotes(
+      airportId: airportId!,
+      dropDate: UiHelper.formatDate(_dropOffDate),
+      dropTime:  UiHelper.formatTime(_selectedStartTime),
+      pickDate:  UiHelper.formatDate(_pickupDate),
+      pickTime: UiHelper.formatTime(_selectedEndTime),
+      promo: 'HCP-APP-OXT78U',
+    ).then((data) {
+      final companies = data['companies'] as List<dynamic>;
+
+      // Separate recommended and non-recommended companies
+      final recommendedCompanies = companies.where((a) => a['recommended'] == "Yes").toList();
+      final otherCompanies = companies.where((a) => a['recommended'] != "Yes").toList();
+
+      // Apply sorting based on the selected filter
+      if (_selectedOption == 'Low to High') {
+        recommendedCompanies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+        otherCompanies.sort((a, b) => double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+      } else if (_selectedOption == 'High to Low') {
+        recommendedCompanies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+        otherCompanies.sort((a, b) => double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+      } else if (_selectedOption == 'Recommended') {
+        // Show only recommended companies if "Recommended" is selected
+        data['companies'] = recommendedCompanies;
+        return data;
+      }
+
+      // Combine lists, placing recommended companies first
+      data['companies'] = [...recommendedCompanies, ...otherCompanies];
+      return data;
+    });
+    // Navigator.pushNamed(context, '/ShowResult',
+    //   arguments: {
+    //     'startDate': UiHelper.formatDate(_pickupDate),
+    //     'endDate': UiHelper.formatDate(_dropOffDate),
+    //     'startTime': UiHelper.formatTime(_selectedStartTime),
+    //     'endTime': UiHelper.formatTime(_selectedEndTime),
+    //     'AirportId': _selectedAirportId.toString(),
+    //     'AirportName': _selectedAirportName,
+    //   },
+    // );
+  }
+
+
+
+
+
+  void _showSetupDialog(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
+    final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder( // Add StatefulBuilder for real-time updates
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: const Text("Setup Options"),
+              content: Card(
+                elevation: 0,
+                color: Colors.transparent,
+                child: Padding(
+                  padding: const EdgeInsets.all(0.0),
+                  child: Column(
+                    children: [
+                      FutureBuilder<List<Map<String, dynamic>>>(
+                        future: _airportData,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Shimmer.fromColors(
+                              baseColor: baseColor,
+                              highlightColor: highlightColor,
+                              child: Container(
+                                width: double.infinity,
+                                height: 50.0,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Text('No airports available');
+                          } else {
+                            final airports = snapshot.data!;
+                            return InkWell(
+                              onTap: () {
+                                showCupertinoModalPopup(
+                                  context: context,
+                                  builder: (_) => CupertinoActionSheet(
+                                    title: const Text("Select Airport"),
+                                    actions: [
+                                      SizedBox(
+                                        height: 200,
+                                        child: CupertinoPicker(
+                                          itemExtent: 60.0,
+                                          onSelectedItemChanged: (int index) {
+                                            setState(() {
+                                              _selectedAirportId = airports[index]['id'];
+                                              _selectedAirportName = airports[index]['name'];
+                                            });
+                                          },
+                                          children: airports.map((airport) {
+                                            return Center(
+                                              child: Text(airport['name']),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
+                                    ],
+                                    cancelButton: CupertinoActionSheetAction(
+                                      child: const Text("Done"),
+                                      onPressed: () => Navigator.of(context).pop(),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey, width: 1),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      const Icon(MingCute.airplane_line, color: Colors.red),
+                                      const SizedBox(width: 5),
+                                      Flexible(
+                                        child: Text(_selectedAirportName ?? "Select Airport"),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      UiHelper.buildContainer(
+                        label: "Drop-off Date",
+                        value: UiHelper.formatDate(_dropOffDate),
+                        onTap: () => _showDatePicker(context, false),
+                        icon: Icons.event,
+                        context: context,
+                      ),
+                      const SizedBox(height: 16),
+                      UiHelper.buildContainer(
+                        label: "Pickup Date",
+                        value: UiHelper.formatDate(_pickupDate),
+                        onTap: () => _showDatePicker(context, true),
+                        icon: Icons.calendar_today,
+                        context: context,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: UiHelper.buildContainer(
+                              label: "Drop-Off Time",
+                              value: UiHelper.formatTimeOfDay(_selectedStartTime),
+                              onTap: () async {
+                                final time = await _selectTime(context, true);
+                                setState(() {
+                                  _selectedStartTime;
+                                });
+                              },
+                              icon: Icons.access_time,
+                              context: context,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: UiHelper.buildContainer(
+                              label: "Pick-up Time",
+                              value: UiHelper.formatTimeOfDay(_selectedEndTime),
+                              onTap: () async {
+                                final time = await _selectTime(context, false);
+                                  setState(() {
+                                    _selectedEndTime;
+                                  });
+
+                              },
+                              icon: Icons.timer,
+                              context: context,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 49,
+                        child: ElevatedButton(
+                          onPressed: _onFindParkingPressed,
+                          child: const Text('Find Parking'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Close"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
