@@ -8,14 +8,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-// void main() => runApp(MyApp());
-//
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(home: SupportTicketForm());
-//   }
-// }
+import '../utils/UiHelper.dart';
 
 class SupportTicketForm extends StatefulWidget {
   @override
@@ -70,7 +63,6 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
       // Show the loading dialog before making the request
       showDialog(
         context: context,
@@ -88,7 +80,6 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
           );
         },
       );
-
       // Prepare the request
       final uri = Uri.parse('https://holidayscarparking.uk/api/createSupportTicket');
       final response = await http.post(
@@ -163,10 +154,7 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: Text('Create Tickets'),
-      ),
+      appBar: AppBar(surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor, title: Text('Create Tickets'),),
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16.0),
@@ -216,7 +204,6 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
                     ),
                   ],
                 ),
-
                 SizedBox(height: 10,),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Ticket Subject'),
@@ -264,13 +251,18 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
                   ),
                 ),
                 SizedBox(height: 20),
-                ElevatedButton(
+                // ElevatedButton(
+                //   onPressed: _submitForm,
+                //   child: Text('Submit Ticket'),
+                //   style: ElevatedButton.styleFrom(
+                //     minimumSize: const Size(double.infinity, 50),
+                //   ),
+                // ),
+
+                CustomButton(
+                  text: 'Submit Ticket',
                   onPressed: _submitForm,
-                  child: Text('Submit Ticket'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                ),
+                )
               ],
             ),
           ),

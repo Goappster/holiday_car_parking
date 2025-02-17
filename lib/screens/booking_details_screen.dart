@@ -591,7 +591,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
 
       if (response.statusCode == 200) {
-
         _notificationService.showNotification('$savedReferenceNo');
         Navigator.pushNamed(
           context,

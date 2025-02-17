@@ -10,9 +10,7 @@ import 'package:intl/intl.dart';
 
 class BookingDatabase {
   static final BookingDatabase instance = BookingDatabase._init();
-
   BookingDatabase._init();
-
   Future<List<Booking>> getBookings() async {
     final response = await http.post(
       Uri.parse('https://holidayscarparking.uk/api/bookingHistory'),
@@ -132,7 +130,6 @@ class BookingCard extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,8 +160,6 @@ class BookingCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
-
                   SizedBox(height: 8),
                   Column(
                     children: [
@@ -244,9 +239,6 @@ class BookingCard extends StatelessWidget {
                           ),
                         ],
                       ),
-
-
-
                       Text.rich(
                         TextSpan(
                           text: 'Payment Made: ',

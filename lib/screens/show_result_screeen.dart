@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/screens/booking.dart';
-import 'package:holidayscar/screens/ui_helper.dart';
+import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:marquee/marquee.dart';
@@ -590,8 +590,8 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                   final int rating = user["rating"] ?? 0;
                   final double ratingDouble = rating.toDouble();
                   final String comment = user["comments"] ?? "No comment";
-
                   return  Card(
+                    color: Colors.transparent,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -793,10 +793,10 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
     _quotes = _apiService.fetchQuotes(
       airportId: airportId!,
-      dropDate: UiHelper.formatDate(_dropOffDate),
-      dropTime:  UiHelper.formatTime(_selectedStartTime),
-      pickDate:  UiHelper.formatDate(_pickupDate),
-      pickTime: UiHelper.formatTime(_selectedEndTime),
+      dropDate: UiHelperDate.formatDate(_dropOffDate),
+      dropTime:  UiHelperDate.formatTime(_selectedStartTime),
+      pickDate:  UiHelperDate.formatDate(_pickupDate),
+      pickTime: UiHelperDate.formatTime(_selectedEndTime),
       promo: 'HCP-APP-OXT78U',
     ).then((data) {
       final companies = data['companies'] as List<dynamic>;
@@ -824,10 +824,10 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
     });
     // Navigator.pushNamed(context, '/ShowResult',
     //   arguments: {
-    //     'startDate': UiHelper.formatDate(_pickupDate),
-    //     'endDate': UiHelper.formatDate(_dropOffDate),
-    //     'startTime': UiHelper.formatTime(_selectedStartTime),
-    //     'endTime': UiHelper.formatTime(_selectedEndTime),
+    //     'startDate': UiHelperDate.formatDate(_pickupDate),
+    //     'endDate': UiHelperDate.formatDate(_dropOffDate),
+    //     'startTime': UiHelperDate.formatTime(_selectedStartTime),
+    //     'endTime': UiHelperDate.formatTime(_selectedEndTime),
     //     'AirportId': _selectedAirportId.toString(),
     //     'AirportName': _selectedAirportName,
     //   },
@@ -935,17 +935,17 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                           }
                         },
                       ),
-                      UiHelper.buildContainer(
+                      UiHelperDate.buildContainer(
                         label: "Drop-off Date",
-                        value: UiHelper.formatDate(_dropOffDate),
+                        value: UiHelperDate.formatDate(_dropOffDate),
                         onTap: () => _showDatePicker(context, false),
                         icon: Icons.event,
                         context: context,
                       ),
                       const SizedBox(height: 16),
-                      UiHelper.buildContainer(
+                      UiHelperDate.buildContainer(
                         label: "Pickup Date",
-                        value: UiHelper.formatDate(_pickupDate),
+                        value: UiHelperDate.formatDate(_pickupDate),
                         onTap: () => _showDatePicker(context, true),
                         icon: Icons.calendar_today,
                         context: context,
@@ -954,9 +954,9 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: UiHelper.buildContainer(
+                            child: UiHelperDate.buildContainer(
                               label: "Drop-Off Time",
-                              value: UiHelper.formatTimeOfDay(_selectedStartTime),
+                              value: UiHelperDate.formatTimeOfDay(_selectedStartTime),
                               onTap: () async {
                                 final time = await _selectTime(context, true);
                                 setState(() {
@@ -969,9 +969,9 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: UiHelper.buildContainer(
+                            child: UiHelperDate.buildContainer(
                               label: "Pick-up Time",
-                              value: UiHelper.formatTimeOfDay(_selectedEndTime),
+                              value: UiHelperDate.formatTimeOfDay(_selectedEndTime),
                               onTap: () async {
                                 final time = await _selectTime(context, false);
                                   setState(() {

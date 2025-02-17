@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:holidayscar/screens/ui_helper.dart';
+import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +13,7 @@ import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 import '../services/get_airports.dart';
 import '../theme/app_theme.dart';
+import '../utils/UiHelper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -345,18 +346,18 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       return;
     }
     // Navigator.pushNamed(context, '/ShowResult', arguments: {
-    //   'startDate': UiHelper.formatDate(_dropOffDate),
-    //   'endDate': UiHelper.formatDate(_pickupDate),
-    //   'startTime': UiHelper.formatTime(_selectedStartTime),
-    //   'endTime': UiHelper.formatTime(_selectedEndTime),
+    //   'startDate': UiHelperDateDate.formatDate(_dropOffDate),
+    //   'endDate': UiHelperDateDate.formatDate(_pickupDate),
+    //   'startTime': UiHelperDateDate.formatTime(_selectedStartTime),
+    //   'endTime': UiHelperDateDate.formatTime(_selectedEndTime),
     // });
 
     Navigator.pushNamed(context, '/ShowResult',
       arguments: {
-        'startDate': UiHelper.formatDate(_dropOffDate),
-        'endDate': UiHelper.formatDate(_pickupDate),
-        'startTime': UiHelper.formatTime(_selectedStartTime),
-        'endTime': UiHelper.formatTime(_selectedEndTime),
+        'startDate': UiHelperDate.formatDate(_dropOffDate),
+        'endDate': UiHelperDate.formatDate(_pickupDate),
+        'startTime': UiHelperDate.formatTime(_selectedStartTime),
+        'endTime': UiHelperDate.formatTime(_selectedEndTime),
         'AirportId': _selectedAirportId.toString(),
         'AirportName': _selectedAirportName,
       },
@@ -389,7 +390,13 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Select Airport',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,),
+                ),
+                const SizedBox(height: 5),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _airportData, // Use the stored future
                   builder: (context, snapshot) {
@@ -481,17 +488,18 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     }
                   },
                 ),
-                UiHelper.buildContainer(
+                const SizedBox(height: 16),
+                UiHelperDate.buildContainer(
                   label: "Drop-off Date",
-                  value: UiHelper.formatDate(_dropOffDate),
+                  value: UiHelperDate.formatDate(_dropOffDate),
                   onTap: () => _showDatePicker(context, false),
                   icon: Icons.event,
                   context: context,
                 ),
                 const SizedBox(height: 16),
-                UiHelper.buildContainer(
+                UiHelperDate.buildContainer(
                   label: "Pickup Date",
-                  value: UiHelper.formatDate(_pickupDate),
+                  value: UiHelperDate.formatDate(_pickupDate),
                   onTap: () => _showDatePicker(context, true),
                   icon: Icons.calendar_today,
                   context: context,
@@ -500,18 +508,18 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 Row(
                   children: [
                     Expanded(
-                      child: UiHelper.buildContainer(
+                      child: UiHelperDate.buildContainer(
                         label: "Drop-Off Time",
-                        value: UiHelper.formatTimeOfDay(_selectedStartTime),
+                        value: UiHelperDate.formatTimeOfDay(_selectedStartTime),
                         onTap: () => _selectTime(context, true),
                         icon: Icons.access_time, context: context,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: UiHelper.buildContainer(
+                      child: UiHelperDate.buildContainer(
                         label: "Pick-up Time",
-                        value: UiHelper.formatTimeOfDay(_selectedEndTime),
+                        value: UiHelperDate.formatTimeOfDay(_selectedEndTime),
                         onTap: () => _selectTime(context, false),
                         icon: Icons.timer,
                         context: context,
@@ -520,14 +528,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 49,
-                  child: ElevatedButton(
-                    onPressed: _onFindParkingPressed,
-                    child: const Text('Find Parking'),
-                  ),
-                ),
+                CustomButton(text: 'Find Parking', onPressed:  _onFindParkingPressed,)
               ],
             ),
           ),

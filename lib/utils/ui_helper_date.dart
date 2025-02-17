@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
-class UiHelper {
+class UiHelperDate {
   static Widget buildContainer({
     required BuildContext context,
     required String label,

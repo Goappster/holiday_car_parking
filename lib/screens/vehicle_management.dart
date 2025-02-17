@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:http/http.dart' as http;
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -546,29 +547,19 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         style: TextStyle(fontSize: 12.0, color: Colors.grey),
                       ),
                       const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                          ),
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              Navigator.pop(context);
-                              await _addVehicle(
-                                registrationController.text,
-                                makeController.text,
-                                modelController.text,
-                                colorController.text,
-                                '${user?['id']}',
-                              );
-                            }
-                          },
-                          child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
+                      CustomButton(text: 'Save',
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            Navigator.pop(context);
+                            await _addVehicle(
+                              registrationController.text,
+                              makeController.text,
+                              modelController.text,
+                              colorController.text,
+                              '${user?['id']}',
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),

@@ -78,8 +78,8 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
           // Navigate to the Create Ticket Screen when the FAB is pressed
           Navigator.pushNamed(context, AppRoutes.createSupportTicket);
         },
-        child: Icon(Icons.add),
         tooltip: 'Create Ticket',
+        child: Icon(Icons.add),
       ),
     );
   }

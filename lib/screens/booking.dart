@@ -376,7 +376,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
 
   void _showFlightDetailsForm(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -385,7 +385,7 @@ class _BookingScreenState extends State<BookingScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Form(
-              key: _formKey,
+              key: formKey,
               child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -454,7 +454,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 15),
                           ),
                           onPressed: () {
-                            if (_formKey.currentState!.validate()) {
+                            if (formKey.currentState!.validate()) {
                               Navigator.maybePop(context);
                             }
                           },
@@ -630,7 +630,6 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               );
             }
-
           },
           child: Text('Continue'),
         )
@@ -639,27 +638,27 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   void _showUserInformation(BuildContext context) {
-    late FocusNode _focusNode;
-    bool _isFocused = false;
+    late FocusNode focusNode;
+    bool isFocused = false;
 
     @override
     void initState() {
       super.initState();
-      _focusNode = FocusNode();
-      _focusNode.addListener(() {
+      focusNode = FocusNode();
+      focusNode.addListener(() {
         setState(() {
-          _isFocused = _focusNode.hasFocus;
+          isFocused = focusNode.hasFocus;
         });
       });
     }
 
     @override
     void dispose() {
-      _focusNode.dispose();
+      focusNode.dispose();
       super.dispose();
     }
 
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -669,7 +668,7 @@ class _BookingScreenState extends State<BookingScreen> {
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setModalState) {
               return Form(
-                key: _formKey,
+                key: formKey,
                 child: Padding(
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -709,7 +708,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             DropdownButtonFormField<String>(
                               decoration: InputDecoration(
                                 prefixIcon: Icon(Icons.person,
-                                  color: _isFocused ? Colors.red : Colors.grey,
+                                  color: isFocused ? Colors.red : Colors.grey,
                                 ),
                               ),
                               hint: Text("Select title"),
@@ -832,8 +831,7 @@ class _BookingScreenState extends State<BookingScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 15),
                             ),
                             onPressed: () {
-          
-                              if (_formKey.currentState!.validate()) {
+                              if (formKey.currentState!.validate()) {
                                 Navigator.maybePop(context);
                               }
                             },

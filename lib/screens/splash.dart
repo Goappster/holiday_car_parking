@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import '../routes.dart';
+import '../utils/UiHelper.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -11,98 +13,75 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _controller;
-    @override
+
+  @override
   void initState() {
     super.initState();
+    _initializeVideo();
     _checkToken();
+  }
+
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _initializeVideo() {
     _controller = VideoPlayerController.asset('assets/car.mp4')
-      ..initialize().then((_) {
-        setState(() {}); // Ensure the first frame is shown after the video is initialized
-      })
+      ..initialize().then((_) => setState(() {}))
       ..setLooping(true)
       ..play();
   }
 
-    @override
-    void dispose() {
-      _controller.dispose();
-      super.dispose();
-    }
-
   Future<void> _checkToken() async {
     final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+    final token = prefs.getString('token');
 
     if (token != null) {
-      // Navigate to home screen if token exists
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.home,
-            (route) => false, // This condition removes all previous routes
-      );
-    } else {
-      // Navigate to login screen if no token
-      // Navigator.pushNamed(
-      //   context,
-      //   AppRoutes.login,
-      // );
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+    final isSmallScreen = size.width < 600;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
+     backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Background image
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/images/Splash.png', // Ensure the image is in assets and added in pubspec.yaml
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
-          Stack(
-            children: [
-              Positioned.fill(
-                child: _controller.value.isInitialized
-                    ? VideoPlayer(_controller)
-                    : Container(color: Colors.black),
+          Positioned.fill(
+            child: _controller.value.isInitialized
+                ? FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _controller.value.size.width,
+                height: _controller.value.size.height,
+                child: VideoPlayer(_controller),
               ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 150, // Adjust height as needed
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.7),
-                        Colors.black.withOpacity(0.0),
-                      ],
-                    ),
-                  ),
+            )
+                : Container(color: Colors.black),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: isLandscape ? size.height * 0.3 : size.height * 0.2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.0),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-
-          // Gradient overlay
-          // Positioned.fill(
-          //   child: Container(
-          //     decoration: BoxDecoration(
-          //       gradient: LinearGradient(
-          //         colors: [Colors.black.withOpacity(0.7), Colors.black.withOpacity(0.9)],
-          //         begin: Alignment.topCenter,
-          //         end: Alignment.bottomCenter,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-          // Text and button content
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -110,72 +89,36 @@ class _SplashScreenState extends State<SplashScreen> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withOpacity(0.9),
-                    Colors.red.withOpacity(0.0),
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.5),
                   ],
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+                padding: EdgeInsets.symmetric( horizontal: isLandscape ? size.width * 0.15 : size.width * 0.05, vertical: isLandscape ? size.height * 0.08 : size.height * 0.05,),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: isLandscape ? MainAxisAlignment.center : MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Logo and title
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.asset('assets/images/LogoWhite.png',
-                        height: 60,),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'One stop ultimate solution to airport parking.',
-                          // textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        Image.asset(
+                          'assets/images/LogoWhite.png',
+                          height: isLandscape ? size.height * 0.15 : size.height * 0.08,
+                        ),
+                        SizedBox(height: size.height * 0.02),
+                        CustomText(
+                          text: "One stop ultimate solution to airport parking.",
+                          style: TextStyle(color: Colors.white),
+                          fontSizeFactor: isSmallScreen ? 0.6 : 0.8,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 40),
-                    // Swipe button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/Signup');
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          gradient: const LinearGradient(
-                            colors: [Colors.redAccent, Colors.red],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          // boxShadow: const [
-                          //   BoxShadow(
-                          //     color: Colors.black45,
-                          //     blurRadius: 10,
-                          //     offset: Offset(0, 4),
-                          //   ),
-                          // ],
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Lets Get Started',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    SizedBox(height: size.height * 0.05),
+                    CustomButton(
+                      text: 'Let’s Get Started',
+                      onPressed: () => Navigator.pushNamed(context, '/Signup'),
                     ),
                   ],
                 ),

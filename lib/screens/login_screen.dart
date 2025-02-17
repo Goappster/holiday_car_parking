@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
+
 import '../services/login_api.dart';
+import '../utils/UiHelper.dart';
+import '../utils/validation_utils.dart';
 import '../widgets/text.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,149 +17,101 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _passwordVisible = false;
   bool _rememberMe = false;
 
-  // Method to handle login
- final LoginApiService _apiService = LoginApiService();
-
-  Future<void> _login(String email, String password) async {
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Container(
-          width: 80.0,
-          height: 80.0,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: CupertinoActivityIndicator(),
-          ),
-        ),
-      ),
-    );
-
-    bool success = await _apiService.login(email, password);
-    Navigator.of(context).pop(); // Close the loading dialog
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User signed in successfully!')),
-      );
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => Material3BottomNav()));
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.home,
-            (route) => false, // This condition removes all previous routes
-      );
-
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(builder: (context) => AnotherScreen())
-      // );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please check your credentials.')),
-      );
-      // _showErrorDialog('Login failed. Please check your credentials.');
-    }
-  }
+  final LoginApiService _apiService = LoginApiService();
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  Future<void> _login(String email, String password) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: AdaptiveLoadingIndicator()),
+    );
+
+    bool success = await _apiService.login(email, password);
+    Navigator.of(context).pop(); // Close loading dialog
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User signed in successfully!')),
+      );
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+            (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please check your credentials.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      // backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02, ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 50),
+                SizedBox(height: screenHeight * 0.05), // Responsive spacing
                 // Logo
                 Center(
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/Logo.png', // Replace with your logo image path
-                        height: 60,
-                      ),
-                    ],
+                  child: Image.asset(
+                    'assets/images/Logo.png',
+                    height: screenHeight * 0.10, // Scales based on screen height
                   ),
                 ),
-                const SizedBox(height: 40),
-                // Login Label
-                const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Illustration
+                SizedBox(height: screenHeight * 0.03),
+                // Login Text
+                CustomText(text: "Login", fontSizeFactor: 2.0),
+                SizedBox(height: screenHeight * 0.02),
+                // Illustration Image
                 Center(
                   child: Image.asset(
-                    'assets/images/pana.png', // Replace with your illustration image path
-                    height: 120,
+                    'assets/images/pana.png',
+                    height: screenHeight * 0.15,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.03),
                 // Email Field
-
-              CustomTextField(
-                label: 'Email',
-                hintText: 'Email',
-                obscureText: false,
-                icon: Icons.email,
-                controller: _emailController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-                const SizedBox(height: 20),
-                // Password Field
-              CustomTextField(
-                label: 'Password',
-                hintText: 'Password',
-                obscureText: !_passwordVisible,
-                icon: Icons.lock,
-                controller: _passwordController,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;
-                    });
-                  },
+                CustomTextField(
+                  label: 'Email',
+                  hintText: 'Enter your email',
+                  obscureText: false,
+                  icon: Icons.email,
+                  controller: _emailController,
+                  validator: validateEmail,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-                const SizedBox(height: 10),
-                // Remember Me and Forgot Password
+                SizedBox(height: screenHeight * 0.02),
+                // Password Field
+                CustomTextField(
+                  label: 'Password',
+                  hintText: 'Enter your password',
+                  obscureText: !_passwordVisible,
+                  icon: Icons.lock,
+                  controller: _passwordController,
+                  suffixIcon: IconButton(
+                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off,),
+                    onPressed: () {
+                      setState(() {
+                        _passwordVisible = !_passwordVisible;
+                      });
+                    },
+                  ),
+                  validator: validatePassword,
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                // Remember Me & Forgot Password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -175,54 +130,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                       Navigator.pushNamed(context, AppRoutes.forgetPass);
+                        Navigator.pushNamed(context, AppRoutes.forgetPass);
                       },
-                      child: const Text('Forget Password?'),
+                      child: const Text('Forgot Password?'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.02),
                 // Login Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    // shape: RoundedRectangleBorder(
-                    //   borderRadius: BorderRadius.circular(10),
-                    // ),
-
-                  ),
+                CustomButton(
+                  text: 'Login',
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
                       _login(_emailController.text, _passwordController.text);
                     }
                   },
-                  child: Text(
-                    'Login',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)
-                  ),
                 ),
-                const SizedBox(height: 20),
-                // Create Account Link
+                SizedBox(height: screenHeight * 0.03),
+                // Create Account Section
                 Center(
                   child: Column(
                     children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                      CustomText(text: "Don't have an account?", fontSizeFactor: 0.7),
                       TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, AppRoutes.signup);
-                        },
-                        child: const Text(
-                          "Create Account",
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),),
+                        onPressed: () => Navigator.pushNamed(context, AppRoutes.signup),
+                        child: CustomText(
+                          text: "Create Account",
+                          fontSizeFactor: 0.5,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(height: screenHeight * 0.05),
               ],
             ),
           ),
