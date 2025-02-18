@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -15,31 +18,45 @@ import 'package:holidayscar/providers/theme_provider.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:holidayscar/routes.dart';
-void main() async{
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   await NotificationService().init();
-   Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';
+  Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';
+
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: MyApp(),
+      child: MyApp(analytics: analytics),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  final FirebaseAnalytics analytics;
+  MyApp({required this.analytics});
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-         //debugShowCheckedModeBanner: false,
           title: 'Holidays Car',
+          navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
           initialRoute: AppRoutes.splash,
           routes: {
             '/Login': (context) => const LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
-            // '/Booking': (context) => BookingScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),
             '/MYBooking': (context) => MyBookingsScreen(),
@@ -48,13 +65,13 @@ class MyApp extends StatelessWidget {
           onGenerateRoute: AppRoutes.generateRoute,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          // themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           themeMode: ThemeMode.system,
         );
       },
     );
   }
 }
+
 
 class Material3BottomNav extends StatefulWidget {
   const Material3BottomNav({super.key});
@@ -65,7 +82,6 @@ class Material3BottomNav extends StatefulWidget {
 
 class _Material3BottomNavState extends State<Material3BottomNav> {
   int _selectedIndex = 0;
-
   final List<Widget> _screens = [
     const HomeScreen(),
     MyBookingsScreen(),
@@ -79,7 +95,6 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
-
         animationDuration: const Duration(seconds: 1),
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1082376010855",
+    "project_id": "holiday-car-parking",
+    "storage_bucket": "holiday-car-parking.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082376010855:android:bfe70c423e20a1d6c5e8c2",
+        "android_client_info": {
+          "package_name": "com.holiday.car.parking.uk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAF7_EjOVO_QGtkCw_oZFj9bMuTb5A4oc4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

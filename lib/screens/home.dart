@@ -1,10 +1,10 @@
 import 'dart:convert';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +22,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  // Initialize Firebase and Notification Settings
+  void initializeFirebase() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      if (message.notification != null) {
+        String? imageUrl = message.data['image']; // Get image URL from FCM payload
+        await showNotification(message.notification?.title, message.notification?.body, imageUrl);
+      }
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    });
+  }
+  // Initialize local notifications
+  Future<void> initializeLocalNotifications() async {
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');  // Default Android launcher icon
+    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+  // Request permissions for notifications
+  void requestPermissions() async {
+    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+  // Show notification with image
+  Future<void> showNotification(String? title, String? body, String? imageUrl) async {
+    var androidDetails = AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      channelDescription: 'your_channel_description',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',  // Use default Android icon here
+    );
+    var platformDetails = NotificationDetails(android: androidDetails);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformDetails,
+      payload: 'item x',
+    );
+  }
+
   String? token;
   Map<String, dynamic>? user;
   Future<void>? _userDataFuture;
@@ -31,6 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    initializeFirebase();
+    initializeLocalNotifications();
+    requestPermissions();
     _userDataFuture = _loadUserData();
     _shimmerTimer = Timer(const Duration(seconds: 2), () {
       setState(() {

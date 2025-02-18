@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 class BookingDatabase {
   static final BookingDatabase instance = BookingDatabase._init();
+
   BookingDatabase._init();
   Future<List<Booking>> getBookings() async {
     final response = await http.post(
@@ -92,25 +93,27 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 itemBuilder: (context, index) {
                   final booking = bookings[index];
                   return GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/PaymentReceipt',
-                          arguments: {
-                            'airportName': booking.airportName,
-                            'departureDate': booking.departureDate,
-                            'returnDate': booking.returnDate,
-                            'totalPrice': booking.totalAmount.toString(),
-                            'ReferenceNo': booking.referenceNo,
-                            'companyName': booking.companyName,
-                            'companyLogo': booking.companyLogo,
-                            'no_of_days': booking.numberOfDays.toString(),
-                          },
-                        );
-                      },
-                      child: BookingCard(booking: booking));
+                    onTap: () {
+                      Navigator.pushNamed(context, '/PaymentReceipt',
+                        arguments: {
+                          'airportName': booking.airportName,
+                          'departureDate': booking.departureDate,
+                          'returnDate': booking.returnDate,
+                          'totalPrice': booking.totalAmount.toString(),
+                          'ReferenceNo': booking.referenceNo,
+                          'companyName': booking.companyName,
+                          'companyLogo': booking.companyLogo,
+                          'no_of_days': booking.numberOfDays.toString(),
+                        },
+                      );
+                    },
+                    child: BookingCard(booking: booking),
+                  );
                 },
               ),
             ),
-
+            // Second tab widget (for 'All Booking' tab)
+            Center(child: Text('No bookings found')), // Placeholder, replace with actual content
           ],
         ),
       ),
