@@ -72,6 +72,10 @@ dependencies:
   firebase_crashlytics: ^4.3.2
   firebase_messaging: ^15.2.2
   image: ^4.3.0
+  lucide_icons: ^0.257.0
+  carousel_slider: ^5.0.0
+#  awesome_bottom_bar: ^1.2.4
+#  dot_navigation_bar: ^1.0.2
 
 dev_dependencies:
   flutter_test:

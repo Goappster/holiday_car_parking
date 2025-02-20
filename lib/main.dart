@@ -12,6 +12,7 @@ import 'package:holidayscar/screens/my_booking.dart';
 import 'package:holidayscar/screens/paymetn_receipt.dart';
 import 'package:holidayscar/screens/profile_screen.dart';
 import 'package:holidayscar/screens/show_result_screeen.dart';
+import 'package:holidayscar/screens/wallet.dart';
 import 'package:holidayscar/services/Notifactions.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
@@ -88,6 +89,7 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
     // const CartScreen(),
    // BookingScreen(),
     UserProfileScreen(),
+    WalletDashboard(),
   ];
 
   @override
@@ -119,16 +121,16 @@ const _navBarItems = [
     selectedIcon: Icon(MingCute.car_2_fill),
     label: 'Bookings',
   ),
-  // NavigationDestination(
-  //   icon: Icon(Icons.shopping_bag_outlined),
-  //   selectedIcon: Icon(Icons.shopping_bag),
-  //   label: 'Cart',
-  // ),
   NavigationDestination(
     icon: Icon(Icons.person_outline_rounded),
     selectedIcon: Icon(Icons.person_rounded),
     label: 'Profile',
   ),
+  NavigationDestination(
+    icon: Icon(MingCute.wallet_5_line),
+    selectedIcon: Icon(MingCute.wallet_5_fill),
+    label: 'Wallet',
+  )
 ];
 
 

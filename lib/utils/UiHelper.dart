@@ -179,15 +179,16 @@ class AdaptiveSizedBox extends StatelessWidget {
 
 // Rubbles filed Button
 
-
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
+  final Color? backgroundColor; // Optional background color
 
   const CustomButton({
     Key? key,
     required this.text,
     required this.onPressed,
+    this.backgroundColor, // Allow custom background color
   }) : super(key: key);
 
   @override
@@ -200,6 +201,7 @@ class CustomButton extends StatelessWidget {
       width: buttonWidth,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor ?? Theme.of(context).primaryColor, // Use custom or primary color
           padding: EdgeInsets.symmetric(vertical: verticalPadding),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -217,4 +219,5 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+
 
