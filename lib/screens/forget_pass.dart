@@ -176,3 +176,4 @@ class LogoWithTitle extends StatelessWidget {
     );
   }
 }
+

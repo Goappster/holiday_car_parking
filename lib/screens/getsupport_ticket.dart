@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';  // To decode JSON
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../routes.dart';
 import 'chat_ui.dart';
@@ -18,50 +19,123 @@ class SupportTicketScreen extends StatefulWidget {
 
 class _SupportTicketScreenState extends State<SupportTicketScreen> {
   List<dynamic> tickets = [];
+  Map<String, dynamic>? user;
+  bool _isLoading = true; // Track loading state
+
 
   @override
   void initState() {
     super.initState();
-    fetchTickets();
+    _loadUserData();  // Only load user data on initialization
   }
 
-  // Function to fetch tickets from the API
-  Future<void> fetchTickets() async {
-    final response = await http.post(
-      Uri.parse('https://holidayscarparking.uk/api/getSupportTicketsList'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'user_id': 890,  // Adjust this value based on the logged-in user or another source of the user ID
-      }),
-    );
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userData = prefs.getString('user');
 
-    if (response.statusCode == 200) {
-      var responseData = jsonDecode(response.body);
-      if (responseData['success']) {
+    if (userData != null) {
+      try {
         setState(() {
-          tickets = responseData['data'];  // Update the tickets list with the response data
+          user = json.decode(userData);  // Parse user data
+          _isLoading = true;  // Indicate that data is being loaded
+        });
+        await fetchTickets();  // Fetch tickets once user data is available
+      } catch (e) {
+        setState(() {
+          user = null;
+          _isLoading = false; // Stop loading if user data decoding fails
         });
       }
     } else {
-      //print('Error: ${response.statusCode}');
-      //print('Response body: ${response.body}');
-      //print('Failed to fetch tickets');
+      setState(() {
+        user = null;  // No user data found
+        _isLoading = false;  // Stop loading if no user data
+      });
     }
+  }
+
+  Future<void> fetchTickets() async {
+    if (user == null) {
+      setState(() {
+        _isLoading = false;  // Stop loading if no user is logged in
+      });
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://holidayscarparking.uk/api/getSupportTicketsList'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'user_id': user!['id'],  // Ensure that the user ID is correct
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var responseData = jsonDecode(response.body);
+        if (responseData['success']) {
+          setState(() {
+            tickets = responseData['data'];  // Update tickets with response data
+            _isLoading = false;  // Stop loading when the data is fetched
+          });
+        } else {
+          setState(() {
+            tickets = [];
+            _isLoading = false;  // Stop loading in case of error in the response
+          });
+        }
+      } else {
+        setState(() {
+          tickets = [];
+          _isLoading = false;  // Stop loading if the API call fails
+        });
+      }
+    } catch (e) {
+      setState(() {
+        tickets = [];
+        _isLoading = false;  // Stop loading in case of error (network issues, etc.)
+      });
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    // Trigger the refresh action
+    setState(() {
+      _isLoading = true; // Set loading to true while refreshing data
+    });
+    await fetchTickets(); // Fetch tickets again when the user pulls to refresh
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-          title: Text('Support Tickets')),
-      body: tickets.isEmpty
-          ? Center(child: CircularProgressIndicator())  // Loading indicator
-          : ListView.builder(
-        itemCount: tickets.length,
-        itemBuilder: (context, index) {
-          var ticket = tickets[index];
-          return GestureDetector(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Text('Support Tickets'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: _isLoading
+            ? Center(
+          child: CircularProgressIndicator(), // Show loading spinner while fetching data
+        )
+            : tickets.isEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'No tickets found.',
+                style: TextStyle(fontSize: 20, color: Colors.grey),
+              ),
+            ],
+          ),
+        )
+            : ListView.builder(
+          itemCount: tickets.length,
+          itemBuilder: (context, index) {
+            var ticket = tickets[index];
+            return GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
@@ -70,12 +144,14 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
                   ),
                 );
               },
-              child: CustomTicketCard(ticket: ticket));
-        },
+              child: CustomTicketCard(ticket: ticket),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to the Create Ticket Screen when the FAB is pressed
+          // Navigate to the "Create New Ticket" screen
           Navigator.pushNamed(context, AppRoutes.createSupportTicket);
         },
         tooltip: 'Create Ticket',
@@ -84,7 +160,6 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
     );
   }
 }
-
 class CustomTicketCard extends StatelessWidget {
   final dynamic ticket;
 

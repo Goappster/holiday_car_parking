@@ -1,5 +1,5 @@
-// Custom Text Field Widget
 import 'package:flutter/material.dart';
+
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final Widget? suffixIcon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final List<String>? suggestions; // Optional suggestions
 
   const CustomTextField({
     required this.label,
@@ -18,13 +19,17 @@ class CustomTextField extends StatefulWidget {
     required this.controller,
     this.suffixIcon,
     this.validator,
-  });
+    this.suggestions,
+    Key? key,
+  }) : super(key: key);
 
   @override
-  _CustomTextFieldState createState() => _CustomTextFieldState();
+  _CustomTextFieldState createState() =>
+      _CustomTextFieldState();
 }
 
-class _CustomTextFieldState extends State<CustomTextField> {
+class _CustomTextFieldState
+    extends State<CustomTextField> {
   late FocusNode _focusNode;
   bool _isFocused = false;
 
@@ -45,6 +50,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
     super.dispose();
   }
 
+  Iterable<String> _getOptions(TextEditingValue textEditingValue) {
+    if (widget.suggestions == null || widget.suggestions!.isEmpty) {
+      return const Iterable<String>.empty();
+    }
+    if (textEditingValue.text.isEmpty) {
+      return const Iterable<String>.empty();
+    }
+    return widget.suggestions!.where((String option) =>
+        option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -55,28 +71,44 @@ class _CustomTextFieldState extends State<CustomTextField> {
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),
-        TextFormField(
-          focusNode: _focusNode,
-          controller: widget.controller,
-          obscureText: widget.obscureText,
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            hintStyle: TextStyle(color: Colors.grey),
-            prefixIcon: Icon(
-              widget.icon,
-              color: _isFocused ? Colors.red : Colors.grey, // Change icon color
-            ),
-            suffixIcon: widget.suffixIcon,
-            // border: OutlineInputBorder(
-            //   borderRadius: BorderRadius.circular(10),
-            //     borderSide: const BorderSide(color: Colors.redAccent)
-            // ),
-            // focusedBorder: OutlineInputBorder(
-            //   borderSide: const BorderSide(color: Colors.red), // Focused border color
-            //   borderRadius: BorderRadius.circular(10),
-            // ),
-          ),
-          validator: widget.validator, // Use validator
+        Autocomplete<String>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            return _getOptions(textEditingValue);
+          },
+          onSelected: (String selection) {
+            widget.controller.text = selection;
+          },
+          fieldViewBuilder: (BuildContext context,
+              TextEditingController textEditingController,
+              FocusNode focusNode,
+              VoidCallback onFieldSubmitted,) {
+            // Sync the internal controller with the provided controller
+            textEditingController.text = widget.controller.text;
+            textEditingController.selection = widget.controller.selection;
+            return TextFormField(
+              controller: textEditingController,
+              focusNode: focusNode,
+              obscureText: widget.obscureText,
+              decoration: InputDecoration(
+                hintText: widget.hintText,
+                hintStyle: const TextStyle(color: Colors.grey),
+                prefixIcon: Icon(
+                  widget.icon,
+                  color: _isFocused ? Colors.red : Colors.grey,
+                ),
+                suffixIcon: widget.suffixIcon,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.red),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              validator: widget.validator,
+            );
+          },
         ),
       ],
     );

@@ -71,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? token;
   Map<String, dynamic>? user;
-  Future<void>? _userDataFuture;
   bool _isShimmerVisible = true;
   Timer? _shimmerTimer;
 
@@ -81,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
     initializeFirebase();
     initializeLocalNotifications();
     requestPermissions();
-    _userDataFuture = _loadUserData();
+    _loadUserData();
     _shimmerTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _isShimmerVisible = false;
@@ -289,14 +288,19 @@ class DateTimePickerSection extends StatefulWidget {
 }
 
 class _DateTimePickerSectionState extends State<DateTimePickerSection> {
-
   TimeOfDay? _selectedStartTime, _selectedEndTime;
   DateTime? _pickupDate;
   DateTime? _dropOffDate;
+
   void _showDatePicker(BuildContext context, bool isPickup) {
     DateTime now = DateTime.now();
-    DateTime initialDate = DateTime(now.year, now.month, now.day);
-    DateTime selectedDate = isPickup ? (_pickupDate ?? initialDate) : (_dropOffDate ?? initialDate);
+    DateTime initialPickupDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    DateTime initialDropOffDate = _dropOffDate ?? _pickupDate ?? initialPickupDate; // Fix here ✅
+
+    // Set the initial date depending on whether it's for pickup or dropoff
+    DateTime selectedDate = isPickup
+        ? (_pickupDate ?? initialPickupDate)
+        : (_dropOffDate ?? (_pickupDate ?? initialPickupDate)); // Ensure drop-off starts from pickup date if it is null
 
     showCupertinoModalPopup(
       context: context,
@@ -314,8 +318,10 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
               Expanded(
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.date,
-                  initialDateTime: selectedDate, // ✅ Ensure selected date is used
-                  minimumDate: initialDate,
+                  initialDateTime: selectedDate,
+                  minimumDate: isPickup
+                      ? initialPickupDate
+                      : (_pickupDate ?? initialPickupDate), // Drop-off must be after pickup
                   maximumDate: DateTime(2100),
                   onDateTimeChanged: (DateTime newDate) {
                     setStateModal(() {
@@ -329,7 +335,15 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   setState(() {
                     if (isPickup) {
                       _pickupDate = selectedDate;
+                      // Ensure drop-off date is at least pickup date
+                      if (_dropOffDate == null || _dropOffDate!.isBefore(_pickupDate!)) {
+                        _dropOffDate = _pickupDate;
+                      }
                     } else {
+                      // Ensure drop-off date is after pickup date
+                      if (_pickupDate != null && selectedDate.isBefore(_pickupDate!)) {
+                        selectedDate = _pickupDate!; // Reset to pickup date if drop-off is before it
+                      }
                       _dropOffDate = selectedDate;
                     }
                   });
@@ -343,8 +357,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       ),
     );
   }
-
-
   Widget _buildCupertinoToolbar(BuildContext context, bool isPickup, DateTime selectedDate) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -447,97 +459,87 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                     fontWeight: FontWeight.bold,),
                 ),
                 const SizedBox(height: 5),
-                FutureBuilder<List<Map<String, dynamic>>>(
+                FutureBuilder<List<Map<String, dynamic>>> (
                   future: _airportData, // Use the stored future
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Shimmer.fromColors(
-                          baseColor: baseColor,
-                          highlightColor: highlightColor,
-                          child: Container(
-                            width: double.infinity,
-                            height: 50.0,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ));
+                        baseColor: baseColor,
+                        highlightColor: highlightColor,
+                        child: Container(
+                          width: double.infinity,
+                          height: 50.0,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
                     } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
+                      return Text('Error: \${snapshot.error}');
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Text('No airports available');
                     } else {
                       final airports = snapshot.data!;
-                      return InkWell(
+                      return GestureDetector(
+                        onTap: () {
+                          showCupertinoModalPopup(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return CupertinoActionSheet(
+                                title: const Text("Select Airport"),
+                                actions: airports.map((airport) {
+                                  return CupertinoActionSheetAction(
+                                    child: Text(airport['name']),
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedAirportId = airport['id'];
+                                        _selectedAirportName = airport['name'];
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
+                                }).toList(),
+                                cancelButton: CupertinoActionSheetAction(
+                                  child: const Text("Cancel"),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              );
+                            },
+                          );
+                        },
                         child: Container(
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            // Rounded corners
                             border: Border.all(
-                              color: Colors.grey, // Stroke color
-                              width: 1, // Stroke width
+                              color: Colors.grey,
+                              width: 1,
                             ),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Center(
-                              child: Row(
-                                children: [
-                                  const Icon(MingCute.airplane_line,
-                                      color: Colors.red),
-                                  const SizedBox(
-                                    width: 5,
+                            child: Row(
+                              children: [
+                                const Icon(MingCute.airplane_line, color: Colors.red),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    _selectedAirportName ?? "Select Airport",
                                   ),
-                                  Flexible(
-                                    child: Text(
-                                      _selectedAirportName ?? "Select Airport",
-                                      // style: Theme.of(context).textTheme.titleMedium,
-                                    ),
-                                  )
-                                ],
-                              ),
+                                )
+                              ],
                             ),
                           ),
                         ),
-                        onTap: () {
-                          showCupertinoModalPopup(
-                            context: context,
-                            builder: (_) => CupertinoActionSheet(
-                              title: Text("Select Airport"),
-                              actions: [
-                                Container(
-                                  height: 200,
-                                  child: CupertinoPicker(
-                                    itemExtent: 60.0,
-                                    onSelectedItemChanged: (int index) {
-                                      setState(() {
-                                        _selectedAirportId =
-                                            airports[index]['id'];
-                                        _selectedAirportName =
-                                            airports[index]['name'];
-                                      });
-                                    },
-                                    children: airports.map((airport) {
-                                      return Center(
-                                        child: Text(airport['name']),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ],
-                              cancelButton: CupertinoActionSheetAction(
-                                child: Text("Done"),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ),
-                          );
-                        },
                       );
                     }
                   },
-                ),
+                )
+                ,
+
+
                 const SizedBox(height: 16),
                 UiHelperDate.buildContainer(
                   label: "Drop-off Date",

@@ -3,76 +3,90 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:holidayscar/screens/support_ticket.dart';
-import 'package:http/http.dart' as http;
-import 'package:holidayscar/models/booking.dart';
 import 'package:intl/intl.dart';
-
-class BookingDatabase {
-  static final BookingDatabase instance = BookingDatabase._init();
-
-  BookingDatabase._init();
-  Future<List<Booking>> getBookings() async {
-    final response = await http.post(
-      Uri.parse('https://holidayscarparking.uk/api/bookingHistory'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_id': 890}),
-    );
-
-    if (response.statusCode == 200) {
-      //print(response.body);
-      final List<dynamic> data = jsonDecode(response.body)['data'];
-      return data.map((json) => Booking.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load bookings');
-    }
-  }
-}
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/dio.dart';
 
 class MyBookingsScreen extends StatefulWidget {
+  const MyBookingsScreen({super.key});
   @override
   _MyBookingsScreenState createState() => _MyBookingsScreenState();
 }
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
-  List<Booking> bookings = [];
-  bool isLoading = true;
 
-  Future<void> fetchBookings() async {
-    try {
-      final data = await BookingDatabase.instance.getBookings();
-      setState(() {
-        bookings = data;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      //print('Error fetching bookings: $e');
-    }
-  }
+  Map<String, dynamic>? user;
+  List<Map<String, dynamic>> bookings = [];
+  bool isLoading = true;
+  final DioService _apiService = DioService();
 
   @override
   void initState() {
     super.initState();
-    fetchBookings();
+    _initialize();
   }
 
+  Future<void> _initialize() async {
+    await _loadUserData();
+    if (user != null) {
+      await loadBookings();
+    } else {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userData = prefs.getString('user');
+
+    if (userData != null) {
+      try {
+        setState(() {
+          user = json.decode(userData);
+        });
+      } catch (e) {
+        user = null;
+      }
+    }
+  }
+
+  Future<void> loadBookings() async {
+    if (user == null || user?['id'] == null) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await _apiService.postRequest('/bookingHistory', {
+        "user_id": user!['id'].toString(),
+      });
+
+      setState(() {
+        if (response != null && response.data['status'] == 'success') {
+          bookings = List<Map<String, dynamic>>.from(response.data['data']);
+        } else {
+          bookings = [];
+        }
+      });
+    } catch (e) {
+      setState(() => bookings = []);
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
+      child:  Scaffold(
         appBar: AppBar(
           centerTitle: true,
           title: Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold),),
           bottom: TabBar(
             dividerHeight: 0,
-            labelColor: Colors.white, 
+            labelColor: Colors.white,
             indicator: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Theme.of(context).primaryColor, 
+              color: Theme.of(context).primaryColor,
             ),
             tabs: [
               Tab(text: '              Active              '),
@@ -87,33 +101,19 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             bookings.isEmpty
                 ? Center(child: Text('No active bookings'))
                 : RefreshIndicator(
-              onRefresh: fetchBookings,
+              onRefresh: loadBookings,
               child: ListView.builder(
                 itemCount: bookings.length,
                 itemBuilder: (context, index) {
                   final booking = bookings[index];
                   return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/PaymentReceipt',
-                        arguments: {
-                          'airportName': booking.airportName,
-                          'departureDate': booking.departureDate,
-                          'returnDate': booking.returnDate,
-                          'totalPrice': booking.totalAmount.toString(),
-                          'ReferenceNo': booking.referenceNo,
-                          'companyName': booking.companyName,
-                          'companyLogo': booking.companyLogo,
-                          'no_of_days': booking.numberOfDays.toString(),
-                        },
-                      );
-                    },
+                    onTap: () { Navigator.pushNamed(context, '/PaymentReceipt', arguments: booking); },
                     child: BookingCard(booking: booking),
                   );
                 },
               ),
             ),
-            // Second tab widget (for 'All Booking' tab)
-            Center(child: Text('No bookings found')), // Placeholder, replace with actual content
+            Center(child: Text('No bookings found')),
           ],
         ),
       ),
@@ -122,13 +122,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 }
 
 class BookingCard extends StatelessWidget {
-  final Booking booking;
-  BookingCard({required this.booking});
+  final Map<String, dynamic> booking;
+  const BookingCard({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.only(left: 16.0, right: 16.0, top: 16, ),
+      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -144,7 +144,7 @@ class BookingCard extends StatelessWidget {
                         height: 48,
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: NetworkImage(booking.companyLogo),
+                            image: NetworkImage(booking['company_logo'] ?? ''),
                             fit: BoxFit.cover,
                           ),
                           borderRadius: BorderRadius.circular(8.0),
@@ -155,10 +155,10 @@ class BookingCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            booking.companyName,
+                            booking['company_name'] ?? 'Unknown Company',
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                          Text(booking.airportName, style: TextStyle(color: Colors.grey)),
+                          Text(booking['airport_name'] ?? 'Unknown Airport', style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ],
@@ -169,77 +169,8 @@ class BookingCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                height: 32,
-                                width: 32,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(5),
-                                    color: const Color(0xFF1D9DD9)
-                                        .withOpacity(0.20)
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: SvgPicture.asset(
-                                    'assets/map_blue.svg',
-                                    // semanticsLabel: 'My SVG Image',
-                                    // height: 10,
-                                    // width: 10,
-                                    // fit: BoxFit.fill,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(DateFormat('dd/MM/yyyy').format(booking.returnDate)),
-                                  Text(
-                                    DateFormat('h:mm a').format(booking.returnDate),
-                                    style: TextStyle(color: Colors.grey),  // Change the color here
-                                  )
-                                ],
-                              ),
-
-                            ],
-                          ),
-                          SizedBox(width: 0),
-
-                          Row(
-                            children: [
-                              Container(
-                                height: 32,
-                                width: 32,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(5),
-                                    color: const Color(0xFF33D91D)
-                                        .withOpacity(0.20)
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: SvgPicture.asset(
-                                    'assets/map.svg',
-                                    // semanticsLabel: 'My SVG Image',
-                                    // height: 10,
-                                    // width: 10,
-                                    // fit: BoxFit.fill,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(DateFormat('dd/MM/yyyy').format(booking.departureDate)),
-                                  Text(
-                                    DateFormat('h:mm a').format(booking.departureDate),
-                                    style: TextStyle(color: Colors.grey),  // Change the color here
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
+                          _buildDateInfo('assets/map_blue.svg', booking['return_date'], Colors.blue.withOpacity(0.2)),
+                          _buildDateInfo('assets/map.svg', booking['departure_date'], Colors.green.withOpacity(0.2)),
                         ],
                       ),
                       Text.rich(
@@ -247,13 +178,8 @@ class BookingCard extends StatelessWidget {
                           text: 'Payment Made: ',
                           children: [
                             TextSpan(
-                              text: '£${booking.totalAmount}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).primaryColor
-
-                              ),
+                              text: '£${booking['total_amount'] ?? '0.00'}',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                             ),
                           ],
                         ),
@@ -266,6 +192,38 @@ class BookingCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDateInfo(String assetPath, String? date, Color bgColor) {
+    DateTime? parsedDate;
+    if (date != null) {
+      try {
+        parsedDate = DateTime.parse(date);
+      } catch (e) {
+        parsedDate = null;
+      }
+    }
+    return Row(
+      children: [
+        Container(
+          height: 32,
+          width: 32,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(5), color: bgColor),
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: SvgPicture.asset(assetPath),
+          ),
+        ),
+        SizedBox(width: 5),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(parsedDate != null ? DateFormat('dd/MM/yyyy').format(parsedDate) : 'Unknown Date'),
+            Text(parsedDate != null ? DateFormat('h:mm a').format(parsedDate) : 'Unknown Time', style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ],
     );
   }
 }

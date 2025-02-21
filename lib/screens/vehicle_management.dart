@@ -18,6 +18,23 @@ class VehicleManagementScreen extends StatefulWidget {
 }
 
 class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
+
+
+  final List<String> vehicleSuggestions = [
+    'Mercedes-Benz', 'BMW', 'Audi', 'Tesla', 'Volvo', 'Toyota', 'Ford', 'Volkswagen', 'Skoda', 'Hyundai', 'Nissan', 'Kia', 'Peugeot',
+    'Renault', 'Jaguar', 'Land Rover',
+    'Lexus', 'Mazda', 'Mitsubishi', 'Porsche', 'Subaru', 'Suzuki', 'Honda', 'Chevrolet', 'Chrysler', 'Dodge', 'Fiat', 'Jeep', 'Genesis',
+    'Alfa Romeo', 'Citroën', 'Bugatti', 'Aston Martin', 'Ferrari', 'Lamborghini', 'Maserati', 'Bentley', 'Rolls-Royce',
+  ];
+
+  final List<String> vehiclemodelSuggestions = [
+    '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020',
+    '2021', '2022', '2023', '2024', '2005', '2006', '2007', '2008', '2009', '1995', '1996', '1997', '1998', '1999',
+    '2000', '2001', '2002', '2003', '2004', '1985', '1986', '1987',
+    '1988', '1989', '1990', '1991', '1992', '1993', '1994',
+  ];
+
+
   List<dynamic> _vehicles = [];
   bool _isLoading = true;
   Map<String, dynamic>? user;
@@ -290,11 +307,14 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
 
 
   void _updateVehicle(BuildContext context, String regNo, String make, String model, String color, String vehId) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     final registrationController = TextEditingController(text: regNo);
     final makeController = TextEditingController(text: make);
     final modelController = TextEditingController(text: model);
     final colorController = TextEditingController(text: color);
+
+
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -303,7 +323,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Form(
-              key: _formKey,
+              key: formKey,
               child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -352,6 +372,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         obscureText: false,
                         icon: Icons.person,
                         controller: makeController,
+                        suggestions: vehicleSuggestions,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your Vehicle Make Company';
@@ -368,6 +389,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                               hintText: '2019',
                               obscureText: false,
                               icon: Icons.person,
+                              suggestions: vehiclemodelSuggestions,
                               controller: modelController,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -411,7 +433,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 15),
                           ),
                           onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
+                            if (formKey.currentState!.validate()) {
                               Navigator.pop(context);
                               await _updateVehicleApi(registrationController.text, makeController.text, modelController.text, colorController.text, vehId);
                             }
@@ -436,7 +458,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
   }
 
   void _showVehicle(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     final registrationController = TextEditingController();
     final makeController = TextEditingController();
     final modelController = TextEditingController();
@@ -449,7 +471,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Form(
-              key: _formKey,
+              key: formKey,
               child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -484,6 +506,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         obscureText: false,
                         icon: Icons.person,
                         controller: registrationController,
+
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your Vehicle Registration Number';
@@ -498,6 +521,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         obscureText: false,
                         icon: Icons.person,
                         controller: makeController,
+                        suggestions: vehicleSuggestions,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your Vehicle Make Company';
@@ -515,6 +539,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                               obscureText: false,
                               icon: Icons.person,
                               controller: modelController,
+                              suggestions: vehiclemodelSuggestions,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter your Vehicle Model';
@@ -549,7 +574,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                       const SizedBox(height: 20),
                       CustomButton(text: 'Save',
                         onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
+                          if (formKey.currentState!.validate()) {
                             Navigator.pop(context);
                             await _addVehicle(
                               registrationController.text,
