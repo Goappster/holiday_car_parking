@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holidayscar/routes.dart';
 
 import '../services/login_api.dart';
@@ -8,7 +9,8 @@ import '../utils/validation_utils.dart';
 import '../widgets/text.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -16,12 +18,53 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _passwordVisible = false;
   bool _rememberMe = false;
-
-  final LoginApiService _apiService = LoginApiService();
-
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final LoginApiService _apiService = LoginApiService();
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+    _loadCredentials();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  // Load saved credentials if 'Remember Me' is checked
+  Future<void> _loadCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('rememberMe') ?? false) {
+      emailController.text = prefs.getString('email') ?? '';
+      passwordController.text = prefs.getString('password') ?? '';
+      setState(() {
+        _rememberMe = true;
+      });
+    }
+  }
+
+  // Save credentials to SharedPreferences
+  Future<void> _saveCredentials(String email, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('rememberMe', _rememberMe);
+    prefs.setString('email', email);
+    prefs.setString('password', password);
+  }
+
+  // Clear saved credentials
+  Future<void> _clearCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('rememberMe');
+    prefs.remove('email');
+    prefs.remove('password');
+  }
 
   Future<void> _login(String email, String password) async {
     showDialog(
@@ -30,21 +73,34 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context) => const Center(child: AdaptiveLoadingIndicator()),
     );
 
-    bool success = await _apiService.login(email, password);
-    Navigator.of(context).pop(); // Close loading dialog
+    try {
+      bool success = await _apiService.login(email, password);
+      Navigator.of(context).pop(); // Close loading dialog
 
-    if (success) {
+      if (success) {
+        if (_rememberMe) {
+          _saveCredentials(email, password);
+        } else {
+          _clearCredentials();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User signed in successfully!')),
+        );
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+              (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please check your credentials.')),
+        );
+      }
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User signed in successfully!')),
-      );
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.home,
-            (route) => false,
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please check your credentials.')),
+        const SnackBar(content: Text('An error occurred, please try again later.')),
       );
     }
   }
@@ -57,25 +113,22 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02, ),
+          padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: screenHeight * 0.05), // Responsive spacing
-                // Logo
+                SizedBox(height: screenHeight * 0.05),
                 Center(
                   child: Image.asset(
                     'assets/images/Logo.png',
-                    height: screenHeight * 0.10, // Scales based on screen height
+                    height: screenHeight * 0.10,
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                // Login Text
                 CustomText(text: "Login", fontSizeFactor: 2.0),
                 SizedBox(height: screenHeight * 0.02),
-                // Illustration Image
                 Center(
                   child: Image.asset(
                     'assets/images/pana.png',
@@ -83,35 +136,55 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                // Email Field
-                CustomTextField(
-                  label: 'Email',
-                  hintText: 'Enter your email',
-                  obscureText: false,
-                  icon: Icons.email,
-                  controller: _emailController,
-                  validator: validateEmail,
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: screenHeight * 0.02),
-                // Password Field
-                CustomTextField(
-                  label: 'Password',
-                  hintText: 'Enter your password',
+                TextFormField(
+                  controller: passwordController,
                   obscureText: !_passwordVisible,
-                  icon: Icons.lock,
-                  controller: _passwordController,
-                  suffixIcon: IconButton(
-                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off,),
-                    onPressed: () {
-                      setState(() {
-                        _passwordVisible = !_passwordVisible;
-                      });
-                    },
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(),
                   ),
-                  validator: validatePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: screenHeight * 0.01),
-                // Remember Me & Forgot Password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -137,17 +210,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.02),
-                // Login Button
-                CustomButton(
-                  text: 'Login',
+                ElevatedButton(
                   onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      _login(_emailController.text, _passwordController.text);
+                    if (_formKey.currentState!.validate()) {
+                      _login(emailController.text, passwordController.text);
                     }
                   },
+                  child: const Text('Login'),
                 ),
                 SizedBox(height: screenHeight * 0.03),
-                // Create Account Section
                 Center(
                   child: Column(
                     children: [
@@ -170,12 +241,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }

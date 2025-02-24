@@ -28,7 +28,7 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   await NotificationService().init();
-  Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';
+  Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
           navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
           initialRoute: AppRoutes.splash,
           routes: {
-            '/Login': (context) => const LoginScreen(),
+            '/Login': (context) =>  LoginScreen(),
             '/ShowResult': (context) => const ShowResultsScreen(),
             '/PaymentConfirm': (context) => BookingConfirmation(),
             '/BookingDetails': (context) => BookingDetailsScreen(),

@@ -25,7 +25,7 @@ class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
+        return MaterialPageRoute(builder: (_) => LoginScreen());
       case signup:
         return MaterialPageRoute(builder: (_) => const CreateAccountScreen());
       case splash:
@@ -43,7 +43,7 @@ class AppRoutes {
       case manageTicketScreen:
         return MaterialPageRoute(builder: (_) =>  SupportTicketScreen());
       default:
-        return MaterialPageRoute(builder: (_) => const LoginScreen()); // Fallback
+        return MaterialPageRoute(builder: (_) =>  LoginScreen()); // Fallback
     }
   }
 }

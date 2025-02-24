@@ -271,7 +271,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),
-
         IntlMobileField(
           decoration: InputDecoration(
             // labelText: 'Mobile Number',

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class DioService {
   final Dio _dio = Dio(
@@ -19,7 +20,9 @@ class DioService {
       Response response = await _dio.get(endpoint, queryParameters: queryParams);
       return response;
     } catch (e) {
-      print("Error in GET request: $e");
+      if (kDebugMode) {
+        print("Error in GET request: $e");
+      }
       return null;
     }
   }
@@ -34,4 +37,7 @@ class DioService {
       return null;
     }
   }
+
+
+
 }
