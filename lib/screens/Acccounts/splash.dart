@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
-import '../routes.dart';
-import '../utils/UiHelper.dart';
+import '../../routes.dart';
+import '../../utils/UiHelper.dart';
 
 class SplashScreen extends StatefulWidget {
   @override

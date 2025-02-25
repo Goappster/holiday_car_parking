@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../widgets/text.dart';
+import '../../widgets/text.dart';
 class ForgotPasswordScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 

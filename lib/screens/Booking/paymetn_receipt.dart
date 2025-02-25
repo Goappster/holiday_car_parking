@@ -9,8 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
-import '../theme/app_theme.dart';
-import '../utils/UiHelper.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/UiHelper.dart';
 
 class PaymentReceipt extends StatefulWidget {
   const PaymentReceipt({super.key});

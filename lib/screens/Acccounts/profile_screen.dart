@@ -6,7 +6,7 @@ import 'package:holidayscar/screens/app_setting.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/vehicle.dart';
+import '../../models/vehicle.dart';
 
 class UserProfileScreen extends StatefulWidget {
   @override

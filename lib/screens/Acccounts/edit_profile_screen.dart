@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl_mobile_field/intl_mobile_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../widgets/text.dart';
+import '../../widgets/text.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

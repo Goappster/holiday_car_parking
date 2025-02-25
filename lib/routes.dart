@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:holidayscar/screens/edit_profile_screen.dart';
-import 'package:holidayscar/screens/forget_pass.dart';
+import 'package:holidayscar/screens/Acccounts/edit_profile_screen.dart';
+import 'package:holidayscar/screens/Acccounts/forget_pass.dart';
 import 'package:holidayscar/screens/getsupport_ticket.dart';
-import 'package:holidayscar/screens/my_booking.dart';
-import 'package:holidayscar/screens/splash.dart';
+import 'package:holidayscar/screens/Booking/my_booking.dart';
+import 'package:holidayscar/screens/Acccounts/splash.dart';
 import 'package:holidayscar/screens/support_ticket.dart';
 import 'main.dart';
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
+import 'screens/Acccounts/login_screen.dart';
+import 'screens/Acccounts/signup_screen.dart';
 
 class AppRoutes {
   static const String login = '/Splash';

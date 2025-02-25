@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:lottie/lottie.dart';
 import 'package:share_plus/share_plus.dart';
-import '../utils/UiHelper.dart';
+import '../../utils/UiHelper.dart';
 class PaymentReceiptScreen extends StatelessWidget {
   const PaymentReceiptScreen({super.key});
 

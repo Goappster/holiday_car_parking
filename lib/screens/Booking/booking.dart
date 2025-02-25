@@ -8,8 +8,8 @@ import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl_mobile_field/intl_mobile_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/booking_api.dart';
-import '../widgets/text.dart';
+import '../../services/booking_api.dart';
+import '../../widgets/text.dart';
 import 'package:http/http.dart' as http;
 
 class BookingScreen extends StatefulWidget {

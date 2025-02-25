@@ -2,17 +2,19 @@ import 'dart:ui';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:holidayscar/screens/booking_confirmation.dart';
-import 'package:holidayscar/screens/booking_details_screen.dart';
+import 'package:holidayscar/providers/wallet_provider.dart';
+import 'package:holidayscar/screens/Booking/booking_confirmation.dart';
+import 'package:holidayscar/screens/Booking/booking_details_screen.dart';
 import 'package:holidayscar/screens/home.dart';
-import 'package:holidayscar/screens/login_screen.dart';
-import 'package:holidayscar/screens/my_booking.dart';
-import 'package:holidayscar/screens/paymetn_receipt.dart';
-import 'package:holidayscar/screens/profile_screen.dart';
-import 'package:holidayscar/screens/show_result_screeen.dart';
-import 'package:holidayscar/screens/wallet.dart';
+import 'package:holidayscar/screens/Acccounts/login_screen.dart';
+import 'package:holidayscar/screens/Booking/my_booking.dart';
+import 'package:holidayscar/screens/Booking/paymetn_receipt.dart';
+import 'package:holidayscar/screens/Acccounts/profile_screen.dart';
+import 'package:holidayscar/screens/Booking/show_result_screeen.dart';
+import 'package:holidayscar/screens/Wallet%20System/wallet.dart';
 import 'package:holidayscar/services/Notifactions.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
@@ -30,14 +32,20 @@ void main() async {
   await NotificationService().init();
   Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
 
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  // Enable Crashlytics only in release mode
+  if (!kDebugMode) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
       child: MyApp(analytics: analytics),
     ),
   );
@@ -46,6 +54,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final FirebaseAnalytics analytics;
   MyApp({required this.analytics});
+
 
   @override
   Widget build(BuildContext context) {

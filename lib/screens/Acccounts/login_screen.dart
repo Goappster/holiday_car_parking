@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holidayscar/routes.dart';
 
-import '../services/login_api.dart';
-import '../utils/UiHelper.dart';
-import '../utils/validation_utils.dart';
-import '../widgets/text.dart';
+import '../../services/login_api.dart';
+import '../../utils/UiHelper.dart';
+import '../../utils/validation_utils.dart';
+import '../../widgets/text.dart';
 
 class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});

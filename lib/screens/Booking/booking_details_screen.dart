@@ -8,9 +8,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http ;
 
-import '../services/Notifactions.dart';
-import '../widgets/company_logo_widget.dart';
-import '../widgets/company_details_widget.dart';
+import '../../services/Notifactions.dart';
+import '../../widgets/company_logo_widget.dart';
+import '../../widgets/company_details_widget.dart';
 import 'package:intl/intl.dart';
 class BookingDetailsScreen extends StatefulWidget {
   // final Map<String, dynamic> company;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/services/registration_api.dart';
 import 'package:intl_mobile_field/intl_mobile_field.dart';
-import '../widgets/text.dart';
+import '../../widgets/text.dart';
 
 class RegistrationService {
   final RegistrationApi _registrationApi = RegistrationApi();

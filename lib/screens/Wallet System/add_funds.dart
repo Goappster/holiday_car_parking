@@ -7,65 +7,10 @@ import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:intl/intl.dart'; // For currency formatting
 import 'package:http/http.dart' as http;
-
-import '../services/dio.dart';
-//
-// void main() {
-//   runApp(MyApp());
-// }
-//
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       home: EnterAmountScreen(),
-//     );
-//   }
-// }
-//
-// class EnterAmountScreen extends StatefulWidget {
-//   @override
-//   _EnterAmountScreenState createState() => _EnterAmountScreenState();
-// }
-//
-// class _EnterAmountScreenState extends State<EnterAmountScreen> {
-//   ValueNotifier<double> amountNotifier = ValueNotifier<double>(0.0);
-//   final TextEditingController _amountController = TextEditingController();
-//
-//   void _showKeypad(BuildContext context) {
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       builder: (context) {
-//         return EnterAmountBottomSheet(amountNotifier: amountNotifier);
-//       },
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.white,
-//       appBar: AppBar(
-//         backgroundColor: Colors.white,
-//         elevation: 0,
-//         title: Text("Enter Amount", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-//       ),
-//       body: Center(
-//         child: ElevatedButton(
-//           onPressed: () => _showKeypad(context),
-//           style: ElevatedButton.styleFrom(
-//             backgroundColor: Colors.black,
-//             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-//             padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
-//           ),
-//           child: Text("Enter Amount", style: TextStyle(color: Colors.yellow, fontSize: 18)),
-//         ),
-//       ),
-//     );
-//   }
-// }
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/wallet_provider.dart';
+import '../../services/dio.dart';
 
 class EnterAmountBottomSheet extends StatefulWidget {
   final ValueNotifier<double> amountNotifier;
@@ -78,6 +23,34 @@ class EnterAmountBottomSheet extends StatefulWidget {
 }
 
 class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
+
+
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userData = prefs.getString('user');
+
+    if (userData != null) {
+      try {
+        setState(() {
+          user = json.decode(userData);
+        });
+      } catch (e) {
+        user = null;
+      }
+    }
+  }
   final TextEditingController _amountController = TextEditingController();
 
   // List of preset amounts
@@ -123,6 +96,7 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
     return NumberFormat("#,##0.00", "en_GB").format(amount); // Format as currency
   }
   Map<String, dynamic>? paymentIntent;
+
 
   @override
   Widget build(BuildContext context) {
@@ -240,18 +214,17 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
 
   Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
     try {
-      // Create payment intent
-      var paymentIntent = await createPaymentIntent(price, 'GBP');
+      paymentIntent = await createPaymentIntent(price, 'GBP');
+
       if (paymentIntent == null) {
         throw Exception("Failed to create payment intent");
       }
 
-      String paymentIntentId = paymentIntent['id'];
+      String paymentIntentId = paymentIntent!['id'];
 
-      // Initialize the payment sheet
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntent['client_secret'],
+          paymentIntentClientSecret: paymentIntent!['client_secret'],
           merchantDisplayName: 'Holiday Car Parking',
           googlePay: const PaymentSheetGooglePay(
             testEnv: false,
@@ -261,11 +234,10 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
         ),
       );
 
-      // Show payment sheet and handle payment
       await displayPaymentSheet(context, price, paymentIntentId);
 
     } catch (e) {
-      // Show error message if any error occurs
+      //print("Exception: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -274,36 +246,17 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
 
   Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
     try {
-      // Show loading dialog before presenting payment sheet
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Center(child: CupertinoActivityIndicator());
-        },
-      );
-
-      // Present the payment sheet
       await Stripe.instance.presentPaymentSheet();
-
       // Call postBookingData after successful payment
-      await sendPostRequest(paymentIntentId, price);
+      await sendPostRequest(context, paymentIntentId, price);
 
-      // Hide the loading dialog after payment is successful
-      Navigator.pop(context);
-
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Paid successfully")),
       );
 
-      // Reset the payment intent
+
       paymentIntent = null;
     } on StripeException catch (e) {
-      // Hide the loading dialog in case of error
-      Navigator.pop(context);
-
-      // Show cancellation message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Payment Cancelled")),
       );
@@ -331,36 +284,66 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
+        //print("Stripe API Error: ${response.body}");
         return null;
       }
     } catch (err) {
+      //print('Error: ${err.toString()}');
       return null;
     }
   }
 
-  final DioService _apiService = DioService();
 
-  // Example method to make a POST request
-  Future<void> sendPostRequest(String trxID, String amount) async {
-    // Example data you want to send in the POST request
+  final DioService _apiService = DioService();
+  Future<void> sendPostRequest(BuildContext context, String trxID, String amount) async {
     Map<String, dynamic> data = {
-      'userId': '890',
+      'userId': user!['id'].toString(),
       'amount': amount,
       'transaction_id': trxID,
       'signature': '40',
     };
-
-    // Sending the POST request
     Response? response = await _apiService.postRequest('wallet/add-funds', data);
-    // Handling the response
     if (response != null && response.statusCode == 200) {
-      // Pop the context if needed
-      Navigator.pop(context);
-      print('Data posted successfully: ${response.data}');
+      // Show Cupertino-style success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Success'),
+            content: const Text('Amount has been successfully added to your wallet.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     } else {
-      print('Failed to post data: ${response?.statusCode}');
+      // Show Cupertino-style error message
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Failed to add funds: .statusCode}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
+
 }
 
 class NumericKeypad extends StatelessWidget {

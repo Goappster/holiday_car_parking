@@ -3,14 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:holidayscar/screens/booking.dart';
+import 'package:holidayscar/screens/Booking/booking.dart';
 import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:marquee/marquee.dart';
 import 'package:shimmer/shimmer.dart';
-import '../services/api_service.dart';
-import '../services/get_airports.dart';
+import '../../services/api_service.dart';
+import '../../services/get_airports.dart';
 import 'company_details.dart';
 
 class ShowResultsScreen extends StatefulWidget {
