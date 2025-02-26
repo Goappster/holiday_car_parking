@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http ;
 
+import '../../Code/custompain.dart';
 import '../../services/Notifactions.dart';
 import '../../widgets/company_logo_widget.dart';
 import '../../widgets/company_details_widget.dart';
@@ -147,6 +148,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       }
     });
   }
+
+
   @override
   Widget build(BuildContext context) {
 
@@ -383,9 +386,42 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  _showBottomSheet(context);
+                 saveIncompleteBooking();
+                  Map<String, dynamic> bookingDetailsDAta  = {
+                    'referenceNo': savedReferenceNo,
+                    // 'company': company,
+                    'title': title,
+                    'first_name': firstName,
+                    'last_name': lastName,
+                    'email': '${user?['email']}',
+                    'contactno': phoneNumber,
+                    'deprTerminal': deprTerminal,
+                    'deptFlight': '$DepartureFlightNo',
+                    'returnTerminal': returnTerminal,
+                    'returnFlight': '$ArrivalFlightNo',
+                    'model': model,
+                    'color': color,
+                    'make': make,
+                    'registration': registration,
+                    'booking_amount': '$bookingPrice',
+                    'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
+                    'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
+                    'booking_fee': '$bookingFees',
+                    'discount_amount': '0',
+
+                  };
+                  showModalBottomSheet(
+                    context: context,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (context) {
+                      return SortModalContent(bookingDetails: bookingDetailsDAta, totalPrice: totalPrice.toString(),);
+                    },
+                  );
+                  // _showBottomSheet(context);
                   // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
-                saveIncompleteBooking();
+
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -398,7 +434,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       ),
     );
   }
+  void showSortModal(BuildContext context,) {
 
+
+
+  }
 
   Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
     return Row(
@@ -470,153 +510,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
-    try {
-      paymentIntent = await createPaymentIntent(price, 'GBP');
-
-      if (paymentIntent == null) {
-        throw Exception("Failed to create payment intent");
-      }
-
-      String paymentIntentId = paymentIntent!['id'];
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntent!['client_secret'],
-          merchantDisplayName: 'Holiday Car Parking',
-          googlePay: const PaymentSheetGooglePay(
-            testEnv: false,
-            currencyCode: 'GBP',
-            merchantCountryCode: 'GB',
-          ),
-        ),
-      );
-
-      await displayPaymentSheet(context, price, paymentIntentId);
-
-    } catch (e) {
-      //print("Exception: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
-  }
-
-  Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
-    try {
-      await Stripe.instance.presentPaymentSheet();
-    // Call postBookingData after successful payment
-      await postBookingData(price, paymentIntentId);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Paid successfully")),
-      );
-
-  
-      paymentIntent = null;
-    } on StripeException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Payment Cancelled")),
-      );
-    }
-  }
-
-  Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
-    try {
-      Map<String, dynamic> body = {
-        'amount': (double.parse(amount) * 100).round().toString(),
-        'currency': currency,
-        'payment_method_types[]': 'card',
-      };
-
-      var secretKey = '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';
-      var response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        //print("Stripe API Error: ${response.body}");
-        return null;
-      }
-    } catch (err) {
-      //print('Error: ${err.toString()}');
-      return null;
-    }
-  }
-
-  Future<void> postBookingData(String price, String paymentIntentId) async {
-    final url = Uri.parse('https://holidayscarparking.uk/api/booking');
-
-    Map<String, String> bookingData = {
-      'referenceNo': '$savedReferenceNo',
-      'title': title,
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': '${user?['email']}',
-      'contactno': phoneNumber,
-      'deprTerminal': deprTerminal,
-      'deptFlight': '$DepartureFlightNo',
-      'returnTerminal': returnTerminal,
-      'returnFlight': '$ArrivalFlightNo',
-      'model': model,
-      'color': color,
-      'make': make,
-      'registration': registration,
-      'payment_status': 'success',
-      'booking_amount': '$bookingPrice',
-      'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
-      'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
-      'booking_fee': '$bookingFees',
-      'discount_amount': '6.52',
-      'total_amount': price,
-      'intent_id': paymentIntentId, // Fixed intent ID issue
-    };
-
-    //print("Sending booking data: $bookingData");
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: bookingData,
-      );
-
-      if (response.statusCode == 200) {
-        _notificationService.showNotification('$savedReferenceNo');
-        Navigator.pushNamed(
-          context,
-          '/PaymentConfirm',
-          arguments: {
-            'company': company,
-            'startDate': startDate,
-            'endDate': endDate,
-            'startTime': startTime,
-            'endTime': endTime,
-            'totalPrice': totalPrice,
-            'referenceNo': '$savedReferenceNo',
-          },
-        );
-      } else {
-      }
-    } catch (e) {
-    }
-  }
-
-
   Future<void> saveIncompleteBooking( ) async {
     DateFormat format = DateFormat("EEE, dd MMM yyyy");
     DateTime parsedStartDate = format.parse(startDate);
     DateTime parsedEndDate = format.parse(endDate);
-
     String formattedStartDate = DateFormat('yyyy-MM-dd').format(parsedStartDate);
     String formattedEndDate = DateFormat('yyyy-MM-dd').format(parsedEndDate);
     final url = Uri.parse('https://holidayscarparking.uk/api/saveIncompleteBooking');
@@ -650,7 +547,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
       if (responseData['success'] == true) {
         savedReferenceNo = responseData['booking']['referenceNo']; // Store reference number
-        ////print('Reference No: $responseData');
+       print('Reference No: $responseData');
       }
       // ('Booking successful: ${response.body}');
 
@@ -820,8 +717,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 15),
                         ),
                         onPressed: () async {
-                          Navigator.maybePop(context);
-                          await  saveCardAndMakePayment(context, totalPrice.toString());
+
                         },
                         child: const Text("Proceed to Payment", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),

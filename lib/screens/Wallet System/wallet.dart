@@ -7,6 +7,7 @@ import 'package:holidayscar/theme/app_theme.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Code/custompain.dart';
 import '../../providers/wallet_provider.dart';
 import 'add_funds.dart';
 import '../../widgets/ImageSlider.dart';
@@ -50,6 +51,17 @@ class _WalletDashboardState extends State<WalletDashboard> {
       }
     }
   }
+  // void showSortModal(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //     ),
+  //     builder: (context) {
+  //       return const SortModalContent();
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +104,9 @@ class _WalletDashboardState extends State<WalletDashboard> {
               children: [
                 _buildQuickAction(context, LucideIcons.circle, 'Add funds', (){showPaymentBottomSheet(context);}),
                 _buildQuickAction(context, Icons.account_balance, 'Withdraw Funds', ()=>showShowWithdrwaScreen(context)),
-                _buildQuickAction(context, Icons.swap_horiz, 'Transfer', (){}),
+                _buildQuickAction(context, Icons.swap_horiz, 'Transfer', (){
+                  // showSortModal(context);
+                }),
                 _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){})
               ],
             ),
