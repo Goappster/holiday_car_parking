@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/Wallet%20System/transaction_History.dart';
+import 'package:holidayscar/screens/Wallet%20System/wtihdrwa_funds.dart';
 import 'package:holidayscar/theme/app_theme.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -154,7 +156,10 @@ class _WalletDashboardState extends State<WalletDashboard> {
                       color: isCredit ? Colors.green : Colors.red,
                     ),
                     title: Text(tx['description'] ?? ''),
-                    subtitle: Text(tx['created_at'] ?? ''),
+                    subtitle: Text(
+                      DateFormat('EEEE, MMMM yyyy')
+                          .format(DateTime.parse(tx['created_at'])),
+                    ),
                     trailing: Text(
                       '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
                       style: TextStyle(
@@ -192,12 +197,12 @@ class _WalletDashboardState extends State<WalletDashboard> {
   ValueNotifier<double> amountNotifier = ValueNotifier<double>(0.0);
   // final TextEditingController _amountController = TextEditingController();
 
-  void _showKeypad(BuildContext context) {
+  void _showKeypad(BuildContext context, String source) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return EnterAmountBottomSheet(amountNotifier: amountNotifier);
+        return EnterAmountBottomSheet(amountNotifier: amountNotifier, source: source, );
       },
     );
   }
@@ -242,7 +247,7 @@ class _WalletDashboardState extends State<WalletDashboard> {
                 additionalText: "Stripe is available in 195+ countries",
                   onTap: () {
                     Navigator.pop(context);
-                    _showKeypad(context);
+                    _showKeypad(context, 'deposit');
                   },
               ),
               SizedBox(height: 10),
@@ -305,13 +310,14 @@ class _WalletDashboardState extends State<WalletDashboard> {
               // ),
               SizedBox(height: 10),
               _buildPaymentOption(
-                title: "Bank transfer or debit card",
-                subtitle: "Requires registration\nOptions and fees vary based on location",
+                title: "Bank Transfer",
+                subtitle: "Requires bank details\nOptions and fees vary based on Bank",
                 image: "assets/images/visa_logo.png",
-                additionalText: "Available in 59 countries",
+                additionalText: "Available Only in UK Any Bank",
                 onTap: () {
                   Navigator.pop(context);
-                  _showKeypad(context);
+                  _showKeypad(context, 'withdraw');
+
                 },
               ),
               SizedBox(height: 20),

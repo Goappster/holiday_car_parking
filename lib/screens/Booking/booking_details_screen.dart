@@ -109,6 +109,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     _loadUserData();
     _updatePermissionStatus();
   }
@@ -145,8 +146,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       String? userData = prefs.getString('user');
       if (userData != null) {
         user = json.decode(userData);
+        saveIncompleteBooking();
       }
     });
+
   }
 
 
@@ -266,9 +269,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               ],
                             ),
                             SizedBox(width: 0),
-
                             Column(
-
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Return Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
@@ -386,10 +387,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                 saveIncompleteBooking();
+
                   Map<String, dynamic> bookingDetailsDAta  = {
                     'referenceNo': savedReferenceNo,
-                    // 'company': company,
+                    'company': company,
                     'title': title,
                     'first_name': firstName,
                     'last_name': lastName,
@@ -408,7 +409,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
                     'booking_fee': '$bookingFees',
                     'discount_amount': '0',
-
+                    'drop_date': startDate,
+                    'drop_time': startTime,
+                    'pick_date': endDate,
+                    'pick_time': endTime,
+                    'user_id': '${user?['id']}',
                   };
                   showModalBottomSheet(
                     context: context,
@@ -531,7 +536,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         'pick_date': formattedEndDate,
         'pick_time': '$endTime',
         'total_days': '$totalDays',
-        'airport_id': '$airportId',
+        'airport_id': airportId ?? '',
         'product_id': '${company['companyID']}',
         'product_code': '${company['product_code']}',
         'park_api': '${company['park_api']}',

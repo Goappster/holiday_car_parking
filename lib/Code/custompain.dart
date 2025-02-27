@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -13,6 +14,7 @@ import '../services/Notifactions.dart';
 import 'package:http/http.dart' as http;
 
 import '../services/StripService.dart';
+import '../services/dio.dart';
 
 class SortModalContent extends StatefulWidget {
    const SortModalContent({super.key, required this.bookingDetails, required this.totalPrice, });
@@ -48,8 +50,7 @@ class _SortModalContentState extends State<SortModalContent> {
     await _loadUserData();
     if (user != null) {
       final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-      await walletProvider.loadWalletBalance(user!['id'].toString());
-      await walletProvider.loadTransactions(user!['id'].toString());
+      walletProvider.loadWalletBalance(user!['id'].toString());
       flightDetails = {
         'user_id': user!['id'].toString(),
         'departure': Data,
@@ -87,82 +88,125 @@ class _SortModalContentState extends State<SortModalContent> {
     }
   }
 
-
-
-
-  final bool _smsConfirmationSelected = false;
-  final bool _cancellationCoverSelected = false;
-
   final NotificationService _notificationService = NotificationService();
   bool isLoading = false;
 
+  late ScaffoldMessengerState? _scaffoldMessenger;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scaffoldMessenger = ScaffoldMessenger.of(context);
+  }
+
+
   Future<void> _handlePayment(BuildContext context) async {
-    // Show loading dialog if not already loading
-    if (!isLoading) {
-      isLoading = true;
-      showDialog(
-        context: context,
-        barrierDismissible: false, // Prevent dismissal by tapping outside
-        builder: (context) => const Center(child: CupertinoActivityIndicator()),
-      );
-    }
 
     try {
-      await PaymentService().saveCardAndMakePayment(context, widget.totalPrice, 'booking', widget.bookingDetails);
-      print("Payment process completed!");
-    } catch (e) {
-      print("Payment error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Payment failed: $e")),
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text("Processing..."),
+            ],
+          ),
+        ),
       );
-    } finally {
+
+      // Debit funds
+      await PaymentService().saveCardAndMakePayment(context, widget.totalPrice, 'booking', widget.bookingDetails);
+      // Close loading dialog before sending booking
       if (context.mounted) {
-        print("Dismissing loading dialog...");
-        Navigator.pop(context); // Dismiss the loading dialog
+        Navigator.pop(context);
+      }
+
+      // Navigator.pushNamed(
+      //   context,
+      //   '/PaymentConfirm',
+      //   arguments: {
+      //     'company': widget.bookingDetails['company'],
+      //     'drop_date': widget.bookingDetails['drop_date'].toString(),
+      //     'drop_time': widget.bookingDetails['drop_time'].toString(),
+      //     'pick_date': widget.bookingDetails['pick_date'].toString(),
+      //     'pick_time': widget.bookingDetails['pick_time'].toString(),
+      //     'totalPrice': widget.totalPrice,
+      //     'referenceNo': widget.bookingDetails['referenceNo'].toString(),
+      //   },
+      // );
+      // Show success dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+
+        // Navigator.pushNamed(
+        //   context,
+        //   '/PaymentConfirm',
+        //   arguments: {
+        //     'company': widget.bookingDetails['company'],
+        //     'drop_date': widget.bookingDetails['drop_date'].toString(),
+        //     'drop_time': widget.bookingDetails['drop_time'].toString(),
+        //     'pick_date': widget.bookingDetails['pick_date'].toString(),
+        //     'pick_time': widget.bookingDetails['pick_time'].toString(),
+        //     'totalPrice': widget.totalPrice,
+        //     'referenceNo': widget.bookingDetails['referenceNo'].toString(),
+        //   },
+        // );
+        // setState(() {
+        //   walletProvider.loadWalletBalance(user!['id'].toString());
+        // });
+        // showDialog(
+        //   context: context,
+        //   builder: (context) => AlertDialog(
+        //     title: Text("Success"),
+        //     content: Text("Your booking has been completed successfully!"),
+        //     actions: [
+        //       TextButton(
+        //         onPressed: () {
+        //           setState(() {
+        //             walletProvider.loadWalletBalance(user!['id'].toString());
+        //           });
+        //           Navigator.pop(context);
+        //         },
+        //         child: Text("OK"),
+        //       ),
+        //     ],
+        //   ),
+        // );
+      }
+    } catch (e) {
+      // Close loading dialog in case of error
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Booking Failed"),
+            content: Text("Something went wrong. Please try again."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
-  // bool isLoading = false;
-  // late BuildContext dialogContext;
-  //
-  // Future<void> _handlePayment(BuildContext context) async {
-  //   // Show loading dialog if not already loading
-  //   if (!isLoading) {
-  //     isLoading = true;
-  //     showDialog(
-  //       context: context,
-  //       barrierDismissible: false, // Prevent dismissal by tapping outside
-  //       builder: (context) => const Center(child: CupertinoActivityIndicator()),
-  //     );
-  //   }
-  //
-  //   try {
-  //     // Perform payment process
-  //     await PaymentService().saveCardAndMakePayment(context, '5', 'add_funds', flightDetails);
-  //
-  //     // Optionally handle success
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Payment Successful!")),
-  //     );
-  //   } catch (e) {
-  //     // Handle errors during payment
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Payment failed: $e")),
-  //     );
-  //   } finally {
-  //     // Safely dismiss loading dialog once the process is done
-  //     if (dialogContext.mounted) {
-  //       Navigator.of(dialogContext).pop(); // Dismiss the loading dialog using stored dialog context
-  //     }
-  //     isLoading = false;  // Reset loading state
-  //   }
-  // }
 
-
-
+  final DioService _apiService = DioService();
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context);
+    final bookingDetails = widget.bookingDetails;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Column(
@@ -225,8 +269,12 @@ class _SortModalContentState extends State<SortModalContent> {
                                 style: TextStyle(color: Colors.green.shade700, fontSize: 14),
                               ),
                               if (balances[index].isNotEmpty)
-                                Text(
-                             'Available Balance: ₤${walletProvider.walletData?['balance']?.toString() ?? "0"}',
+                                Consumer<WalletProvider>(
+                                  builder: (context, walletProvider, child) {
+                                    return Text(
+                                      'Available Balance: ₤${walletProvider.walletData?['balance']?.toString() ?? "0"}',
+                                    );
+                                  },
                                 ),
                               if (promotions[index].isNotEmpty)
                                 Container(
@@ -256,141 +304,250 @@ class _SortModalContentState extends State<SortModalContent> {
 
           const SizedBox(height: 20),
           // Confirm Button
-          CustomButton(text: 'Continue', onPressed: () async {
-            if (selectedIndex == 0) {
-              postBookingData(widget.totalPrice, 'Wallet');
-              if (walletProvider.walletData?['balance']?.toString() != null) {
-                postBookingData(widget.totalPrice, 'Wallet');
-                // print(widget.bookingDetails['referenceNo']);
-                // print(widget.bookingDetails['title']);
-                // print(widget.bookingDetails['first_name']);
-                // print(widget.bookingDetails['email']);
-                // print(widget.bookingDetails['contactno']);
-                // print(widget.bookingDetails['deprTerminal']);
-                // print(widget.bookingDetails['returnTerminal']);
-                // print(widget.bookingDetails['model']);
-                // print(widget.bookingDetails['booking_amount']);
+          CustomButton(
+            text: 'Continue',
+            onPressed: () async {
+              if (selectedIndex == 0) {
+                if (walletProvider.walletData?['balance']?.toString() != null) {
+                  Navigator.maybePop(context);
+                  double balance = double.tryParse(walletProvider.walletData?['balance']?.toString() ?? '') ?? 0.0;
+                  double totalPrice = double.tryParse(widget.totalPrice.toString()) ?? 0.0;
+                  if (totalPrice >= balance) {
+                    showCupertinoDialog<bool>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return CupertinoAlertDialog(
+                          title: const Text('Low Balance'),
+                          content: const Text('⚠️ Your balance is low! Please deposit funds into your HCP wallet 💰 to continue enjoying smooth parking bookings. 🚗'),
+                          actions: [
+                            CupertinoDialogAction(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            CupertinoDialogAction(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Add Funds 💳',
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Total price is greater than or equal to your balance."),
+                        duration: Duration(seconds: 2), // Customize duration
+                      ),
+                    );
 
-                // Parse the balance string to a double
-                double balance = double.tryParse(walletProvider.walletData?['balance']?.toString() ?? '') ?? 0.0;
-                double totalPrice = double.tryParse(widget.totalPrice.toString()) ?? 0.0;
+                  }
+                  if (totalPrice < balance) {
+                    Navigator.maybePop(context);
+                    try {
+                      // Show loading dialog
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => AlertDialog(
+                          content: Row(
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(width: 16),
+                              Text("Processing..."),
+                            ],
+                          ),
+                        ),
+                      );
 
-                // Compare the totalPrice and balance
-                // If totalPrice is greater than or equal to balance
-                if (totalPrice >= balance) {
-                  // Display a Scaffold SnackBar if the total price is greater than or equal to the balance
+                      // Debit funds
+                      await debitFunds(context, totalPrice.toString(), bookingDetails);
+                      // Close loading dialog before sending booking
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+
+                      // Call booking API
+                     await sendBooking(context, totalPrice.toString(), bookingDetails);
+                     //  Navigator.pushNamed(
+                     //    context,
+                     //    '/PaymentConfirm',
+                     //    arguments: {
+                     //      'company': bookingDetails['company'],
+                     //      'startDate': bookingDetails['drop_date'].toString(),
+                     //      'endDate': bookingDetails['endDate'].toString(),
+                     //      'startTime': bookingDetails['drop_time'].toString(),
+                     //      'endTime': bookingDetails['pick_time'].toString(),
+                     //      'totalPrice': widget.totalPrice.toString(),
+                     //      'referenceNo': bookingDetails['referenceNo'].toString(),
+                     //    },
+                     //  );
+                      // Show success dialog
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        setState(() {
+                          walletProvider.loadWalletBalance(user!['id'].toString());
+                        });
+                        // showDialog(
+                        //   context: context,
+                        //   builder: (context) => AlertDialog(
+                        //     title: Text("Success"),
+                        //     content: Text("Your booking has been completed successfully!"),
+                        //     actions: [
+                        //       TextButton(
+                        //         onPressed: () {
+                        //           setState(() {
+                        //             walletProvider.loadWalletBalance(user!['id'].toString());
+                        //           });
+                        //           Navigator.pop(context);
+                        //         },
+                        //         child: Text("OK"),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // );
+                      }
+                    } catch (e) {
+                      // Close loading dialog in case of error
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+
+                      // Show error dialog
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Booking Failed"),
+                            content: Text("Something went wrong. Please try again."),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("OK"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }
+                  }
+
+
+                } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("Total price is greater than or equal to your balance."),
+                      content: Text("Balance is not available."),
                       duration: Duration(seconds: 2), // Customize duration
                     ),
                   );
-                  print(walletProvider.walletData?['balance']?.toString());
                 }
-
-                // If totalPrice is less than the balance
-                if (totalPrice < balance) {
-                  postBookingData(totalPrice.toString(), 'Wallet');
-                  // Show Scaffold SnackBar message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Your balance is sufficient. You can proceed to booking."),
-                      duration: Duration(seconds: 2), // Customize duration
-                    ),
-                  );
-                  // Proceed to the booking process here
-                  // For example: bookingFunction();
-                }
-
-                // If balance is greater than total price (this condition is redundant and unnecessary as part of the above conditions)
-                // Since `totalPrice < balance` already covers this case, you don't need this separate check
-              } else {
-                // Show Scaffold SnackBar if balance is unavailable
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Balance is not available."),
-                    duration: Duration(seconds: 2), // Customize duration
-                  ),
-                );
+              } else if (selectedIndex == 1) {
+                Navigator.maybePop(context);
+                await _handlePayment(context);
               }
-            } else if (selectedIndex == 1) {
-             Navigator.maybePop(context);
-             Navigator.maybePop(context);
-              await _handlePayment(context);
-            }
-          },
+            },
           ),
           const SizedBox(height: 10),
         ],
       ),
     );
   }
-  Future<void> postBookingData(String price, String paymentIntentId) async {
-    final url = Uri.parse('https://holidayscarparking.uk/api/booking');
 
+  Future<void> sendBooking(BuildContext context, String price, Map<String, dynamic> bookingDetails) async {
     Map<String, String> bookingData = {
-      'referenceNo':  '131313351',
-      'title': widget.bookingDetails['title'],
-      'first_name': widget.bookingDetails['first_name'],
-      'last_name':  widget.bookingDetails['last_name'],
-      'email':  widget.bookingDetails['email'],
-      'contactno':  widget.bookingDetails['contactno'],
-      'deprTerminal':  widget.bookingDetails['deprTerminal'],
-      'deptFlight':  widget.bookingDetails['deptFlight'],
-      'returnTerminal':  widget.bookingDetails['returnTerminal'],
-      'returnFlight':  widget.bookingDetails['returnFlight'],
-      'model':  widget.bookingDetails['model'],
-      'color':  widget.bookingDetails['color'],
-      'make': widget.bookingDetails['make'],
-      'registration':  widget.bookingDetails['registration'],
+      'referenceNo': bookingDetails['referenceNo'] ?? '',
+      'title': bookingDetails['title'] ?? '',
+      'first_name': bookingDetails['first_name'] ?? '',
+      'last_name': bookingDetails['last_name'] ?? '',
+      'email': bookingDetails['email'] ?? '',
+      'contactno': bookingDetails['contactno'] ?? '',
+      'deprTerminal': bookingDetails['deprTerminal'] ?? '',
+      'deptFlight': bookingDetails['deptFlight'] ?? '',
+      'returnTerminal': bookingDetails['returnTerminal'] ?? '',
+      'returnFlight': bookingDetails['returnFlight'] ?? '',
+      'model': bookingDetails['model'] ?? '',
+      'color': bookingDetails['color'] ?? '',
+      'make': bookingDetails['make'] ?? '',
+      'registration': bookingDetails['registration'] ?? '',
       'payment_status': 'wallet',
-      'booking_amount':  widget.bookingDetails['booking_amount'],
-      'cancelfee': widget.bookingDetails['cancelfee'],
-      'smsfee': widget.bookingDetails['smsfee'],
-      'booking_fee': widget.bookingDetails['booking_fee'],
-      'discount_amount': widget.bookingDetails['discount_amount'],
+      'booking_amount': bookingDetails['booking_amount'] ?? '',
+      'cancelfee': bookingDetails['cancelfee'] ?? '',
+      'smsfee': bookingDetails['smsfee'] ?? '',
+      'booking_fee': bookingDetails['booking_fee'] ?? '',
+      'discount_amount': bookingDetails['discount_amount'] ?? '',
       'total_amount': price,
-      'intent_id': 'booking via wallet', // Fixed intent ID issue
+      'intent_id': 'booking via wallet',
     };
 
-    //print("Sending booking data: $bookingData");
+    Response? response = await _apiService.postRequest('booking', bookingData);
+    if (response?.statusCode == 200) {
+      print("Booking failed: ${response}");
+      _notificationService.showNotification(bookingDetails['referenceNo']);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushNamed(
+          context,
+          '/PaymentConfirm',
+          arguments: {
+            'company': bookingDetails['company'],
+            'drop_date': bookingDetails['drop_date'].toString(),
+            'drop_time': bookingDetails['drop_time'].toString(),
+            'pick_date': bookingDetails['pick_date'].toString(),
+            'pick_time': bookingDetails['pick_time'].toString(),
+            'totalPrice': price,
+            'referenceNo': bookingDetails['referenceNo'].toString(),
+          },
+        );
+      });
+    } else {
+      print("Booking failed: ${response}");
+      throw Exception("Failed to complete booking");
+    }
+  }
 
+  Future<void> debitFunds(BuildContext context, String price, Map<String, dynamic> bookingDetails) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: bookingData,
-      );
+      Map<String, String> data = {
+        'userId': bookingDetails['user_id'],
+        'amount': price,
+        'transaction_id': bookingDetails['referenceNo'],
+        'signature': 'gdfgdgdgdg',
+      };
 
-      if (response.statusCode == 200) {
-        print(response.body);
-        _notificationService.showNotification(widget.bookingDetails['referenceNo']);
-        // Navigator.pushNamed(
-        //   context,
-        //   '/PaymentConfirm',
-        //   arguments: {
-        //     'company': widget.bookingDetails['company'],
-        //     'startDate': startDate,
-        //     'endDate': endDate,
-        //     'startTime': startTime,
-        //     'endTime': endTime,
-        //     'totalPrice': totalPrice,
-        //     'referenceNo': '$savedReferenceNo',
-        //   },
-        // );
+      Response? response = await _apiService.postRequest('wallet/debitfunds', data);
+      if (response?.statusCode == 200) {
+        print("Success: ${response?.data}");
+        // _notificationService.showNotification(bookingDetails['referenceNo']);
       } else {
+        print("Booking failed: ${response?.statusCode} - ${response?.data}");
+        throw Exception("Failed to complete booking");
       }
     } catch (e) {
+      print("Error: $e");
+      throw Exception("An error occurred while processing the payment.");
     }
   }
 }
 
-//
 
 
 
 
+
+
+
+// Navigator.pushNamed(
+// context,
+// '/PaymentConfirm',
+// arguments: {
+// 'company': bookingDetails['company'],
+// 'startDate': bookingDetails['drop_date'].toString(),
+// 'endDate': bookingDetails['endDate'].toString(),
+// 'startTime': bookingDetails['drop_time'].toString(),
+// 'endTime': bookingDetails['pick_time'].toString(),
+// 'totalPrice': price.toString(),
+// 'referenceNo': bookingDetails['referenceNo'].toString(),
+// },
+// );
 
 

@@ -11,12 +11,13 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/wallet_provider.dart';
 import '../../services/dio.dart';
+import 'bank_selection.dart';
 
 class EnterAmountBottomSheet extends StatefulWidget {
   final ValueNotifier<double> amountNotifier;
+final String source;
 
-
-  const EnterAmountBottomSheet({super.key, required this.amountNotifier});
+  const EnterAmountBottomSheet({super.key, required this.amountNotifier, required this.source});
 
   @override
   _EnterAmountBottomSheetState createState() => _EnterAmountBottomSheetState();
@@ -205,7 +206,13 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
           // Next button
           CustomButton(text: 'Next ${_amountController.text}', onPressed: () {
             Navigator.pop(context);
-            saveCardAndMakePayment(context, _amountController.text.toString());
+            if (widget.source == 'withdraw'){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=> BankSelectionScreen(amount: _amountController.text, userId: user!['id'].toString(),) ));
+            } else{
+              saveCardAndMakePayment(context, _amountController.text.toString());
+            }
+
+
           }),
         ],
       ),

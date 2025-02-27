@@ -142,12 +142,18 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   late FocusNode _focusNode;
+  late TextEditingController _internalController;
   bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _focusNode = FocusNode();
+    _internalController = TextEditingController(text: widget.controller.text);
+
+    // Sync internal controller with the provided controller
+    widget.controller.addListener(_syncControllers);
+
     _focusNode.addListener(() {
       setState(() {
         _isFocused = _focusNode.hasFocus;
@@ -155,22 +161,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
     });
   }
 
+  void _syncControllers() {
+    if (_internalController.text != widget.controller.text) {
+      _internalController.text = widget.controller.text;
+      _internalController.selection = widget.controller.selection;
+    }
+  }
+
   @override
   void dispose() {
     _focusNode.dispose();
+    _internalController.dispose();
+    widget.controller.removeListener(_syncControllers);
     super.dispose();
-  }
-
-  // Function to filter suggestions based on the input text
-  Iterable<String> _getOptions(TextEditingValue textEditingValue) {
-    if (widget.suggestions == null || widget.suggestions!.isEmpty) {
-      return const Iterable<String>.empty();
-    }
-    if (textEditingValue.text.isEmpty) {
-      return const Iterable<String>.empty();
-    }
-    return widget.suggestions!.where((String option) =>
-        option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
   }
 
   @override
@@ -189,18 +192,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
           },
           onSelected: (String selection) {
             widget.controller.text = selection;
-            widget.controller.selection = TextSelection.collapsed(offset: selection.length);
+            widget.controller.selection =
+                TextSelection.collapsed(offset: selection.length);
           },
           fieldViewBuilder: (BuildContext context,
               TextEditingController textEditingController,
               FocusNode focusNode,
               VoidCallback onFieldSubmitted) {
-            // Sync the internal controller with the provided controller
-            textEditingController.text = widget.controller.text;
-            textEditingController.selection = widget.controller.selection;
+            // Assign internal controller only once to prevent build conflicts
+            if (textEditingController.text != _internalController.text) {
+              textEditingController.text = _internalController.text;
+              textEditingController.selection = _internalController.selection;
+            }
+
             return TextFormField(
-              controller: textEditingController,
-              focusNode: focusNode,
+              controller: _internalController, // Use internal controller
+              focusNode: _focusNode,
               obscureText: widget.obscureText,
               decoration: InputDecoration(
                 hintText: widget.hintText,
@@ -226,4 +233,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
       ],
     );
   }
+
+  Iterable<String> _getOptions(TextEditingValue textEditingValue) {
+    if (widget.suggestions == null || widget.suggestions!.isEmpty) {
+      return const Iterable<String>.empty();
+    }
+    if (textEditingValue.text.isEmpty) {
+      return const Iterable<String>.empty();
+    }
+    return widget.suggestions!.where((String option) =>
+        option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+  }
 }
+

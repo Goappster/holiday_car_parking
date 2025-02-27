@@ -5,9 +5,12 @@ import 'package:holidayscar/services/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import 'Notifactions.dart';
+
 class PaymentService {
   static const String _secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
-
+  final NotificationService _notificationService = NotificationService();
+  final DioService _apiService = DioService();
   Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
     try {
       Map<String, dynamic> body = {
@@ -62,38 +65,94 @@ class PaymentService {
     }
   }
 
-  Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId, String source, final Map<String, dynamic> extraData,) async {
+  Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId, String source, Map<String, dynamic> extraData,) async {
     try {
-      // Present the payment sheet
       await Stripe.instance.presentPaymentSheet();
-      // Depending on the 'source', make different API calls
-      if (source == 'add_funds') {
-        // Call API for credit card payment (example)
-        await sendPostRequest(context, paymentIntentId, price, extraData);
-      } else if (source == 'booking') {
-        // Call API for PayPal payment (example)
-        // await makePaypalPayment(extraData);
+      if (source == 'booking') {
+        // sendBooking(context, price, extraData, paymentIntentId);
+      } else if (source == 'addFunds') { // Fix duplicate condition
+        // await sendPostRequest(context, paymentIntentId, price, extraData);
       } else if (source == 'bank_transfer') {
-        // Call API for bank transfer payment (example)
         // await makeBankTransferPayment(extraData);
-      } else {
-        // Default API call if no specific source is matched
-        // await makeDefaultPayment(extraData);
       }
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Paid successfully")),
+        const SnackBar(content: Text("Paid successfully")),
       );
+
+      // WidgetsBinding.instance.addPostFrameCallback((_) {
+      //   Navigator.pushNamed(
+      //     context,
+      //     '/PaymentConfirm',
+      //     arguments: {
+      //       'company': extraData['company'],
+      //       'drop_date': extraData['drop_date'].toString(),
+      //       'drop_time': extraData['drop_time'].toString(),
+      //       'pick_date': extraData['pick_date'].toString(),
+      //       'pick_time': extraData['pick_time'].toString(),
+      //       'totalPrice': price,
+      //       'referenceNo': extraData['referenceNo'].toString(),
+      //     },
+      //   );
+      // });
     } on StripeException {
-      // Show error message if payment is cancelled
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Payment Cancelled: ${extraData['user_id']}")),
+        SnackBar(content: Text("Payment Cancelled")),
       );
     }
   }
 
-  final DioService _apiService = DioService();
+
+  Future<void> sendBooking(BuildContext context, String price, Map<String, dynamic> bookingDetails, String paymentIntentId) async {
+    Map<String, String> bookingData = {
+      'referenceNo': bookingDetails['referenceNo'] ?? '',
+      'title': bookingDetails['title'] ?? '',
+      'first_name': bookingDetails['first_name'] ?? '',
+      'last_name': bookingDetails['last_name'] ?? '',
+      'email': bookingDetails['email'] ?? '',
+      'contactno': bookingDetails['contactno'] ?? '',
+      'deprTerminal': bookingDetails['deprTerminal'] ?? '',
+      'deptFlight': bookingDetails['deptFlight'] ?? '',
+      'returnTerminal': bookingDetails['returnTerminal'] ?? '',
+      'returnFlight': bookingDetails['returnFlight'] ?? '',
+      'model': bookingDetails['model'] ?? '',
+      'color': bookingDetails['color'] ?? '',
+      'make': bookingDetails['make'] ?? '',
+      'registration': bookingDetails['registration'] ?? '',
+      'payment_status': 'wallet',
+      'booking_amount': bookingDetails['booking_amount'] ?? '',
+      'cancelfee': bookingDetails['cancelfee'] ?? '',
+      'smsfee': bookingDetails['smsfee'] ?? '',
+      'booking_fee': bookingDetails['booking_fee'] ?? '',
+      'discount_amount': bookingDetails['discount_amount'] ?? '',
+      'total_amount': price,
+      'intent_id': paymentIntentId,
+    };
+
+    Response? response = await _apiService.postRequest('booking', bookingData);
+    if (response?.statusCode == 200) {
+      _notificationService.showNotification(bookingDetails['referenceNo']);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushNamed(
+          context,
+          '/PaymentConfirm',
+          arguments: {
+            'company': bookingDetails['company'],
+            'drop_date': bookingDetails['drop_date'].toString(),
+            'drop_time': bookingDetails['drop_time'].toString(),
+            'pick_date': bookingDetails['pick_date'].toString(),
+            'pick_time': bookingDetails['pick_time'].toString(),
+            'totalPrice': price,
+            'referenceNo': bookingDetails['referenceNo'].toString(),
+          },
+        );
+      });
+
+    } else {
+      print("Booking failed: ${response}");
+      throw Exception("Failed to complete booking");
+    }
+  }
   Future<void> sendPostRequest(BuildContext context, String trxID, String amount, final Map<String, dynamic> extraData,) async {
     Map<String, dynamic> data = {
       'userId': extraData['user_id'],

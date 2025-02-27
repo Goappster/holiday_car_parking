@@ -1,29 +1,26 @@
 import 'dart:ui';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:holidayscar/providers/wallet_provider.dart';
 import 'package:holidayscar/screens/Booking/booking_confirmation.dart';
 import 'package:holidayscar/screens/Booking/booking_details_screen.dart';
+import 'package:holidayscar/screens/Booking/paymetn_receipt.dart';
 import 'package:holidayscar/screens/home.dart';
 import 'package:holidayscar/screens/Acccounts/login_screen.dart';
 import 'package:holidayscar/screens/Booking/my_booking.dart';
-import 'package:holidayscar/screens/Booking/paymetn_receipt.dart';
 import 'package:holidayscar/screens/Acccounts/profile_screen.dart';
 import 'package:holidayscar/screens/Booking/show_result_screeen.dart';
 import 'package:holidayscar/screens/Wallet%20System/wallet.dart';
 import 'package:holidayscar/services/Notifactions.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_analytics/observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +50,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final FirebaseAnalytics analytics;
-  MyApp({required this.analytics});
+  const MyApp({super.key, required this.analytics});
 
 
   @override
@@ -95,8 +92,6 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
   final List<Widget> _screens = [
     const HomeScreen(),
     MyBookingsScreen(),
-    // const CartScreen(),
-   // BookingScreen(),
     UserProfileScreen(),
     WalletDashboard(),
   ];
@@ -104,43 +99,46 @@ class _Material3BottomNavState extends State<Material3BottomNav> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: NavigationBar(
-        animationDuration: const Duration(seconds: 1),
+        indicatorColor: AppTheme.primaryColor,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        animationDuration: const Duration(milliseconds: 500),
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        destinations: _navBarItems,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_car_outlined),
+            selectedIcon: Icon(Icons.directions_car),
+            label: 'Bookings',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Wallet',
+          ),
+        ],
       ),
     );
   }
 }
-
-const _navBarItems = [
-  NavigationDestination(
-    icon: Icon(MingCute.home_4_line),
-    selectedIcon: Icon(MingCute.home_4_fill),
-    label: 'Home',
-  ),
-  NavigationDestination(
-    icon: Icon(MingCute.car_2_line),
-    selectedIcon: Icon(MingCute.car_2_fill),
-    label: 'Bookings',
-  ),
-  NavigationDestination(
-    icon: Icon(Icons.person_outline_rounded),
-    selectedIcon: Icon(Icons.person_rounded),
-    label: 'Profile',
-  ),
-  NavigationDestination(
-    icon: Icon(MingCute.wallet_5_line),
-    selectedIcon: Icon(MingCute.wallet_5_fill),
-    label: 'Wallet',
-  )
-];
 
 
 // class Material3BottomNav extends StatefulWidget {
