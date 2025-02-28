@@ -28,6 +28,7 @@ void main() async {
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   await NotificationService().init();
   Stripe.publishableKey = 'pk_test_51OvKOKIpEtljCntg7LBirQmwmjL3Dh2nY4RzepYbuHrzpxLYpGZxYEKZAtfnJv3vMwzKjIMaAQhuajNzHTVl0CU900xp4xNCGq';
+  // Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';
 
   // Enable Crashlytics only in release mode
   if (!kDebugMode) {

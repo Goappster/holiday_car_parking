@@ -268,7 +268,6 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
             text: 'Next',
             onPressed: () async {
               double amount = double.tryParse(_amountController.text.toString()) ?? 0.0;
-
               if (widget.source == 'withdraw') {
                 if (amount >= 100) {
                   Navigator.push(
