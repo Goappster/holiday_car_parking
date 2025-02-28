@@ -124,58 +124,10 @@ class _SortModalContentState extends State<SortModalContent> {
       if (context.mounted) {
         Navigator.pop(context);
       }
-
-      // Navigator.pushNamed(
-      //   context,
-      //   '/PaymentConfirm',
-      //   arguments: {
-      //     'company': widget.bookingDetails['company'],
-      //     'drop_date': widget.bookingDetails['drop_date'].toString(),
-      //     'drop_time': widget.bookingDetails['drop_time'].toString(),
-      //     'pick_date': widget.bookingDetails['pick_date'].toString(),
-      //     'pick_time': widget.bookingDetails['pick_time'].toString(),
-      //     'totalPrice': widget.totalPrice,
-      //     'referenceNo': widget.bookingDetails['referenceNo'].toString(),
-      //   },
-      // );
       // Show success dialog
       if (context.mounted) {
         Navigator.pop(context);
 
-        // Navigator.pushNamed(
-        //   context,
-        //   '/PaymentConfirm',
-        //   arguments: {
-        //     'company': widget.bookingDetails['company'],
-        //     'drop_date': widget.bookingDetails['drop_date'].toString(),
-        //     'drop_time': widget.bookingDetails['drop_time'].toString(),
-        //     'pick_date': widget.bookingDetails['pick_date'].toString(),
-        //     'pick_time': widget.bookingDetails['pick_time'].toString(),
-        //     'totalPrice': widget.totalPrice,
-        //     'referenceNo': widget.bookingDetails['referenceNo'].toString(),
-        //   },
-        // );
-        // setState(() {
-        //   walletProvider.loadWalletBalance(user!['id'].toString());
-        // });
-        // showDialog(
-        //   context: context,
-        //   builder: (context) => AlertDialog(
-        //     title: Text("Success"),
-        //     content: Text("Your booking has been completed successfully!"),
-        //     actions: [
-        //       TextButton(
-        //         onPressed: () {
-        //           setState(() {
-        //             walletProvider.loadWalletBalance(user!['id'].toString());
-        //           });
-        //           Navigator.pop(context);
-        //         },
-        //         child: Text("OK"),
-        //       ),
-        //     ],
-        //   ),
-        // );
       }
     } catch (e) {
       // Close loading dialog in case of error

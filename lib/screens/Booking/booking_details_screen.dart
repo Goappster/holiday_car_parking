@@ -109,7 +109,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   @override
   void initState() {
     super.initState();
-
     _loadUserData();
     _updatePermissionStatus();
   }
@@ -387,7 +386,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-
                   Map<String, dynamic> bookingDetailsDAta  = {
                     'referenceNo': savedReferenceNo,
                     'company': company,
@@ -438,11 +436,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ),
       ),
     );
-  }
-  void showSortModal(BuildContext context,) {
-
-
-
   }
 
   Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
@@ -515,7 +508,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  Future<void> saveIncompleteBooking( ) async {
+  Future<void> saveIncompleteBooking() async {
     DateFormat format = DateFormat("EEE, dd MMM yyyy");
     DateTime parsedStartDate = format.parse(startDate);
     DateTime parsedEndDate = format.parse(endDate);

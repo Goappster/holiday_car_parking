@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 class CompanyLogoWidget extends StatelessWidget {
   final Map<String, dynamic> company;
 
-  const CompanyLogoWidget({Key? key, required this.company}) : super(key: key);
+  const CompanyLogoWidget({super.key, required this.company});
 
   @override
   Widget build(BuildContext context) {

@@ -4,7 +4,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/models/vehicle.dart';
+import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
+import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl_mobile_field/intl_mobile_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -301,9 +303,9 @@ class _BookingScreenState extends State<BookingScreen> {
       child: Card(
         child: ListTile(
           leading: const CircleAvatar(
-            backgroundImage: NetworkImage('https://img.freepik.com/free-psd/3d-render-avatar-character_23-2150611759.jpg?t=st=1737462976~exp=1737466576~hmac=bb7f1ed6b30ebe44da413b5b2cc15fa51ea4e9e3affc6444ac96799a26db1911&w=740'), // Replace with actual image asset
+            backgroundImage: NetworkImage('https://m.media-amazon.com/images/I/51h590Ep9hL.png'), // Replace with actual image asset
           ),
-          title:  Text('Mr, ${user?['first_name']} ${user?['last_name']}'),
+          title:  Text('${user?['title']}, ${user?['first_name']} ${user?['last_name']}'),
           subtitle: Column(
              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -384,84 +386,100 @@ class _BookingScreenState extends State<BookingScreen> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            return Form(
-              key: formKey,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Center(
-                        child: Text(
-                          'Add Flight Details',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextField(
-                        label: 'Departure Flight',
-                        hintText: 'Enter Flight Number',
-                        obscureText: false,
-                        icon: Icons.person,
-                        controller: depFlightController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Departure Flight Number';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        label: 'Arrival Flight',
-                        hintText: 'Enter Flight Number',
-                        obscureText: false,
-                        icon: Icons.person,
-                        controller: arrivalFlightController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Arrival Flight Number';
-                          }
-                          return null;
-                        },
-                      ),
-                      // if (_promoState == "expired") promoCodeExpired(),
-                      // if (_promoState == "removed") promoCodeRemoved(),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
+            return SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 15),
                           ),
-                          onPressed: () {
-                            if (formKey.currentState!.validate()) {
-                              Navigator.maybePop(context);
-                            }
-                          },
-                          child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 10),
+                        const Center(
+                          child: Text(
+                            'Add Flight Details',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        CustomTextField(
+                          label: 'Departure Flight',
+                          hintText: 'Enter Flight Number',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: depFlightController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your Departure Flight Number';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          label: 'Arrival Flight',
+                          hintText: 'Enter Flight Number',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: arrivalFlightController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your Arrival Flight Number';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          label: 'Passengers',
+                          hintText: 'Enter Total Passengers',
+                          obscureText: false,
+                          icon: Icons.person,
+                          controller: passengersController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter Total Passengers';
+                            }
+                            return null;
+                          },
+                        ),
+                        // if (_promoState == "expired") promoCodeExpired(),
+                        // if (_promoState == "removed") promoCodeRemoved(),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                Navigator.maybePop(context);
+                              }
+                            },
+                            child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -540,45 +558,120 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+
   Future<void> _selectVehicle(BuildContext context) async {
-    // Fetch vehicles from your data source
-    List vehiclesData = await fetchVehiclesByCustomer('${user?['id']}'); // Replace with actual user ID
-    List<Vehicle> vehicles = vehiclesData.map((data) => Vehicle.fromMap(data)).toList();
-    showCupertinoDialog(
+    showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select a Vehicle'),
-          content: ListView.builder(
-            shrinkWrap: true,
-            itemCount: vehicles.length,
-            itemBuilder: (context, index) {
-              final vehicle = vehicles[index];
-              return ListTile(
-                title: Text('Make: ${vehicle.make}'),
-                subtitle: Text('Model: ${vehicle.model}, Color: ${vehicle.color}, registration: ${vehicle.registration}'),
-                onTap: () {
-                  _onVehicleSelected(vehicle);
-                  // Navigator.pop(context);
-                },
-              );
-            },
-          ),
-          actions: <Widget>[
-            CupertinoDialogAction(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.pop(context);
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.9,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return FutureBuilder<List<Vehicle>>(
+              future: fetchVehiclesByCustomer('${user?['id']}').then(
+                    (data) => data.map((vehicle) => Vehicle.fromMap(vehicle)).toList(),
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                } else if (snapshot.hasError) {
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: Text("Failed to load vehicles")),
+                  );
+                }
+                List<Vehicle> vehicles = snapshot.data ?? [];
+
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Center(
+                        child: Text(
+                          'Select a Vehicle',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Show vehicle list if available
+                      if (vehicles.isNotEmpty)
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            itemCount: vehicles.length,
+                            itemBuilder: (context, index) {
+                              final vehicle = vehicles[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 4.0, bottom: 4),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.withOpacity(0.10), width: 1.0),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Card(
+                                    elevation: 0,
+                                    child: ListTile(
+                                      leading: Image.asset('assets/images/car.png', width: 40),
+                                      title: Text(vehicle.make),
+                                      subtitle: Text(
+                                        'Model: ${vehicle.model}, Color: ${vehicle.color}, Reg: ${vehicle.registration}',
+                                      ),
+                                      onTap: () {
+                                        _onVehicleSelected(vehicle);
+                                        // Navigator.pop(context); // Close modal after selection
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      else
+                        const SizedBox(
+                          child: Center(child: Text("No vehicles available")),
+                        ),
+                      // "Manage Vehicles" button is always visible
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: CustomButton(
+                          text: 'Manage Vehicles',
+                          onPressed: () {
+                            Navigator.pushNamed(context, AppRoutes.vehicleManagement);
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                );
               },
-            ),
-          ],
+            );
+          },
         );
       },
-    ).then((selectedVehicle) {
-      if (selectedVehicle != null) {
-        _onVehicleSelected(selectedVehicle);
-      }
-    });
+    );
   }
 
 
@@ -769,20 +862,6 @@ class _BookingScreenState extends State<BookingScreen> {
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 10),
-                        CustomTextField(
-                          label: 'Passengers',
-                          hintText: 'Enter Total Passengers',
-                          obscureText: false,
-                          icon: Icons.person,
-                          controller: passengersController,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter Total Passengers';
-                            }
-                            return null;
-                          },
                         ),
                         const SizedBox(height: 10),
                         Column(

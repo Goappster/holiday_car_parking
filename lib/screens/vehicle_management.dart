@@ -459,10 +459,10 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
 
   void _showVehicle(BuildContext context) {
     final formKey = GlobalKey<FormState>();
-    final registrationController = TextEditingController();
-    final makeController = TextEditingController();
-    final modelController = TextEditingController();
-    final colorController = TextEditingController();
+    final TextEditingController registrationController = TextEditingController();
+    final TextEditingController makeController = TextEditingController();
+    final TextEditingController modelController = TextEditingController();
+    final TextEditingController colorController = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -574,6 +574,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                       const SizedBox(height: 20),
                       CustomButton(text: 'Save',
                         onPressed: () async {
+                        // print(registrationController.text,);
                           if (formKey.currentState!.validate()) {
                             Navigator.pop(context);
                             await _addVehicle(
@@ -613,11 +614,11 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'registration': registration,
-          'make': make,
-          'model': model,
-          'color': color,
-          'user_id': userId,
+          'registration': registration ?? '',
+          'make': make?? '',
+          'model': model?? '',
+          'color': color?? '',
+          'user_id': userId?? '',
         }),
       );
 
@@ -646,7 +647,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           },
         );
       } else {
-       //debug//print(response.body);
+      print(response.body);
         _showErrorDialog('Failed to add vehicle. Please try again.');
       }
     } catch (e) {

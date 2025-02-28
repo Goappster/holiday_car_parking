@@ -69,9 +69,9 @@ class PaymentService {
     try {
       await Stripe.instance.presentPaymentSheet();
       if (source == 'booking') {
-        // sendBooking(context, price, extraData, paymentIntentId);
-      } else if (source == 'addFunds') { // Fix duplicate condition
-        // await sendPostRequest(context, paymentIntentId, price, extraData);
+        await sendBooking(context, price, extraData, paymentIntentId);
+      } else if (source == 'add_funds') { // Fix duplicate condition
+         await sendPostRequest(context, paymentIntentId, price, extraData);
       } else if (source == 'bank_transfer') {
         // await makeBankTransferPayment(extraData);
       }
@@ -153,6 +153,8 @@ class PaymentService {
       throw Exception("Failed to complete booking");
     }
   }
+
+
   Future<void> sendPostRequest(BuildContext context, String trxID, String amount, final Map<String, dynamic> extraData,) async {
     Map<String, dynamic> data = {
       'userId': extraData['user_id'],
@@ -162,43 +164,49 @@ class PaymentService {
     };
     Response? response = await _apiService.postRequest('wallet/add-funds', data);
     if (response != null && response.statusCode == 200) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Success'),
+              content: const Text('Amount has been successfully added to your wallet.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      });
       // Show Cupertino-style success dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Amount has been successfully added to your wallet.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+
     } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: const Text('Failed to add funds: .statusCode}'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      });
       // Show Cupertino-style error message
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Failed to add funds: .statusCode}'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+;
     }
   }
 

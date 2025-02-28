@@ -11,22 +11,13 @@ class ViewDeatils extends StatefulWidget {
 }
 
 class _ViewDeatilsState extends State<ViewDeatils> {
-  final String htmlContent = """
-    <h2>Welcome to Home</h2>
-    <p>This is an <b>HTML</b> content example.</p>
-    <ul>
-      <li>Item 1</li>
-      <li>Item 2</li>
-      <li>Item 3</li>
-    </ul>
-  """;
 
 
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(title: Text("Company Details "),
         centerTitle: true,
@@ -41,7 +32,7 @@ class _ViewDeatilsState extends State<ViewDeatils> {
               tabs: [
                 Tab(text: "    Info   "),
                 Tab(text: "       Arrival / Return     "),
-                Tab(text: "       Map         "),
+                // Tab(text: "       Map         "),
                 Tab(text: "      Terms and Conditions    "),
               ],
             ),
@@ -67,13 +58,14 @@ class _ViewDeatilsState extends State<ViewDeatils> {
                         ),
                       ),
                     ),
-                    Center(child: Text("👤 Profile Screen")),
                     SizedBox(
                       height: double.infinity, // Allows scrolling inside the available space
                       child: SingleChildScrollView(
-                        child: HtmlWidget(widget.company['term_condition']),
+                        child: HtmlWidget(
+                          widget.company['term_condition'],
+                        ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),

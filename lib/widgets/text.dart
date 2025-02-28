@@ -113,7 +113,6 @@ import 'package:flutter/material.dart';
 //   }
 // }
 
-
 class CustomTextField extends StatefulWidget {
   final String label;
   final String hintText;
@@ -122,7 +121,7 @@ class CustomTextField extends StatefulWidget {
   final Widget? suffixIcon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
-  final List<String>? suggestions; // Optional suggestions
+  final List<String>? suggestions;
 
   const CustomTextField({
     required this.label,
@@ -142,17 +141,12 @@ class CustomTextField extends StatefulWidget {
 
 class _CustomTextFieldState extends State<CustomTextField> {
   late FocusNode _focusNode;
-  late TextEditingController _internalController;
   bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _focusNode = FocusNode();
-    _internalController = TextEditingController(text: widget.controller.text);
-
-    // Sync internal controller with the provided controller
-    widget.controller.addListener(_syncControllers);
 
     _focusNode.addListener(() {
       setState(() {
@@ -161,18 +155,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
     });
   }
 
-  void _syncControllers() {
-    if (_internalController.text != widget.controller.text) {
-      _internalController.text = widget.controller.text;
-      _internalController.selection = widget.controller.selection;
-    }
-  }
-
   @override
   void dispose() {
     _focusNode.dispose();
-    _internalController.dispose();
-    widget.controller.removeListener(_syncControllers);
     super.dispose();
   }
 
@@ -199,14 +184,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
               TextEditingController textEditingController,
               FocusNode focusNode,
               VoidCallback onFieldSubmitted) {
-            // Assign internal controller only once to prevent build conflicts
-            if (textEditingController.text != _internalController.text) {
-              textEditingController.text = _internalController.text;
-              textEditingController.selection = _internalController.selection;
-            }
-
             return TextFormField(
-              controller: _internalController, // Use internal controller
+              controller: widget.controller, // Directly use widget.controller
               focusNode: _focusNode,
               obscureText: widget.obscureText,
               decoration: InputDecoration(
@@ -245,4 +224,3 @@ class _CustomTextFieldState extends State<CustomTextField> {
         option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
   }
 }
-

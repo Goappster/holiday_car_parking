@@ -156,10 +156,7 @@ class _WalletDashboardState extends State<WalletDashboard> {
                       color: isCredit ? Colors.green : Colors.red,
                     ),
                     title: Text(tx['description'] ?? ''),
-                    subtitle: Text(
-                      DateFormat('EEEE, MMMM yyyy')
-                          .format(DateTime.parse(tx['created_at'])),
-                    ),
+                    subtitle: Text(DateFormat('EEEE MMMM yyyy hh:mm a').format(DateTime.parse(tx['created_at'])),),
                     trailing: Text(
                       '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
                       style: TextStyle(

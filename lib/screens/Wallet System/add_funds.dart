@@ -10,12 +10,13 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/wallet_provider.dart';
+import '../../services/StripService.dart';
 import '../../services/dio.dart';
 import 'bank_selection.dart';
 
 class EnterAmountBottomSheet extends StatefulWidget {
   final ValueNotifier<double> amountNotifier;
-final String source;
+   final String source;
 
   const EnterAmountBottomSheet({super.key, required this.amountNotifier, required this.source});
 
@@ -54,10 +55,8 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
   }
   final TextEditingController _amountController = TextEditingController();
 
-  // List of preset amounts
   List<int> presetAmounts = [100, 200, 350, 50];
 
-  // Function to handle key tap actions (numbers and backspace)
   void onKeyTap(String value) {
     setState(() {
       double currentAmount = widget.amountNotifier.value;
@@ -84,7 +83,6 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
     });
   }
 
-  // Function to set preset amount directly
   void setPresetAmount(int amount) {
     setState(() {
       _amountController.text = amount.toString(); // Update TextField with preset amount
@@ -92,11 +90,73 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
     });
   }
 
+
+
   // Format the amount as currency
   String getFormattedAmount(double amount) {
     return NumberFormat("#,##0.00", "en_GB").format(amount); // Format as currency
   }
-  Map<String, dynamic>? paymentIntent;
+
+
+
+
+  Future<void> _handlePayment(BuildContext context) async {
+    Map<String, dynamic> details  = {
+      'user_id': '${user!['id']}',
+
+    };
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text("Processing..."),
+            ],
+          ),
+        ),
+      );
+
+      // Debit funds
+      await PaymentService().saveCardAndMakePayment(context, _amountController.text, 'add_funds', details);
+      // Close loading dialog before sending booking
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+      // Show success dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+
+      }
+    } catch (e) {
+      // Close loading dialog in case of error
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Booking Failed"),
+            content: Text("Something went wrong. Please try again."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
 
 
   @override
@@ -204,151 +264,56 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
           NumericKeypad(onKeyTap: onKeyTap),
           SizedBox(height: 20),
           // Next button
-          CustomButton(text: 'Next ${_amountController.text}', onPressed: () {
-            Navigator.pop(context);
-            if (widget.source == 'withdraw'){
-              Navigator.push(context, MaterialPageRoute(builder: (context)=> BankSelectionScreen(amount: _amountController.text, userId: user!['id'].toString(),) ));
-            } else{
-              saveCardAndMakePayment(context, _amountController.text.toString());
-            }
+          CustomButton(
+            text: 'Next',
+            onPressed: () async {
+              double amount = double.tryParse(_amountController.text.toString()) ?? 0.0;
 
-
-          }),
+              if (widget.source == 'withdraw') {
+                if (amount >= 100) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BankSelectionScreen(
+                        amount: _amountController.text,
+                        userId: user!['id'].toString(),
+                      ),
+                    ),
+                  );
+                } else {
+                  _showAlertDialog(context, '⚠️',
+                      'You must withdraw at least £100 from your HCP wallet.');
+                }
+              } else {
+                if (amount >= 50) {
+                  await _handlePayment(context);
+                } else {
+                  _showAlertDialog(context, 'Low Amount ⚠️',
+                      'Your amount is too low! Please deposit a minimum of £50 into your HCP wallet.');
+                }
+              }
+            },
+          )
         ],
       ),
     );
   }
-
-  Future<void> saveCardAndMakePayment(BuildContext context, String price) async {
-    try {
-      paymentIntent = await createPaymentIntent(price, 'GBP');
-
-      if (paymentIntent == null) {
-        throw Exception("Failed to create payment intent");
-      }
-
-      String paymentIntentId = paymentIntent!['id'];
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntent!['client_secret'],
-          merchantDisplayName: 'Holiday Car Parking',
-          googlePay: const PaymentSheetGooglePay(
-            testEnv: false,
-            currencyCode: 'GBP',
-            merchantCountryCode: 'GB',
-          ),
-        ),
-      );
-
-      await displayPaymentSheet(context, price, paymentIntentId);
-
-    } catch (e) {
-      //print("Exception: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
-  }
-
-  Future<void> displayPaymentSheet(BuildContext context, String price, String paymentIntentId) async {
-    try {
-      await Stripe.instance.presentPaymentSheet();
-      // Call postBookingData after successful payment
-      await sendPostRequest(context, paymentIntentId, price);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Paid successfully")),
-      );
-
-
-      paymentIntent = null;
-    } on StripeException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Payment Cancelled")),
-      );
-    }
-  }
-
-  Future<Map<String, dynamic>?> createPaymentIntent(String amount, String currency) async {
-    try {
-      Map<String, dynamic> body = {
-        'amount': (double.parse(amount) * 100).round().toString(),
-        'currency': currency,
-        'payment_method_types[]': 'card',
-      };
-
-      var secretKey = 'sk_test_51OvKOKIpEtljCntg1FlJgg8lqldMDCAEZscX3lGtppD7LId1gV0aBIrxDmpGwAKVZv8RDXXm4RmTNxMlrOUocTVh00tASgVVjc';
-      var response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer $secretKey',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        //print("Stripe API Error: ${response.body}");
-        return null;
-      }
-    } catch (err) {
-      //print('Error: ${err.toString()}');
-      return null;
-    }
-  }
-
-
-  final DioService _apiService = DioService();
-  Future<void> sendPostRequest(BuildContext context, String trxID, String amount) async {
-    Map<String, dynamic> data = {
-      'userId': user!['id'].toString(),
-      'amount': amount,
-      'transaction_id': trxID,
-      'signature': '40',
-    };
-    Response? response = await _apiService.postRequest('wallet/add-funds', data);
-    if (response != null && response.statusCode == 200) {
-      // Show Cupertino-style success dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Amount has been successfully added to your wallet.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      // Show Cupertino-style error message
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Failed to add funds: .statusCode}'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+  void _showAlertDialog(BuildContext context, String title, String message) {
+    showCupertinoDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
 }

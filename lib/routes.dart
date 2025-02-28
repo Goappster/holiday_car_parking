@@ -5,6 +5,7 @@ import 'package:holidayscar/screens/getsupport_ticket.dart';
 import 'package:holidayscar/screens/Booking/my_booking.dart';
 import 'package:holidayscar/screens/Acccounts/splash.dart';
 import 'package:holidayscar/screens/support_ticket.dart';
+import 'package:holidayscar/screens/vehicle_management.dart';
 import 'main.dart';
 import 'screens/Acccounts/login_screen.dart';
 import 'screens/Acccounts/signup_screen.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String forgetPass = '/forgetPass';
   static const String createSupportTicket = '/supportTicket';
   static const String manageTicketScreen = '/manageTicketScreen';
+  static const String vehicleManagement = '/vehicleManagement';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -42,6 +44,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) =>  SupportTicketForm());
       case manageTicketScreen:
         return MaterialPageRoute(builder: (_) =>  SupportTicketScreen());
+      case vehicleManagement:
+        return MaterialPageRoute(builder: (_) =>  VehicleManagementScreen());
       default:
         return MaterialPageRoute(builder: (_) =>  LoginScreen()); // Fallback
     }
