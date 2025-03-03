@@ -179,7 +179,7 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Add funds',
+            '',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
           ),
           const SizedBox(height: 10),

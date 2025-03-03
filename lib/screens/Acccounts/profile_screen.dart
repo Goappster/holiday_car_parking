@@ -163,7 +163,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                         if (confirmLogout == true) {
                           SharedPreferences prefs = await SharedPreferences.getInstance();
-                          await prefs.clear();
+                          await prefs.remove('token'); // Removes only the token
+                          await prefs.remove('user');
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             AppRoutes.login,

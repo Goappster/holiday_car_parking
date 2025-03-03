@@ -1,16 +1,13 @@
 import 'dart:convert';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/screens/Wallet%20System/transaction_History.dart';
-import 'package:holidayscar/screens/Wallet%20System/wtihdrwa_funds.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../Code/custompain.dart';
 import '../../providers/wallet_provider.dart';
+import '../Booking/PaymentReceiptScreen.dart';
 import 'add_funds.dart';
 import '../../widgets/ImageSlider.dart';
 
@@ -108,8 +105,11 @@ class _WalletDashboardState extends State<WalletDashboard> {
                 _buildQuickAction(context, Icons.account_balance, 'Withdraw Funds', ()=>showShowWithdrwaScreen(context)),
                 _buildQuickAction(context, Icons.swap_horiz, 'Transfer', (){
                   // showSortModal(context);
+                  _showMessage(context, 'Coming Soon!');
                 }),
-                _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){})
+                _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){
+                  _showMessage(context, 'Coming Soon!');
+                })
               ],
             ),
             SizedBox(height: 20),
@@ -149,26 +149,41 @@ class _WalletDashboardState extends State<WalletDashboard> {
                 : Column(
               children: walletProvider.transactions.take(5).map((tx) {
                 bool isCredit = tx['type'] == 'credit';
-                return Card(
-                  child: ListTile(
-                    leading: Icon(
-                      isCredit ? Icons.credit_card : Icons.remove_circle,
-                      color: isCredit ? Colors.green : Colors.red,
-                    ),
-                    title: Text(tx['description'] ?? ''),
-                    subtitle: Text(DateFormat('EEEE MMMM yyyy hh:mm a').format(DateTime.parse(tx['created_at'])),),
-                    trailing: Text(
-                      '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
-                      style: TextStyle(
-                        color: isCredit ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
+                          return Card(
+                            child: ListTile(
+                              leading: Icon(
+                                isCredit
+                                    ? Icons.credit_card
+                                    : Icons.remove_circle,
+                                color: isCredit ? Colors.green : Colors.red,
+                              ),
+                              title: Text(tx['description'] ?? ''),
+                              subtitle: Text(
+                                DateFormat('EEEE MMMM yyyy hh:mm a')
+                                    .format(DateTime.parse(tx['created_at'])),
+                              ),
+                              trailing: Text(
+                                '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
+                                style: TextStyle(
+                                  color: isCredit ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaymentReceiptScreen(
+                                      data: tx,
+                                      source: 'transactions',
+                                    ),
+                                  ),
+                                );
+                              }, // No navigation on tap
+                            ),
+                          );
+                        }).toList(),
                       ),
-                    ),
-                    onTap: () {}, // No navigation on tap
-                  ),
-                );
-              }).toList(),
-            ),
           ],
         ),
       ),
@@ -187,6 +202,16 @@ class _WalletDashboardState extends State<WalletDashboard> {
           SizedBox(height: 5),
           Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
         ],
+      ),
+    );
+  }
+
+
+  void _showMessage(BuildContext context, String source) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(source),
+        duration: Duration(seconds: 2), // Duration for how long the Snackbar will be visible,
       ),
     );
   }
@@ -247,14 +272,14 @@ class _WalletDashboardState extends State<WalletDashboard> {
                     _showKeypad(context, 'deposit');
                   },
               ),
-              SizedBox(height: 10),
-              _buildPaymentOption(
-                title: "Bank transfer or debit card",
-                subtitle: "Requires registration\nOptions and fees vary based on location",
-                image: "assets/images/visa_logo.png",
-                additionalText: "Available in 59 countries",
-                onTap: () {  },
-              ),
+              // SizedBox(height: 10),
+              // _buildPaymentOption(
+              //   title: "Bank transfer or debit card",
+              //   subtitle: "Requires registration\nOptions and fees vary based on location",
+              //   image: "assets/images/visa_logo.png",
+              //   additionalText: "Available in 59 countries",
+              //   onTap: () {  },
+              // ),
               SizedBox(height: 20),
             ],
           ),

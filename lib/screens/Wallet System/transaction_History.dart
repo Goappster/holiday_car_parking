@@ -189,17 +189,27 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           Color statusColor = getStatusColor(status);
           IconData statusIcon = getStatusIcon(status);
 
-          return Card(
-            child: ListTile(
-              leading: Icon(statusIcon, color: statusColor), // Add icon
-              title: Text(
-                status,
-                style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(tx['created_at'] ?? ''),
-              trailing: Text(
-                '\$${tx['amount'] ?? '0.00'}',
-                style: TextStyle(color: isCredit ? Colors.green : Colors.red),
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentReceiptScreen(data: tx, source: 'withdrawStatus'),
+                ),
+              );
+            },
+            child: Card(
+              child: ListTile(
+                leading: Icon(statusIcon, color: statusColor), // Add icon
+                title: Text(
+                  status,
+                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(tx['created_at'] ?? ''),
+                trailing: Text(
+                  '\$${tx['amount'] ?? '0.00'}',
+                  style: TextStyle(color: isCredit ? Colors.green : Colors.red),
+                ),
               ),
             ),
           );
@@ -223,13 +233,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         itemBuilder: (context, index) {
           final tx = transactions[index];
           bool isCredit = tx['type'] == 'credit';
-          return Card(
-            child: ListTile(
-              title: Text(tx['description'] ?? ''),
-              subtitle: Text(DateFormat('EEEE MMMM yyyy hh:mm a').format(DateTime.parse(tx['created_at'])),),
-              trailing: Text(
-                '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
-                style: TextStyle(color: isCredit ? Colors.green : Colors.red),
+          return InkWell(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentReceiptScreen(data: tx, source: 'transactions',),
+                ),
+              );
+            },
+            child: Card(
+              child: ListTile(
+                title: Text(tx['description'] ?? ''),
+                subtitle: Text(DateFormat('EEEE MMMM yyyy hh:mm a').format(DateTime.parse(tx['created_at'])),),
+                trailing: Text(
+                  '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
+                  style: TextStyle(color: isCredit ? Colors.green : Colors.red),
+                ),
               ),
             ),
           );

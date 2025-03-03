@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/wallet_provider.dart';
+import '../screens/Wallet System/add_funds.dart';
+import '../screens/Wallet System/wallet.dart';
 import '../services/Notifactions.dart';
 import 'package:http/http.dart' as http;
 
@@ -277,9 +279,12 @@ class _SortModalContentState extends State<SortModalContent> {
                               child: const Text('Cancel'),
                             ),
                             CupertinoDialogAction(
-                              onPressed: () => Navigator.of(context).pop(true),
+                              onPressed: () =>  Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) =>  WalletDashboard()),
+                              ),
                               child: const Text(
-                                'Add Funds 💳',
+                                'Add funds 💳',
                                 style: TextStyle(color: Colors.blue),
                               ),
                             ),
@@ -485,21 +490,5 @@ class _SortModalContentState extends State<SortModalContent> {
 
 
 
-
-
-
-// Navigator.pushNamed(
-// context,
-// '/PaymentConfirm',
-// arguments: {
-// 'company': bookingDetails['company'],
-// 'startDate': bookingDetails['drop_date'].toString(),
-// 'endDate': bookingDetails['endDate'].toString(),
-// 'startTime': bookingDetails['drop_time'].toString(),
-// 'endTime': bookingDetails['pick_time'].toString(),
-// 'totalPrice': price.toString(),
-// 'referenceNo': bookingDetails['referenceNo'].toString(),
-// },
-// );
 
 

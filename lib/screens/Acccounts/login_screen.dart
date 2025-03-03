@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holidayscar/routes.dart';
 
@@ -41,13 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
   // Load saved credentials if 'Remember Me' is checked
   Future<void> _loadCredentials() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('rememberMe') ?? false) {
-      emailController.text = prefs.getString('email') ?? '';
-      passwordController.text = prefs.getString('password') ?? '';
-      setState(() {
-        _rememberMe = true;
-      });
-    }
+    setState(() {
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (_rememberMe) {
+        emailController.text = prefs.getString('email') ?? '';
+        passwordController.text = prefs.getString('password') ?? '';
+      }
+    });
   }
 
   // Save credentials to SharedPreferences
@@ -138,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: screenHeight * 0.03),
                 TextFormField(
                   controller: emailController,
+                  autofillHints: [AutofillHints.email], // Autofill hint for email
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'Email',
@@ -157,6 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: screenHeight * 0.02),
                 TextFormField(
                   controller: passwordController,
+                  autofillHints: [AutofillHints.password], // Autofill hint for password
                   obscureText: !_passwordVisible,
                   decoration: InputDecoration(
                     labelText: 'Password',
@@ -212,6 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: screenHeight * 0.02),
                 ElevatedButton(
                   onPressed: () {
+                    TextInput.finishAutofillContext(); // Signal autofill context is complete
                     if (_formKey.currentState!.validate()) {
                       _login(emailController.text, passwordController.text);
                     }

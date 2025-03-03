@@ -288,19 +288,31 @@ class DateTimePickerSection extends StatefulWidget {
 }
 
 class _DateTimePickerSectionState extends State<DateTimePickerSection> {
+
   TimeOfDay? _selectedStartTime, _selectedEndTime;
-  DateTime? _pickupDate;
-  DateTime? _dropOffDate;
+  DateTime? _pickupDate, _dropOffDate;
 
   void _showDatePicker(BuildContext context, bool isPickup) {
     DateTime now = DateTime.now();
-    DateTime initialPickupDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    DateTime initialDropOffDate = _dropOffDate ?? _pickupDate ?? initialPickupDate; // Fix here ✅
 
-    // Set the initial date depending on whether it's for pickup or dropoff
+    // Initialize drop-off date to be tomorrow if it's not already set
+    DateTime initialDropOffDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+
+    // If no drop-off date is already set, use the initial drop-off date
+    DateTime initialPickupDate = _pickupDate ?? _dropOffDate ?? initialDropOffDate;
+
+    // Set the selected date based on whether it's for pickup or dropoff
     DateTime selectedDate = isPickup
-        ? (_pickupDate ?? initialPickupDate)
-        : (_dropOffDate ?? (_pickupDate ?? initialPickupDate)); // Ensure drop-off starts from pickup date if it is null
+        ? (_pickupDate ?? initialPickupDate)  // If it's pickup, use _pickupDate or the initial pickup date
+        : (_dropOffDate ?? initialDropOffDate);
+
+    // Ensure minimumDate is not later than the selectedDate
+    DateTime minimumDate = isPickup
+        ? (_dropOffDate ?? initialDropOffDate)  // Pickup date cannot be earlier than the drop-off date
+        : initialDropOffDate;
+
+    // Make sure the minimum date is not after the selected date
+    minimumDate = minimumDate.isAfter(selectedDate) ? selectedDate : minimumDate;
 
     showCupertinoModalPopup(
       context: context,
@@ -319,9 +331,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.date,
                   initialDateTime: selectedDate,
-                  minimumDate: isPickup
-                      ? initialPickupDate
-                      : (_pickupDate ?? initialPickupDate), // Drop-off must be after pickup
+                  minimumDate: minimumDate, // Set the correct minimum date based on drop-off
                   maximumDate: DateTime(2100),
                   onDateTimeChanged: (DateTime newDate) {
                     setStateModal(() {
@@ -334,17 +344,21 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 onPressed: () {
                   setState(() {
                     if (isPickup) {
+                      // If it's pickup, set the pickup date
                       _pickupDate = selectedDate;
-                      // Ensure drop-off date is at least pickup date
-                      if (_dropOffDate == null || _dropOffDate!.isBefore(_pickupDate!)) {
+
+                      // Ensure drop-off date is at least the pickup date
+                      if (_dropOffDate == null || _dropOffDate!.isAfter(_pickupDate!)) {
                         _dropOffDate = _pickupDate;
                       }
                     } else {
-                      // Ensure drop-off date is after pickup date
-                      if (_pickupDate != null && selectedDate.isBefore(_pickupDate!)) {
-                        selectedDate = _pickupDate!; // Reset to pickup date if drop-off is before it
-                      }
+                      // If it's dropoff, set the drop-off date
                       _dropOffDate = selectedDate;
+
+                      // Automatically set pickup date to be on or after drop-off date
+                      if (_pickupDate == null || _pickupDate!.isAfter(_dropOffDate!)) {
+                        _pickupDate = _dropOffDate;  // Set pickup date to be the drop-off date or later
+                      }
                     }
                   });
                   Navigator.pop(context);
@@ -357,6 +371,8 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       ),
     );
   }
+
+
   Widget _buildCupertinoToolbar(BuildContext context, bool isPickup, DateTime selectedDate) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -403,7 +419,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
   }
 
   void _onFindParkingPressed() {
-    if (_selectedStartTime == null || _selectedEndTime == null || _pickupDate == null || _dropOffDate == null) {
+    if (_selectedStartTime == null || _selectedEndTime == null || _pickupDate == null || _dropOffDate == null || _selectedAirportId == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select all inputs.')));
       return;
     }

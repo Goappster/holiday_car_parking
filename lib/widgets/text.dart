@@ -113,6 +113,10 @@ import 'package:flutter/material.dart';
 //   }
 // }
 
+import 'package:flutter/material.dart';
+
+import 'package:flutter/material.dart';
+
 class CustomTextField extends StatefulWidget {
   final String label;
   final String hintText;
@@ -121,7 +125,8 @@ class CustomTextField extends StatefulWidget {
   final Widget? suffixIcon;
   final TextEditingController controller;
   final String? Function(String?)? validator;
-  final List<String>? suggestions;
+  final bool enableAutocomplete;
+  final Iterable<String>? autocompleteOptions;
 
   const CustomTextField({
     required this.label,
@@ -131,7 +136,8 @@ class CustomTextField extends StatefulWidget {
     required this.controller,
     this.suffixIcon,
     this.validator,
-    this.suggestions,
+    this.enableAutocomplete = false,
+    this.autocompleteOptions,
     Key? key,
   }) : super(key: key);
 
@@ -147,7 +153,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
-
     _focusNode.addListener(() {
       setState(() {
         _isFocused = _focusNode.hasFocus;
@@ -171,56 +176,75 @@ class _CustomTextFieldState extends State<CustomTextField> {
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 8),
-        Autocomplete<String>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            return _getOptions(textEditingValue);
-          },
-          onSelected: (String selection) {
-            widget.controller.text = selection;
-            widget.controller.selection =
-                TextSelection.collapsed(offset: selection.length);
-          },
-          fieldViewBuilder: (BuildContext context,
-              TextEditingController textEditingController,
-              FocusNode focusNode,
-              VoidCallback onFieldSubmitted) {
-            return TextFormField(
-              controller: widget.controller, // Directly use widget.controller
-              focusNode: _focusNode,
-              obscureText: widget.obscureText,
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle: const TextStyle(color: Colors.grey),
-                prefixIcon: Icon(
-                  widget.icon,
-                  color: _isFocused ? Colors.red : Colors.grey,
+        if (widget.enableAutocomplete && widget.autocompleteOptions != null)
+          Autocomplete<String>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return const Iterable<String>.empty();
+              }
+              return widget.autocompleteOptions!.where((String option) {
+                return option
+                    .toLowerCase()
+                    .contains(textEditingValue.text.toLowerCase());
+              });
+            },
+            onSelected: (String selection) {
+              widget.controller.text = selection;
+            },
+            fieldViewBuilder: (BuildContext context,
+                TextEditingController textEditingController,
+                FocusNode focusNode,
+                VoidCallback onFieldSubmitted) {
+              return TextFormField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                obscureText: widget.obscureText,
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: Icon(
+                    widget.icon,
+                    color: _isFocused ? Colors.red : Colors.grey,
+                  ),
+                  suffixIcon: widget.suffixIcon,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.red),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                suffixIcon: widget.suffixIcon,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.red),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                validator: widget.validator,
+              );
+            },
+          )
+        else
+          TextFormField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            obscureText: widget.obscureText,
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: Icon(
+                widget.icon,
+                color: _isFocused ? Colors.red : Colors.grey,
               ),
-              validator: widget.validator,
-            );
-          },
-        ),
+              suffixIcon: widget.suffixIcon,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.red),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            validator: widget.validator,
+          ),
       ],
     );
-  }
-
-  Iterable<String> _getOptions(TextEditingValue textEditingValue) {
-    if (widget.suggestions == null || widget.suggestions!.isEmpty) {
-      return const Iterable<String>.empty();
-    }
-    if (textEditingValue.text.isEmpty) {
-      return const Iterable<String>.empty();
-    }
-    return widget.suggestions!.where((String option) =>
-        option.toLowerCase().contains(textEditingValue.text.toLowerCase()));
   }
 }

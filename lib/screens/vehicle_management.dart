@@ -1,15 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:http/http.dart' as http;
-import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/text.dart';
-
 class VehicleManagementScreen extends StatefulWidget {
   const VehicleManagementScreen({super.key});
 
@@ -27,7 +26,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
     'Alfa Romeo', 'Citroën', 'Bugatti', 'Aston Martin', 'Ferrari', 'Lamborghini', 'Maserati', 'Bentley', 'Rolls-Royce',
   ];
 
-  final List<String> vehiclemodelSuggestions = [
+  final List<String> vehicleModelSuggestions = [
     '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020',
     '2021', '2022', '2023', '2024', '2005', '2006', '2007', '2008', '2009', '1995', '1996', '1997', '1998', '1999',
     '2000', '2001', '2002', '2003', '2004', '1985', '1986', '1987',
@@ -366,37 +365,91 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         },
                       ),
                       SizedBox(height: 10),
-                      CustomTextField(
-                        label: 'Vehicle Make',
-                        hintText: 'Japan Motors',
-                        obscureText: false,
-                        icon: Icons.person,
-                        controller: makeController,
-                        suggestions: vehicleSuggestions,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Vehicle Make Company';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Vehicle Make',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Autocomplete<String>(
+                            optionsBuilder: (TextEditingValue textEditingValue) {
+                              if (textEditingValue.text.isEmpty) {
+                                return const Iterable<String>.empty();
+                              }
+                              return vehicleSuggestions.where(
+                                    (model) => model.toLowerCase().contains(textEditingValue.text.toLowerCase()),
+                              );
+                            },
+                            onSelected: (String selection) {
+                              makeController.text = selection;
+                            },
+                            fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                              return TextFormField(
+                                controller: controller, // Use the provided controller
+                                focusNode: focusNode,
+                                onEditingComplete: onEditingComplete,
+                                decoration: const InputDecoration(
+                                  // labelText: 'Vehicle Model',
+                                  hintText: 'Tesla',
+                                  prefixIcon: Icon(Icons.directions_car),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your Vehicle Model';
+                                  }
+                                  return null;
+                                },
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       SizedBox(height: 10),
                       Row(
                         children: [
                           Expanded(
-                            child: CustomTextField(
-                              label: 'Vehicle Model',
-                              hintText: '2019',
-                              obscureText: false,
-                              icon: Icons.person,
-                              suggestions: vehiclemodelSuggestions,
-                              controller: modelController,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your Vehicle Model';
-                                }
-                                return null;
-                              },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Vehicle Model',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                Autocomplete<String>(
+                                  optionsBuilder: (TextEditingValue textEditingValue) {
+                                    if (textEditingValue.text.isEmpty) {
+                                      return const Iterable<String>.empty();
+                                    }
+                                    return vehicleModelSuggestions.where(
+                                          (model) => model.toLowerCase().contains(textEditingValue.text.toLowerCase()),
+                                    );
+                                  },
+                                  onSelected: (String selection) {
+                                    modelController.text = selection;
+                                  },
+                                  fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                                    return TextFormField(
+                                      controller: controller, // Use the provided controller
+                                      focusNode: focusNode,
+                                      onEditingComplete: onEditingComplete,
+                                      decoration: const InputDecoration(
+                                        // labelText: 'Vehicle Model',
+                                        hintText: '2019',
+                                        prefixIcon: Icon(Icons.directions_car),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter your Vehicle Model';
+                                        }
+                                        return null;
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 10), // Space between the fields
@@ -461,7 +514,7 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
     final formKey = GlobalKey<FormState>();
     final TextEditingController registrationController = TextEditingController();
     final TextEditingController makeController = TextEditingController();
-    final TextEditingController modelController = TextEditingController();
+    TextEditingController modelController = TextEditingController();
     final TextEditingController colorController = TextEditingController();
     showModalBottomSheet(
       context: context,
@@ -506,7 +559,6 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         obscureText: false,
                         icon: Icons.person,
                         controller: registrationController,
-
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your Vehicle Registration Number';
@@ -515,38 +567,93 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
                         },
                       ),
                       SizedBox(height: 10),
-                      CustomTextField(
-                        label: 'Vehicle Make',
-                        hintText: 'Japan Motors',
-                        obscureText: false,
-                        icon: Icons.person,
-                        controller: makeController,
-                        suggestions: vehicleSuggestions,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Vehicle Make Company';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Vehicle Make',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Autocomplete<String>(
+                            optionsBuilder: (TextEditingValue textEditingValue) {
+                              if (textEditingValue.text.isEmpty) {
+                                return const Iterable<String>.empty();
+                              }
+                              return vehicleSuggestions.where(
+                                    (model) => model.toLowerCase().contains(textEditingValue.text.toLowerCase()),
+                              );
+                            },
+                            onSelected: (String selection) {
+                              makeController.text = selection;
+                            },
+                            fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                              return TextFormField(
+                                controller: controller, // Use the provided controller
+                                focusNode: focusNode,
+                                onEditingComplete: onEditingComplete,
+                                decoration: const InputDecoration(
+                                  // labelText: 'Vehicle Model',
+                                  hintText: 'Japan Motors',
+                                  prefixIcon: Icon(Icons.directions_car),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your Vehicle Model';
+                                  }
+                                  return null;
+                                },
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       SizedBox(height: 10),
                       Row(
                         children: [
                           Expanded(
-                            child: CustomTextField(
-                              label: 'Vehicle Model',
-                              hintText: '2019',
-                              obscureText: false,
-                              icon: Icons.person,
-                              controller: modelController,
-                              suggestions: vehiclemodelSuggestions,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your Vehicle Model';
-                                }
-                                return null;
-                              },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                 'Vehicle Model',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                Autocomplete<String>(
+                                  optionsBuilder: (TextEditingValue textEditingValue) {
+                                    if (textEditingValue.text.isEmpty) {
+                                      return const Iterable<String>.empty();
+                                    }
+                                    return vehicleModelSuggestions.where(
+                                          (model) => model.toLowerCase().contains(textEditingValue.text.toLowerCase()),
+                                    );
+                                  },
+                                  onSelected: (String selection) {
+                                    modelController.text = selection;
+                                  },
+                                  fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                                    return TextFormField(
+                                      controller: controller, // Use the provided controller
+                                      focusNode: focusNode,
+                                      onEditingComplete: onEditingComplete,
+                                      decoration: const InputDecoration(
+                                        // labelText: 'Vehicle Model',
+                                        hintText: '2019',
+                                        prefixIcon: Icon(Icons.directions_car),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter your Vehicle Model';
+                                        }
+                                        return null;
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
+
                           ),
                           const SizedBox(width: 10), // Space between the fields
                           Expanded(
@@ -614,11 +721,11 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'registration': registration ?? '',
-          'make': make?? '',
-          'model': model?? '',
-          'color': color?? '',
-          'user_id': userId?? '',
+          'registration': registration,
+          'make': make,
+          'model': model,
+          'color': color,
+          'user_id': userId,
         }),
       );
 
@@ -647,7 +754,9 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
           },
         );
       } else {
-      print(response.body);
+      if (kDebugMode) {
+        print(response.body);
+      }
         _showErrorDialog('Failed to add vehicle. Please try again.');
       }
     } catch (e) {
