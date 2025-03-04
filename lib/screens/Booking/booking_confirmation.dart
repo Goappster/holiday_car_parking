@@ -70,124 +70,104 @@ class _BookingConfirmationState extends State<BookingConfirmation> {
   @override
   Widget build(BuildContext context) {
 
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
-
-        return  Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.3, // Responsive height
-                    child: Lottie.asset(
-                      'assets/payment_confirm.json',
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.3, // Responsive height
+                child: Lottie.asset(
+                  'assets/payment_confirm.json',
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Booking Successful!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '£${double.parse(bookingPrice).toStringAsFixed(2)}',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: _buildCompanyLogo(company),
+                title: Text('${company['name'] ?? ''}'),
+                subtitle: Text('${company['parking_type'] ?? ''}'),
+              ),
+              DottedDashedLine(
+                height: 0,
+                width: double.infinity,
+                axis: Axis.horizontal,
+                dashColor: Theme.of(context).dividerColor,
+              ),
+              ListTile(
+                title: const Text('Drop-Off'),
+                trailing: Text('${startDate ?? ''} at $startTime'),
+              ),
+              ListTile(
+                title: const Text('Return'),
+                trailing: Text('$endDate at $endTime'),
+              ),
+              ListTile(
+                title: const Text('Booking Price'),
+                trailing: Text(
+                  '£${double.parse(bookingPrice).toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/barcode.png',
+                      width: MediaQuery.of(context).size.width * 0.6, // Adjusted width
                       fit: BoxFit.contain,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Booking Successful!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '£${double.parse(bookingPrice).toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.green,
+                    const SizedBox(height: 8),
+                    Text(
+                      '$endTimsavedReferenceNoe',
+                      style: const TextStyle(fontSize: 18),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    leading: _buildCompanyLogo(company),
-                    title: Text('${company['name'] ?? ''}'),
-                    subtitle: Text('${company['parking_type'] ?? ''}'),
-                  ),
-                  DottedDashedLine(
-                    height: 0,
-                    width: double.infinity,
-                    axis: Axis.horizontal,
-                    dashColor: Theme.of(context).dividerColor,
-                  ),
-                  ListTile(
-                    title: const Text('Drop-Off'),
-                    trailing: Text('${startDate ?? ''} at $startTime'),
-                  ),
-                  ListTile(
-                    title: const Text('Return'),
-                    trailing: Text('$endDate at $endTime'),
-                  ),
-                  ListTile(
-                    title: const Text('Booking Price'),
-                    trailing: Text(
-                      '£${double.parse(bookingPrice).toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'assets/images/barcode.png',
-                          width: MediaQuery.of(context).size.width * 0.6, // Adjusted width
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '$endTimsavedReferenceNoe',
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.01,),
-                  Align(
-                      alignment: Alignment.bottomCenter,
-                      child: CustomButton(
-                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRoutes.home,
-                              (route) => false,
-                        ),
-                        text: "Back",
-                        backgroundColor: Colors.green,
-                      )
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.01,),
+              Align(
+                  alignment: Alignment.bottomCenter,
+                  child: CustomButton(
+                    onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      AppRoutes.home,
+                          (route) => false,
+                    ),
+                    text: "Back",
+                    backgroundColor: Colors.green,
+                  )
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
-          },
-        ),
-      );
-    });
-  }
+
 
   Widget _buildCompanyLogo(Map<String, dynamic> company) {
     return ClipRRect(

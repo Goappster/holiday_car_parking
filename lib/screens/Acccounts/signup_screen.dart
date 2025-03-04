@@ -92,62 +92,41 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double textScale = MediaQuery.of(context).textScaleFactor;
 
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
-
-        return Scaffold(
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 50),
-                    _buildLogo(),
-                    const SizedBox(height: 40),
-                    _buildTitle(),
-                    const SizedBox(height: 20),
-                    _buildNameFields(),
-                    const SizedBox(height: 10),
-                    _buildLastNameField(),
-                    const SizedBox(height: 10),
-                    _buildEmailField(),
-                    const SizedBox(height: 10),
-                    _buildPhoneNumberField(),
-                    const SizedBox(height: 10),
-                    _buildPasswordField(),
-                    const SizedBox(height: 20),
-                    _buildCreateAccountButton(),
-                    const SizedBox(height: 20),
-                    _buildLoginLink(),
-                  ],
-                ),
-              ),
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 50),
+                _buildLogo(),
+                const SizedBox(height: 40),
+                _buildTitle(),
+                const SizedBox(height: 20),
+                _buildNameFields(),
+                const SizedBox(height: 10),
+                _buildLastNameField(),
+                const SizedBox(height: 10),
+                _buildEmailField(),
+                const SizedBox(height: 10),
+                _buildPhoneNumberField(),
+                const SizedBox(height: 10),
+                _buildPasswordField(),
+                const SizedBox(height: 20),
+                _buildCreateAccountButton(),
+                const SizedBox(height: 20),
+                _buildLoginLink(),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
-          },
-        ),
-      );
-    });
-  }
 
   Widget _buildLogo() {
     return Center(

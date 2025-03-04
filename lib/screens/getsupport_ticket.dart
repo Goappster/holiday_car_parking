@@ -112,78 +112,58 @@ class _SupportTicketScreenState extends State<SupportTicketScreen> {
   @override
   Widget build(BuildContext context) {
 
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-            title: Text('Support Tickets'),
-          ),
-          body: RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: _isLoading
-                ? Center(
-              child: CircularProgressIndicator(), // Show loading spinner while fetching data
-            )
-                : tickets.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'No tickets found.',
-                    style: TextStyle(fontSize: 20, color: Colors.grey),
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Text('Support Tickets'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: _isLoading
+            ? Center(
+          child: CircularProgressIndicator(), // Show loading spinner while fetching data
+        )
+            : tickets.isEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'No tickets found.',
+                style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
-            )
-                : ListView.builder(
-              itemCount: tickets.length,
-              itemBuilder: (context, index) {
-                var ticket = tickets[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TicketDetailsPage(ticketRef: '${ticket['ticket_id']}'),
-                      ),
-                    );
-                  },
-                  child: CustomTicketCard(ticket: ticket),
+            ],
+          ),
+        )
+            : ListView.builder(
+          itemCount: tickets.length,
+          itemBuilder: (context, index) {
+            var ticket = tickets[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TicketDetailsPage(ticketRef: '${ticket['ticket_id']}'),
+                  ),
                 );
               },
-            ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              // Navigate to the "Create New Ticket" screen
-              Navigator.pushNamed(context, AppRoutes.createSupportTicket);
-            },
-            tooltip: 'Create Ticket',
-            child: Icon(Icons.add),
-          ),
-        );
-      },
-    );
-  }
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+              child: CustomTicketCard(ticket: ticket),
+            );
           },
         ),
-      );
-    });
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to the "Create New Ticket" screen
+          Navigator.pushNamed(context, AppRoutes.createSupportTicket);
+        },
+        tooltip: 'Create Ticket',
+        child: Icon(Icons.add),
+      ),
+    );
   }
+
 }
 class CustomTicketCard extends StatelessWidget {
   final dynamic ticket;

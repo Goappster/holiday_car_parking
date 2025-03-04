@@ -27,8 +27,8 @@ android {
         applicationId = "com.holiday.car.parking.uk"
         minSdk = 21  // Explicitly set to 21 or higher
         targetSdk = flutter.targetSdkVersion
-        versionCode 4
-        versionName "1.4"
+        versionCode 5
+        versionName "1.5"
     }
 
     buildTypes {

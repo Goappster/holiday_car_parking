@@ -156,144 +156,124 @@ class _SupportTicketFormState extends State<SupportTicketForm> {
   @override
   Widget build(BuildContext context) {
 
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
+    return Scaffold(
+      appBar: AppBar(surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor, title: Text('Create Tickets'),),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                SizedBox(height: 10,),
+                TextFormField(
+                  controller: _referenceNoController,
+                  decoration: InputDecoration(labelText: 'Booking Reference No.',
 
-        return Scaffold(
-          appBar: AppBar(surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor, title: Text('Create Tickets'),),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 10,),
-                    TextFormField(
-                      controller: _referenceNoController,
-                      decoration: InputDecoration(labelText: 'Booking Reference No.',
-
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.paste),
-                          onPressed: _pasteText,
-                        ),),
-                    ),
-                    SizedBox(height: 20,),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            decoration: InputDecoration(labelText: 'Support Department'),
-                            value: department,  // Set the value (null or any default value if needed)
-                            items: <String>['Booking', 'Complaint', 'Amendment', 'Cancellation'].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (value) => setState(() => department = value),
-                          ),
-                        ),
-                        SizedBox(width: 10,),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            decoration: InputDecoration(labelText: 'Ticket Priority'),
-                            value: priority,  // Set the value (null or any default value if needed)
-                            items: <String>['Low', 'Medium', 'High'].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (value) => setState(() => priority = value),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10,),
-                    TextFormField(
-                      decoration: InputDecoration(labelText: 'Ticket Subject'),
-                      onSaved: (value) => subject = value,
-                    ),
-                    SizedBox(height: 10,),
-                    TextFormField(
-                      decoration: InputDecoration(labelText: 'Ticket Message'),
-                      maxLines: 3,
-                      onSaved: (value) => message = value,
-                    ),
-                    SizedBox(height: 10,),
-                    ListTile(
-                      title: Text('Attachment: ${_imageFile?.name ?? "No Image Chosen"}'),
-                      trailing: ElevatedButton(
-                        onPressed: _pickImage,
-                        child: Text('Choose Image'),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.paste),
+                      onPressed: _pasteText,
+                    ),),
+                ),
+                SizedBox(height: 20,),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(labelText: 'Support Department'),
+                        value: department,  // Set the value (null or any default value if needed)
+                        items: <String>['Booking', 'Complaint', 'Amendment', 'Cancellation'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => department = value),
                       ),
                     ),
-                    SizedBox(height: 20,),
-                    RichText(
-                      text: TextSpan(
-                        children: <TextSpan>[
-                          TextSpan(
-                              text: 'I Agree To The',
-                              style: Theme.of(context).textTheme.titleSmall
-                          ),
-                          TextSpan(
-                            text: 'HolidaysCarParking',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
-                          ),
-                          TextSpan(
-                              text: '\'s Privacy Policy & ',
-                              style: Theme.of(context).textTheme.titleSmall
-                          ),
-                          TextSpan(
-                            text: 'Terms & Conditions',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
-                            recognizer: TapGestureRecognizer()..onTap = () {
-                              // Handle tap on the Terms & Conditions link
-                              //print('Tapped Terms & Conditions');
-                            },
-                          ),
-                        ],
+                    SizedBox(width: 10,),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(labelText: 'Ticket Priority'),
+                        value: priority,  // Set the value (null or any default value if needed)
+                        items: <String>['Low', 'Medium', 'High'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => priority = value),
                       ),
                     ),
-                    SizedBox(height: 20),
-                    // ElevatedButton(
-                    //   onPressed: _submitForm,
-                    //   child: Text('Submit Ticket'),
-                    //   style: ElevatedButton.styleFrom(
-                    //     minimumSize: const Size(double.infinity, 50),
-                    //   ),
-                    // ),
-
-                    CustomButton(
-                      text: 'Submit Ticket',
-                      onPressed: _submitForm,
-                    )
                   ],
                 ),
-              ),
+                SizedBox(height: 10,),
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Ticket Subject'),
+                  onSaved: (value) => subject = value,
+                ),
+                SizedBox(height: 10,),
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Ticket Message'),
+                  maxLines: 3,
+                  onSaved: (value) => message = value,
+                ),
+                SizedBox(height: 10,),
+                ListTile(
+                  title: Text('Attachment: ${_imageFile?.name ?? "No Image Chosen"}'),
+                  trailing: ElevatedButton(
+                    onPressed: _pickImage,
+                    child: Text('Choose Image'),
+                  ),
+                ),
+                SizedBox(height: 20,),
+                RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                          text: 'I Agree To The',
+                          style: Theme.of(context).textTheme.titleSmall
+                      ),
+                      TextSpan(
+                        text: 'HolidaysCarParking',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                      ),
+                      TextSpan(
+                          text: '\'s Privacy Policy & ',
+                          style: Theme.of(context).textTheme.titleSmall
+                      ),
+                      TextSpan(
+                        text: 'Terms & Conditions',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                        recognizer: TapGestureRecognizer()..onTap = () {
+                          // Handle tap on the Terms & Conditions link
+                          //print('Tapped Terms & Conditions');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                // ElevatedButton(
+                //   onPressed: _submitForm,
+                //   child: Text('Submit Ticket'),
+                //   style: ElevatedButton.styleFrom(
+                //     minimumSize: const Size(double.infinity, 50),
+                //   ),
+                // ),
+
+                CustomButton(
+                  text: 'Submit Ticket',
+                  onPressed: _submitForm,
+                )
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
-          },
-        ),
-      );
-    });
-  }
+
   void _pasteText() async {
     ClipboardData? data = await Clipboard.getData('text/plain');
     if (data != null && data.text != null) {

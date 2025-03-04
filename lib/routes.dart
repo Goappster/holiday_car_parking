@@ -11,7 +11,7 @@ import 'screens/Acccounts/login_screen.dart';
 import 'screens/Acccounts/signup_screen.dart';
 
 class AppRoutes {
-  static const String login = '/Splash';
+  static const String login = '/Login';
   static const String signup = '/signup';
   static const String splash = '/';
   static const String home = '/home';

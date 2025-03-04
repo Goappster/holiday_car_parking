@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
@@ -289,7 +290,7 @@ class NoInternetDialog extends StatelessWidget {
                   children: [
                     // Cancel Button
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => SystemNavigator.pop(),
                       child: Text(
                         "Cancel",
                         style: TextStyle(
@@ -299,7 +300,6 @@ class NoInternetDialog extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     // Retry Button
                     ElevatedButton(
                       onPressed: checkConnectivity,

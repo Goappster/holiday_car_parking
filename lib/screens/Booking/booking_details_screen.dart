@@ -157,169 +157,84 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
-
-        return  Scaffold(
-          appBar: AppBar(
-            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            title:   Text('Booking Details'),
-          ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      appBar: AppBar(
+        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title:   Text('Booking Details'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      CompanyLogoWidget(company: company),
-                      const SizedBox(width: 10),
-                      CompanyDetailsWidget(company: company),
-                    ],
+                  CompanyLogoWidget(company: company),
+                  const SizedBox(width: 10),
+                  CompanyDetailsWidget(company: company),
+                ],
+              ),
+              const SizedBox(height: 26,),
+              DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
+              const SizedBox(height: 10,),
+              buildDetailRow('Drop-Off', '$startDate at $startTime'),
+              buildDetailRow('Return', '$endDate at $endTime'),
+              buildDetailRow('No of Days', '$totalDays'),
+              const SizedBox(height: 10,),
+              DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
+              const SizedBox(height: 10,),
+              buildDetailRow('Booking Price', '£${bookingPrice.toStringAsFixed(2)}'),
+              buildDetailRow('Booking Fee', '£1.99'),
+              const SizedBox(height: 10,),
+              DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
+              const SizedBox(height: 20,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  const SizedBox(height: 26,),
-                  DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
-                  const SizedBox(height: 10,),
-                  buildDetailRow('Drop-Off', '$startDate at $startTime'),
-                  buildDetailRow('Return', '$endDate at $endTime'),
-                  buildDetailRow('No of Days', '$totalDays'),
-                  const SizedBox(height: 10,),
-                  DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
-                  const SizedBox(height: 10,),
-                  buildDetailRow('Booking Price', '£${bookingPrice.toStringAsFixed(2)}'),
-                  buildDetailRow('Booking Fee', '£1.99'),
-                  const SizedBox(height: 10,),
-                  DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, ),
-                  const SizedBox(height: 20,),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      Text(
-                        '£${totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.red),
-                      ),
-                    ],
+                  Text(
+                    '£${totalPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.red),
                   ),
-                  const SizedBox(height: 22,),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Material.Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+              const SizedBox(height: 22,),
+              SizedBox(
+                width: double.infinity,
+                child: Material.Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
+                            CompanyLogoWidget(company: company),
+                            const SizedBox(width: 10),
+                            CompanyDetailsWidget(company: company),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CompanyLogoWidget(company: company),
-                                const SizedBox(width: 10),
-                                CompanyDetailsWidget(company: company),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Drop-Off Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          height: 32,
-                                          width: 32,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(5),
-                                              color: const Color(0xFF1D9DD9)
-                                                  .withOpacity(0.20)
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: SvgPicture.asset(
-                                              'assets/map_blue.svg',
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(width: 5),
-                                        /*     DateFormat('dd/MM/yyyy').format(startDateTime)*/
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('$startDate'),
-                                            Text(
-                                              '$startTime',
-                                              style: TextStyle(color: Colors.grey),  // Change the color here
-                                            )
-                                          ],
-                                        ),
-
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(width: 0),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Return Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          height: 32,
-                                          width: 32,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(5),
-                                              color: const Color(0xFF33D91D)
-                                                  .withOpacity(0.20)
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: SvgPicture.asset(
-                                              'assets/map.svg',
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(width: 5),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('$endDate'),
-                                            Text(
-                                              "at $endTime",
-                                              style: TextStyle(color: Colors.grey, ),  // Change the color here
-                                            )
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
+                                Text('Drop-Off Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
                                 Row(
                                   children: [
                                     Container(
@@ -327,23 +242,24 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       width: 32,
                                       decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(5),
-                                          color: const Color(0xFFB11DB4)
+                                          color: const Color(0xFF1D9DD9)
                                               .withOpacity(0.20)
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(4.0),
                                         child: SvgPicture.asset(
-                                          'assets/booking_price.svg',
+                                          'assets/map_blue.svg',
                                         ),
                                       ),
                                     ),
                                     SizedBox(width: 5),
+                                    /*     DateFormat('dd/MM/yyyy').format(startDateTime)*/
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('Booking Price'),
+                                        Text('$startDate'),
                                         Text(
-                                          '£$bookingPrice',
+                                          '$startTime',
                                           style: TextStyle(color: Colors.grey),  // Change the color here
                                         )
                                       ],
@@ -351,8 +267,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
                                   ],
                                 ),
-                                SizedBox(width: 0),
-
+                              ],
+                            ),
+                            SizedBox(width: 0),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Return Date', style: Theme.of(context).textTheme.titleSmall?.copyWith( fontWeight: FontWeight.bold),),
                                 Row(
                                   children: [
                                     Container(
@@ -360,13 +281,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       width: 32,
                                       decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(5),
-                                          color: const Color(0xFFED1C24)
+                                          color: const Color(0xFF33D91D)
                                               .withOpacity(0.20)
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(4.0),
                                         child: SvgPicture.asset(
-                                          'assets/booking_fee.svg',
+                                          'assets/map.svg',
                                         ),
                                       ),
                                     ),
@@ -374,10 +295,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('Booking Fee'),
+                                        Text('$endDate'),
                                         Text(
-                                          '£1.99',
-                                          style: TextStyle(color: Colors.grey),  // Change the color here
+                                          "at $endTime",
+                                          style: TextStyle(color: Colors.grey, ),  // Change the color here
                                         )
                                       ],
                                     ),
@@ -387,81 +308,138 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ),
-                  // const SizedBox(height: 12),
-                  _buildSectionTitle('Explore Additional Services'),
-                  _buildAdditionalServices(context, totalPrice),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      Map<String, dynamic> bookingDetailsDAta  = {
-                        'referenceNo': savedReferenceNo,
-                        'company': company,
-                        'title': title,
-                        'first_name': firstName,
-                        'last_name': lastName,
-                        'email': '${user?['email']}',
-                        'contactno': phoneNumber,
-                        'deprTerminal': deprTerminal,
-                        'deptFlight': '$DepartureFlightNo',
-                        'returnTerminal': returnTerminal,
-                        'returnFlight': '$ArrivalFlightNo',
-                        'model': model,
-                        'color': color,
-                        'make': make,
-                        'registration': registration,
-                        'booking_amount': '$bookingPrice',
-                        'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
-                        'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
-                        'booking_fee': '$bookingFees',
-                        'discount_amount': '0',
-                        'drop_date': startDate,
-                        'drop_time': startTime,
-                        'pick_date': endDate,
-                        'pick_time': endTime,
-                        'user_id': '${user?['id']}',
-                      };
-                      showModalBottomSheet(
-                        context: context,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        builder: (context) {
-                          return SortModalContent(bookingDetails: bookingDetailsDAta, totalPrice: totalPrice.toString(),);
-                        },
-                      );
-                      // _showBottomSheet(context);
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: const Color(0xFFB11DB4)
+                                          .withOpacity(0.20)
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: SvgPicture.asset(
+                                      'assets/booking_price.svg',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Booking Price'),
+                                    Text(
+                                      '£$bookingPrice',
+                                      style: TextStyle(color: Colors.grey),  // Change the color here
+                                    )
+                                  ],
+                                ),
 
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
+                              ],
+                            ),
+                            SizedBox(width: 0),
+
+                            Row(
+                              children: [
+                                Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: const Color(0xFFED1C24)
+                                          .withOpacity(0.20)
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: SvgPicture.asset(
+                                      'assets/booking_fee.svg',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Booking Fee'),
+                                    Text(
+                                      '£1.99',
+                                      style: TextStyle(color: Colors.grey),  // Change the color here
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    child: const Text('Pay Now'),
                   ),
-                ],
+                ),
               ),
-            ),
+              // const SizedBox(height: 12),
+              _buildSectionTitle('Explore Additional Services'),
+              _buildAdditionalServices(context, totalPrice),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () {
+                  Map<String, dynamic> bookingDetailsDAta  = {
+                    'referenceNo': savedReferenceNo,
+                    'company': company,
+                    'title': title,
+                    'first_name': firstName,
+                    'last_name': lastName,
+                    'email': '${user?['email']}',
+                    'contactno': phoneNumber,
+                    'deprTerminal': deprTerminal,
+                    'deptFlight': '$DepartureFlightNo',
+                    'returnTerminal': returnTerminal,
+                    'returnFlight': '$ArrivalFlightNo',
+                    'model': model,
+                    'color': color,
+                    'make': make,
+                    'registration': registration,
+                    'booking_amount': '$bookingPrice',
+                    'cancelfee': _cancellationCoverSelected ? '1.99' : '0.00',
+                    'smsfee': _smsConfirmationSelected ? '1.99' : '0.00',
+                    'booking_fee': '$bookingFees',
+                    'discount_amount': '0',
+                    'drop_date': startDate,
+                    'drop_time': startTime,
+                    'pick_date': endDate,
+                    'pick_time': endTime,
+                    'user_id': '${user?['id']}',
+                  };
+                  showModalBottomSheet(
+                    context: context,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (context) {
+                      return SortModalContent(bookingDetails: bookingDetailsDAta, totalPrice: totalPrice.toString(),);
+                    },
+                  );
+                  // _showBottomSheet(context);
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => BookingConfirmation()));
+
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Pay Now'),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
-          },
-        ),
-      );
-    });
-  }
+
   Widget _buildAdditionalServices(BuildContext context, double companyPrice) {
     return Row(
       children: [

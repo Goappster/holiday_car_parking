@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -439,8 +440,15 @@ class _SortModalContentState extends State<SortModalContent> {
 
     Response? response = await _apiService.postRequest('booking', bookingData);
     if (response?.statusCode == 200) {
-      print("Booking failed: ${response}");
-      _notificationService.showNotification(bookingDetails['referenceNo']);
+      _notificationService.showNotification(
+          '🅿️ Parking Reserved – Ready for You ',
+          '🚗 Your airport parking is confirmed!\n'
+              'ReferenceNo: #${bookingDetails['referenceNo']}\n'
+              'Parking Spot: ${bookingDetails['company']['name']}\n'
+              'Drop-Off: ${bookingDetails['drop_date']} ${bookingDetails['drop_time']}\n'
+              'Pick-Up: ${bookingDetails['pick_date']} ${bookingDetails['pick_time']}\n'
+        // '🚀 Enjoy a hassle-free parking experience. Safe travels! ✈️'
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamed(
           context,
@@ -473,14 +481,19 @@ class _SortModalContentState extends State<SortModalContent> {
 
       Response? response = await _apiService.postRequest('wallet/debitfunds', data);
       if (response?.statusCode == 200) {
-        print("Success: ${response?.data}");
+        _notificationService.showNotification(
+            '⚠️ Payment Deducted!',
+            'A payment of £$price has been deducted from your wallet.\n'
+                'Transaction ID: #${bookingDetails['referenceNo']}\n'
+                'Date & Time: ${DateFormat('EEE, dd MMM yyyy • HH:mm').format(DateTime.now())}\n'
+        );
         // _notificationService.showNotification(bookingDetails['referenceNo']);
       } else {
-        print("Booking failed: ${response?.statusCode} - ${response?.data}");
+        // print("Booking failed: ${response?.statusCode} - ${response?.data}");
         throw Exception("Failed to complete booking");
       }
     } catch (e) {
-      print("Error: $e");
+      // print("Error: $e");
       throw Exception("An error occurred while processing the payment.");
     }
   }

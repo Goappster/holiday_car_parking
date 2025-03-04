@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +15,7 @@ import 'package:holidayscar/screens/Acccounts/profile_screen.dart';
 import 'package:holidayscar/screens/Booking/show_result_screeen.dart';
 import 'package:holidayscar/screens/Wallet%20System/wallet.dart';
 import 'package:holidayscar/services/Notifactions.dart';
+import 'package:holidayscar/services/background_service.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +26,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  initializeService();
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   await NotificationService().init();
   Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';

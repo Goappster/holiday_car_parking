@@ -79,70 +79,49 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
 
-    return Consumer<ConnectivityProvider>(
-      builder: (context, provider, child) {
-        if (!provider.isConnected) {
-          _showNoInternetDialog(context);
-        }
-
-        return  DefaultTabController(
-          length: 2,
-          child:  Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              title: Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold),),
-              bottom: TabBar(
-                dividerHeight: 0,
-                labelColor: Colors.white,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Theme.of(context).primaryColor,
-                ),
-                tabs: [
-                  Tab(text: '              Active              '),
-                  Tab(text: '          All Booking             '),
-                ],
+    return DefaultTabController(
+      length: 2,
+      child:  Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold),),
+          bottom: TabBar(
+            dividerHeight: 0,
+            labelColor: Colors.white,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).primaryColor,
+            ),
+            tabs: [
+              Tab(text: '              Active              '),
+              Tab(text: '          All Booking             '),
+            ],
+          ),
+        ),
+        body: isLoading
+            ? Center(child: CupertinoActivityIndicator())
+            : TabBarView(
+          children: [
+            bookings.isEmpty
+                ? Center(child: Text('No active bookings'))
+                : RefreshIndicator(
+              onRefresh: loadBookings,
+              child: ListView.builder(
+                itemCount: bookings.length,
+                itemBuilder: (context, index) {
+                  final booking = bookings[index];
+                  return GestureDetector(
+                    onTap: () { Navigator.pushNamed(context, '/PaymentReceipt', arguments: booking); },
+                    child: BookingCard(booking: booking),
+                  );
+                },
               ),
             ),
-            body: isLoading
-                ? Center(child: CupertinoActivityIndicator())
-                : TabBarView(
-              children: [
-                bookings.isEmpty
-                    ? Center(child: Text('No active bookings'))
-                    : RefreshIndicator(
-                  onRefresh: loadBookings,
-                  child: ListView.builder(
-                    itemCount: bookings.length,
-                    itemBuilder: (context, index) {
-                      final booking = bookings[index];
-                      return GestureDetector(
-                        onTap: () { Navigator.pushNamed(context, '/PaymentReceipt', arguments: booking); },
-                        child: BookingCard(booking: booking),
-                      );
-                    },
-                  ),
-                ),
-                Center(child: Text('No bookings found')),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-  void _showNoInternetDialog(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => NoInternetDialog(
-          checkConnectivity: () {
-            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
-          },
+            Center(child: Text('No bookings found')),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 }
 
