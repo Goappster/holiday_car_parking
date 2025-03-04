@@ -19,7 +19,6 @@ class PaymentReceiptScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get device screen width and height using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
@@ -127,20 +126,20 @@ class PaymentReceiptScreen extends StatelessWidget {
                             source == 'withdrawStatus'
                                 ? SizedBox(
                               height: 40,
-                                  width: 40,
-                                  child: CircleAvatar(
-                                      backgroundColor: getStatusColor(status),
-                                          // .withOpacity(0.10),
-                                      child: Icon(getStatusIcon(status), size: 35,),
-                                    ),
-                                )
+                              width: 40,
+                              child: CircleAvatar(
+                                backgroundColor: getStatusColor(status),
+                                // .withOpacity(0.10),
+                                child: Icon(getStatusIcon(status), size: 35,),
+                              ),
+                            )
                                 : SvgPicture.asset(
-                                    "assets/success_icon.svg",
-                                    width: screenWidth * 0.27,
-                                    // Adjust icon size based on screen width
-                                    height: screenWidth *
-                                        0.27, // Adjust icon size based on screen width
-                                  ),
+                              "assets/success_icon.svg",
+                              width: screenWidth * 0.27,
+                              // Adjust icon size based on screen width
+                              height: screenWidth *
+                                  0.27, // Adjust icon size based on screen width
+                            ),
                             SizedBox(height: screenHeight * 0.03),
                             source == 'withdrawStatus' ? Text(
                               status,
@@ -172,7 +171,7 @@ class PaymentReceiptScreen extends StatelessWidget {
                             ),
                             source == 'withdrawStatus'
                                 ? Text(
-                                    '\$${data['amount'] ?? '0.00'}',
+                                '\$${data['amount'] ?? '0.00'}',
                                 style: TextStyle(
                                     color: isCredit
                                         ? Colors.green
@@ -180,17 +179,17 @@ class PaymentReceiptScreen extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     fontSize: screenWidth *
                                         0.08)
-                                  )
+                            )
                                 : Text(
-                                    '${isCredit ? "+" : "-"}${data['amount'] ?? "0"}',
-                                    style: TextStyle(
-                                        color: isCredit
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: screenWidth *
-                                            0.08), // Adjust font size for the amount
-                                  ),
+                              '${isCredit ? "+" : "-"}${data['amount'] ?? "0"}',
+                              style: TextStyle(
+                                  color: isCredit
+                                      ? Colors.green
+                                      : Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: screenWidth *
+                                      0.08), // Adjust font size for the amount
+                            ),
                             SizedBox(height: screenHeight * 0.04),
                             DottedDashedLine(
                               height: 0,
@@ -221,7 +220,7 @@ class PaymentReceiptScreen extends StatelessWidget {
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                         children: [
                                           // Text(
                                           //   "Balance ${isCredit ? "Credit" : "Debit" ?? '0'}",
@@ -251,16 +250,16 @@ class PaymentReceiptScreen extends StatelessWidget {
                                           source == 'withdrawStatus'
                                               ? Text(data['created_at'])
                                               : Text(
-                                                  DateFormat(
-                                                          'EEEE MMMM yyyy hh:mm a')
-                                                      .format(DateTime.parse(
-                                                          data['created_at'])),
-                                                ),
+                                            DateFormat(
+                                                'EEEE MMMM yyyy hh:mm a')
+                                                .format(DateTime.parse(
+                                                data['created_at'])),
+                                          ),
                                           source == 'withdrawStatus'
                                               ? Text(data['transaction_id'] ?? '',
-                                                  style: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 12))
+                                              style: TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 12))
                                               : Text('Nothing'),
                                         ],
                                       ),
@@ -268,48 +267,48 @@ class PaymentReceiptScreen extends StatelessWidget {
                                     // Transaction Amount & Status
                                     source == 'withdrawStatus'
                                         ? Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Container(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: getStatusColor(status)
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Icon(
-                                                    getStatusIcon(status),
-                                                    color: statusColor),
-                                              ),
-                                            ],
-                                          )
-                                        : Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Container(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: getStatusColor(status)
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  "Success",
-                                                  style: TextStyle(
-                                                      color: Colors.green,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 12),
-                                                ),
-                                              ),
-                                            ],
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: getStatusColor(status)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                            BorderRadius.circular(8),
                                           ),
+                                          child: Icon(
+                                              getStatusIcon(status),
+                                              color: statusColor),
+                                        ),
+                                      ],
+                                    )
+                                        : Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: getStatusColor(status)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                            BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            "Success",
+                                            style: TextStyle(
+                                                color: Colors.green,
+                                                fontWeight:
+                                                FontWeight.bold,
+                                                fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),

@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/connectivity_provider.dart';
 import '../../routes.dart';
 import '../../services/dio.dart';
 class WithdrwaFunds extends StatefulWidget {
@@ -19,65 +21,86 @@ class _WithdrwaFundsState extends State<WithdrwaFunds> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Withdraw"),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-               Text(
-                "Withdraw \£${widget.amount}",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Transfer should arrive on March 02",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Column(
-                  children: [
-                    _buildDetailRow("From", "HCP Wallet"),
-                    _buildDetailRow("To", "${widget.bankName} ••4458"),
-                    _buildDetailRow("Payment Method", widget.bankName),
-                    _buildDetailRow("Fee", "\£0.05"),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "You can cancel your withdrawal within the first few minutes after submitting.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-              const Spacer(),
-              CustomButton(text: 'Confirm', onPressed: () {
-                sendPostRequest(context, widget.userId, widget.amount, widget.accountNumber, widget.accountTitle);
-              }),
-              TextButton(
-                onPressed: () {
-                  // Navigator.push(context, MaterialPageRoute(builder: (context)=> BankSelectionScreen() ));
-                  // sendPostRequest(context, widget.)
-                },
-                child:  Text("Cancel withdraw",
-                    style: TextStyle(color: AppTheme.primaryColor)),
-              ),
-              const SizedBox(height: 20),
-            ],
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Withdraw"),
+            centerTitle: true,
           ),
-        ),
-      ),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Withdraw \£${widget.amount}",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Transfer should arrive on March 02",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      children: [
+                        _buildDetailRow("From", "HCP Wallet"),
+                        _buildDetailRow("To", "${widget.bankName} ••4458"),
+                        _buildDetailRow("Payment Method", widget.bankName),
+                        _buildDetailRow("Fee", "\£0.05"),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "You can cancel your withdrawal within the first few minutes after submitting.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const Spacer(),
+                  CustomButton(text: 'Confirm', onPressed: () {
+                    sendPostRequest(context, widget.userId, widget.amount, widget.accountNumber, widget.accountTitle);
+                  }),
+                  TextButton(
+                    onPressed: () {
+                      // Navigator.push(context, MaterialPageRoute(builder: (context)=> BankSelectionScreen() ));
+                      // sendPostRequest(context, widget.)
+                    },
+                    child:  Text("Cancel withdraw",
+                        style: TextStyle(color: AppTheme.primaryColor)),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 
   Widget _buildDetailRow(String title, String value) {

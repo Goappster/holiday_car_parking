@@ -6,6 +6,10 @@ import 'package:icons_plus/icons_plus.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/connectivity_provider.dart';
+import '../utils/UiHelper.dart';
 
 /// Fetch ticket details API
 Future<Map<String, dynamic>> fetchTicketDetails(String ticketRef) async {
@@ -95,68 +99,76 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-          title: const Text('Ticket Details')),
-      body: Column(
-        children: [
-          Expanded(
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: ticketData,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CupertinoActivityIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  final data = snapshot.data!;
-                  final progress = data['data']['progress'];
-                  final messages = progress.entries.toList().reversed.toList();
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-                  });
-                  return ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16.0),
-                    children: messages.map<Widget>((entry) {
-                      final messageData = entry.value;
-                      final isClient = messageData['reply_by'] == 'Client';
-                      return Column(
-                        crossAxisAlignment:
-                        isClient ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          _buildChatBubble(
-                            content: messageData['message'],
-                            isSender: isClient,
-                          ),
-                          Text(
-                            'Time: ${messageData['replyingtime']}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          if (messageData['attachment'] != null &&
-                              messageData['attachment'].isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 10),
-                              child: Image.network(
-                                'https://holidayscarparking.uk/${messageData['attachment']}',
-                                height: 200,
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+              surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+              title: const Text('Ticket Details')),
+          body: Column(
+            children: [
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: ticketData,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CupertinoActivityIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (snapshot.hasData) {
+                      final data = snapshot.data!;
+                      final progress = data['data']['progress'];
+                      final messages = progress.entries.toList().reversed.toList();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                      });
+                      return ListView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16.0),
+                        children: messages.map<Widget>((entry) {
+                          final messageData = entry.value;
+                          final isClient = messageData['reply_by'] == 'Client';
+                          return Column(
+                            crossAxisAlignment:
+                            isClient ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              _buildChatBubble(
+                                content: messageData['message'],
+                                isSender: isClient,
                               ),
-                            ),
-                          const SizedBox(height: 10),
-                        ],
+                              Text(
+                                'Time: ${messageData['replyingtime']}',
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                              if (messageData['attachment'] != null &&
+                                  messageData['attachment'].isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Image.network(
+                                    'https://holidayscarparking.uk/${messageData['attachment']}',
+                                    height: 200,
+                                  ),
+                                ),
+                              const SizedBox(height: 10),
+                            ],
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
-                  );
-                } else {
-                  return const Center(child: Text('No Data Available'));
-                }
-              },
-            ),
+                    } else {
+                      return const Center(child: Text('No Data Available'));
+                    }
+                  },
+                ),
+              ),
+              _buildReplyInput(),
+            ],
           ),
-          _buildReplyInput(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -242,5 +254,18 @@ class _TicketDetailsPageState extends State<TicketDetailsPage> {
         ],
       ),
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 }

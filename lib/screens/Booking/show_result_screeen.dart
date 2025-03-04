@@ -8,9 +8,12 @@ import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:holidayscar/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:marquee/marquee.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/get_airports.dart';
+import '../../utils/UiHelper.dart';
 import 'company_details.dart';
 
 class ShowResultsScreen extends StatefulWidget {
@@ -87,69 +90,93 @@ class _ShowResultsScreenState extends State<ShowResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Company'),
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildAirportCard(context, startDate, endDate, startTime, endTime, airportName, {}),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double textScale = MediaQuery.of(context).textScaleFactor;
+
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return  Scaffold(
+          appBar: AppBar(
+            title: const Text('Available Company'),
+            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Available For You',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  _buildAirportCard(context, startDate, endDate, startTime, endTime, airportName, {}),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Available For You',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      DropdownButton<String>(
+                        iconEnabledColor: Theme.of(context).primaryColor,
+                        icon: const Icon(MingCute.filter_line),
+                        underline: const SizedBox.shrink(),
+                        value: _selectedOption,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedOption = newValue!;
+                            _quotes?.then((data) {
+                              final companies = data['companies'] as List<dynamic>;
+                              if (_selectedOption == 'Low to High') {
+                                companies.sort((a, b) =>
+                                    double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
+                              } else if (_selectedOption == 'High to Low') {
+                                companies.sort((a, b) =>
+                                    double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
+                              }
+                              return data;
+                            });
+                          });
+                        },
+                        items: _filterOptions.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(color: Theme.of(context).primaryColor),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
-                  DropdownButton<String>(
-                    iconEnabledColor: Theme.of(context).primaryColor,
-                    icon: const Icon(MingCute.filter_line),
-                    underline: const SizedBox.shrink(),
-                    value: _selectedOption,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedOption = newValue!;
-                        _quotes?.then((data) {
-                          final companies = data['companies'] as List<dynamic>;
-                          if (_selectedOption == 'Low to High') {
-                            companies.sort((a, b) =>
-                                double.parse(a['price'].toString()).compareTo(double.parse(b['price'].toString())));
-                          } else if (_selectedOption == 'High to Low') {
-                            companies.sort((a, b) =>
-                                double.parse(b['price'].toString()).compareTo(double.parse(a['price'].toString())));
-                          }
-                          return data;
-                        });
-                      });
-                    },
-                    items: _filterOptions.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(color: Theme.of(context).primaryColor),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  const SizedBox(height: 8),
+                  _buildOffersList(context, startDate, endDate, startTime, endTime),
+                  const SizedBox(height: 16),
                 ],
               ),
-              const SizedBox(height: 8),
-              _buildOffersList(context, startDate, endDate, startTime, endTime),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
-
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
+  }
 
   Widget _buildAirportCard(BuildContext context, String startDate, String endDate, String startTime, String endTime, String airportName, Map<String, dynamic> offer) {
     return Card(

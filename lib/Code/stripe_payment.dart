@@ -1,113 +1,111 @@
 // import 'package:flutter/material.dart';
-// import 'package:flutter_stripe/flutter_stripe.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:holidayscar/services/StripService.dart';
+// import 'package:flutter/services.dart';
+// import 'package:holidayscar/theme/app_theme.dart';
+// import 'package:holidayscar/utils/UiHelper.dart';
+// import 'package:lottie/lottie.dart';
+// import 'package:provider/provider.dart';
 //
-// class PaymentForm extends StatefulWidget {
-//   @override
-//   _PaymentFormState createState() => _PaymentFormState();
+// import '../providers/connectivity_provider.dart';
+//
+// void main() {
+//   runApp(
+//     MultiProvider(
+//       providers: [
+//
+//       ],
+//       child: MyApp(),
+//     ),
+//   );
 // }
 //
-// class _PaymentFormState extends State<PaymentForm> {
-//   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-//   String cardNumber = '';
-//   String expiryDate = '';
-//   String cvc = '';
-//
-//   // Payment processing function
-//   Future<void> _processPayment() async {
-//     if (_formKey.currentState?.validate() ?? false) {
-//       _formKey.currentState?.save();
-//
-//       try {
-//         // Initialize Stripe
-//         StripeService.init();
-//
-//         // Create a payment method
-//         final paymentMethod = await StripeService.createPaymentMethod(
-//           cardNumber: cardNumber,
-//           expiryDate: expiryDate,
-//           cvc: cvc,
-//         );
-//
-//         // Send payment method ID to the backend to save
-//         final response = await http.post(
-//           Uri.parse('https://your-backend.com/save-payment-method'),
-//           body: {'paymentMethodId': paymentMethod.id},
-//         );
-//
-//         if (response.statusCode == 200) {
-//           // Successfully saved payment method
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text('Card saved successfully!')),
-//           );
-//         } else {
-//           // Handle error
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(content: Text('Failed to save card.')),
-//           );
-//         }
-//       } catch (e) {
-//         // Handle error
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('Error: $e')),
-//         );
-//       }
-//     }
-//   }
-//
+// class MyApp extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
-//     return Form(
-//       key: _formKey,
-//       child: Column(
-//         children: <Widget>[
-//           TextFormField(
-//             decoration: InputDecoration(labelText: 'Card Number'),
-//             keyboardType: TextInputType.number,
-//             validator: (value) {
-//               if (value == null || value.isEmpty) {
-//                 return 'Please enter a card number';
-//               }
-//               return null;
-//             },
-//             onSaved: (value) {
-//               cardNumber = value ?? '';
-//             },
-//           ),
-//           TextFormField(
-//             decoration: InputDecoration(labelText: 'Expiry Date (MM/YY)'),
-//             keyboardType: TextInputType.datetime,
-//             validator: (value) {
-//               if (value == null || value.isEmpty) {
-//                 return 'Please enter the expiry date';
-//               }
-//               return null;
-//             },
-//             onSaved: (value) {
-//               expiryDate = value ?? '';
-//             },
-//           ),
-//           TextFormField(
-//             decoration: InputDecoration(labelText: 'CVC'),
-//             keyboardType: TextInputType.number,
-//             validator: (value) {
-//               if (value == null || value.isEmpty) {
-//                 return 'Please enter CVC';
-//               }
-//               return null;
-//             },
-//             onSaved: (value) {
-//               cvc = value ?? '';
-//             },
-//           ),
-//           SizedBox(height: 20),
-//           ElevatedButton(
-//             onPressed: _processPayment,
-//             child: Text('Pay Now'),
-//           ),
-//         ],
-//       ),
+//     return MaterialApp(
+//       title: 'Material App',
+//       home: HomeScreen(),
 //     );
+//   }
+// }
+//
+// class HomeScreen extends StatefulWidget {
+//   @override
+//   _HomeScreenState createState() => _HomeScreenState();
+// }
+//
+// class _HomeScreenState extends State<HomeScreen> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Consumer<ConnectivityProvider>(
+//       builder: (context, provider, child) {
+//         if (!provider.isConnected) {
+//           _showNoInternetDialog(context);
+//         }
+//
+//         return Scaffold(
+//           appBar: AppBar(),
+//           body: SafeArea(
+//             child: SingleChildScrollView(
+//               child: Padding(
+//                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const SizedBox(height: 16),
+//                     Text("Account Settings",
+//                         style: Theme.of(context).textTheme.headlineMedium),
+//                     Text(
+//                       "Update your settings like notifications, payments, profile edit etc.",
+//                       style: Theme.of(context).textTheme.bodyMedium,
+//                     ),
+//                     const SizedBox(height: 24),
+//                     ProfileMenuCard(
+//                       icon: Icons.person,
+//                       title: "Profile Information",
+//                       subTitle: "Change your account information",
+//                       press: () {
+//                         Navigator.pushNamed(context, AppRoutes.editProfile);
+//                       },
+//                     ),
+//                     ProfileMenuCard(
+//                       icon: Icons.privacy_tip,
+//                       title: "Privacy Policy",
+//                       subTitle: "Read our privacy policy",
+//                       press: _privacy,
+//                     ),
+//                     ProfileMenuCard(
+//                       // svgSrc: disclaimerIconSvg,
+//                       title: "terms & conditions",
+//                       subTitle: "terms-and-conditions",
+//                       press: _termsApp,
+//                       icon: Icons.help,
+//                     ),
+//                     ProfileMenuCard(
+//                       icon: Icons.share,
+//                       title: "Share App",
+//                       subTitle: "Share this app with your friends",
+//                       press: _shareApp,
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+//   void _showNoInternetDialog(BuildContext context) {
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       showDialog(
+//         context: context,
+//         barrierDismissible: false,
+//         builder: (context) => NoInternetDialog(
+//           checkConnectivity: () {
+//             Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+//           },
+//         ),
+//       );
+//     });
 //   }
 // }

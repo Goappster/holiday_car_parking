@@ -1,12 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
+import '../../providers/connectivity_provider.dart';
+import '../../utils/UiHelper.dart';
 import '../../widgets/text.dart';
 class ForgotPasswordScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 
   ForgotPasswordScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final TextEditingController emailController = TextEditingController();
@@ -71,52 +75,74 @@ class ForgotPasswordScreen extends StatelessWidget {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(),
-      body: LogoWithTitle(
-        title: 'Forgot Password',
-        subText:
-        "Enter your email address, and we’ll send you a link to reset your password.",
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Form(
-              key: _formKey,
-              child: CustomTextField(
-                label: 'Email',
-                hintText: 'Email',
-                obscureText: false,
-                icon: Icons.email,
-                controller: emailController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
+
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return Scaffold(
+          appBar: AppBar(),
+          body: LogoWithTitle(
+            title: 'Forgot Password',
+            subText:
+            "Enter your email address, and we’ll send you a link to reset your password.",
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Form(
+                  key: _formKey,
+                  child: CustomTextField(
+                    label: 'Email',
+                    hintText: 'Email',
+                    obscureText: false,
+                    icon: Icons.email,
+                    controller: emailController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
               ),
-            ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    sendForgotPasswordRequest(context, emailController.text);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  // shape: const StadiumBorder(),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+                child: const Text("Next"),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                _formKey.currentState!.save();
-                sendForgotPasswordRequest(context, emailController.text);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-             // shape: const StadiumBorder(),
-              padding: const EdgeInsets.symmetric(vertical: 15),
-            ),
-            child: const Text("Next"),
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 }
 
@@ -176,4 +202,8 @@ class LogoWithTitle extends StatelessWidget {
     );
   }
 }
+
+
+
+
 

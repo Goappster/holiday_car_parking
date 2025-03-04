@@ -9,6 +9,7 @@ import 'package:intl/intl.dart'; // For currency formatting
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../services/StripService.dart';
 import '../../services/dio.dart';
@@ -161,142 +162,164 @@ class _EnterAmountBottomSheetState extends State<EnterAmountBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(10),
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return  Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
-          ),
-          const SizedBox(height: 10),
-          // Display the formatted amount in a non-editable TextField
-          ValueListenableBuilder<double>(
-            valueListenable: widget.amountNotifier,
-            builder: (context, amount, child) {
-              return Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                  // color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Editable TextField
-                    Expanded(
-                      child: TextField(
-                        controller: _amountController,
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                        keyboardType: TextInputType.none,
-                        decoration: InputDecoration(
-                          hintText: "Amount",
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none, // No border when focused
-                          enabledBorder: InputBorder.none, // No border when enabled
-                          contentPadding: EdgeInsets.zero, // Optional: removes extra padding
-                        ),
-                        onChanged: (text) {
-                          widget.amountNotifier.value = double.tryParse(text) ?? 0.0;
-                        },
-                      ),
+              const SizedBox(height: 10),
+              Text(
+                '',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+              ),
+              const SizedBox(height: 10),
+              // Display the formatted amount in a non-editable TextField
+              ValueListenableBuilder<double>(
+                valueListenable: widget.amountNotifier,
+                builder: (context, amount, child) {
+                  return Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                      // color: Colors.white,
                     ),
-                    Text("£", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              );
-            },
-          ),
-          SizedBox(height: 20),
-
-          // Display preset amounts as chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: presetAmounts.map((amount) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: GestureDetector(
-                    onTap: () {
-                      setPresetAmount(amount); // Set the selected preset amount in the TextField
-                    },
-                    child: Chip(
-                      label: Text("£$amount", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.10),
-                      labelStyle: TextStyle(color: AppTheme.primaryColor),
-                      // deleteIcon: Icon(MingCute.check_circle_fill),
-                      // onDeleted: () {
-                      //   setPresetAmount(amount); // Set the selected preset amount in the TextField
-                      // },
-                      shape: RoundedRectangleBorder(
-                        side: BorderSide(
-                          color: AppTheme.primaryColor, // Set the border color here
-                          width: 1, // Adjust the width of the border if needed
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Editable TextField
+                        Expanded(
+                          child: TextField(
+                            controller: _amountController,
+                            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                            keyboardType: TextInputType.none,
+                            decoration: InputDecoration(
+                              hintText: "Amount",
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none, // No border when focused
+                              enabledBorder: InputBorder.none, // No border when enabled
+                              contentPadding: EdgeInsets.zero, // Optional: removes extra padding
+                            ),
+                            onChanged: (text) {
+                              widget.amountNotifier.value = double.tryParse(text) ?? 0.0;
+                            },
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(20), // Adjust the border radius if needed
-                      ),
-                      // deleteIconColor: AppTheme.primaryColor,  // Set the color of the delete icon (x)
-                    ),
-                  )
-
-
-
-                );
-              }).toList(),
-            ),
-          ),
-          SizedBox(height: 20),
-          // Numeric keypad
-          NumericKeypad(onKeyTap: onKeyTap),
-          SizedBox(height: 20),
-          // Next button
-          CustomButton(
-            text: 'Next',
-            onPressed: () async {
-              double amount = double.tryParse(_amountController.text.toString()) ?? 0.0;
-              if (widget.source == 'withdraw') {
-                if (amount >= 100) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BankSelectionScreen(
-                        amount: _amountController.text,
-                        userId: user!['id'].toString(),
-                      ),
+                        Text("£", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      ],
                     ),
                   );
-                } else {
-                  _showAlertDialog(context, '⚠️',
-                      'You must withdraw at least £100 from your HCP wallet.');
-                }
-              } else {
-                if (amount >= 50) {
-                  await _handlePayment(context);
-                } else {
-                  _showAlertDialog(context, 'Low Amount ⚠️',
-                      'Your amount is too low! Please deposit a minimum of £50 into your HCP wallet.');
-                }
-              }
-            },
-          )
-        ],
-      ),
+                },
+              ),
+              SizedBox(height: 20),
+
+              // Display preset amounts as chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: presetAmounts.map((amount) {
+                    return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            setPresetAmount(amount); // Set the selected preset amount in the TextField
+                          },
+                          child: Chip(
+                            label: Text("£$amount", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            backgroundColor: AppTheme.primaryColor.withOpacity(0.10),
+                            labelStyle: TextStyle(color: AppTheme.primaryColor),
+                            // deleteIcon: Icon(MingCute.check_circle_fill),
+                            // onDeleted: () {
+                            //   setPresetAmount(amount); // Set the selected preset amount in the TextField
+                            // },
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                color: AppTheme.primaryColor, // Set the border color here
+                                width: 1, // Adjust the width of the border if needed
+                              ),
+                              borderRadius: BorderRadius.circular(20), // Adjust the border radius if needed
+                            ),
+                            // deleteIconColor: AppTheme.primaryColor,  // Set the color of the delete icon (x)
+                          ),
+                        )
+
+
+
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Numeric keypad
+              NumericKeypad(onKeyTap: onKeyTap),
+              SizedBox(height: 20),
+              // Next button
+              CustomButton(
+                text: 'Next',
+                onPressed: () async {
+                  double amount = double.tryParse(_amountController.text.toString()) ?? 0.0;
+                  if (widget.source == 'withdraw') {
+                    if (amount >= 100) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BankSelectionScreen(
+                            amount: _amountController.text,
+                            userId: user!['id'].toString(),
+                          ),
+                        ),
+                      );
+                    } else {
+                      _showAlertDialog(context, '⚠️',
+                          'You must withdraw at least £100 from your HCP wallet.');
+                    }
+                  } else {
+                    if (amount >= 50) {
+                      await _handlePayment(context);
+                    } else {
+                      _showAlertDialog(context, 'Low Amount ⚠️',
+                          'Your amount is too low! Please deposit a minimum of £50 into your HCP wallet.');
+                    }
+                  }
+                },
+              )
+            ],
+          ),
+        );
+      },
     );
   }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
+  }
+
   void _showAlertDialog(BuildContext context, String title, String message) {
     showCupertinoDialog<bool>(
       context: context,

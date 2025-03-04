@@ -8,9 +8,11 @@ import 'package:holidayscar/screens/search_screen.dart';
 import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
+import '../providers/connectivity_provider.dart';
 import '../services/get_airports.dart';
 import '../theme/app_theme.dart';
 import '../utils/UiHelper.dart';
@@ -110,174 +112,195 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
     final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
-    return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hi, ${user?['first_name']} ${user?['last_name']}!',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
-            ),
-            Text(
-              DateFormat('dd MMM, yyyy').format(DateTime.now()), // Formats current date
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            width: 40,
-            height: 40,
-            margin: EdgeInsets.only( right: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12), // Rounded corners
-              border: Border.all(
-                color: Colors.grey, // Stroke color
-                width: 1, // Stroke width
-              ),
-            ),
-            child: Center(
-              child:  IconButton(
-                icon: Icon(MingCute.notification_line, size: 20,),
-                onPressed: () {
-                  // CupertinoAlertDialog(
-                  //   title: const Text('Confirm Logout'),
-                  //   content: const Text('Are you sure you want to logout?'),
-                  //   actions: [
-                  //     CupertinoDialogAction(
-                  //       onPressed: () => Navigator.of(context).pop(false),
-                  //       child: const Text('Cancel'),
-                  //     ),
-                  //     CupertinoDialogAction(
-                  //       onPressed: () => Navigator.of(context).pop(true),
-                  //       child: const Text('Logout'),
-                  //     ),
-                  //   ],
-                  // );
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return CupertinoAlertDialog(
-                        title: const Text('Release Notes.'),
-                        content: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('🌟 Key Features'),
-                            Text('🔐 User Authentication'),
-                            Text('📅 Booking Management'),
-                            Text('💳 Payment Processing'),
-                            Text('🎁 Promotional Offers'),
-                            SizedBox(height: 8), // Spacing
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
 
-                            Text('⏰ Time Display'),
-                            Text('🚀 Improvements'),
-                            Text('• Faster data retrieval for a smoother experience.'),
-                            Text('• Enhanced UI/UX for a user-friendly interface.'),
-                            SizedBox(height: 8), // Spacing
-
-                            Text('⚠️ Known Issues'),
-                            Text('• Minor UI glitches on certain devices. We\'re working on it!'),
-                            SizedBox(height: 8), // Spacing
-
-                            Text('🔮 Coming Soon'),
-                            Text('• More payment options.'),
-                            Text('• Improved user profile features.'),
-                          ],
-                        ),
-                        actions: [
-                          CupertinoDialogAction(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                },
-              ),
-
-            ),
-          ),
-        ],
-      ),
-
-      body: _isShimmerVisible
-          ? Shimmer.fromColors(
-        baseColor: baseColor,
-        highlightColor: highlightColor,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
+        return Scaffold(
+          appBar: AppBar(
+            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+            elevation: 0,
+            title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // const SizedBox(height: 10),
-                const DateTimePickerSection(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Hot Offers',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SearchScreen()),
-                        );
-                      },
-                      child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
-                    ),
-                  ],
+                Text(
+                    'Hi, ${user?['first_name']} ${user?['last_name']}!',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
                 ),
-                const HotOffersSection(),
+                Text(
+                  DateFormat('dd MMM, yyyy').format(DateTime.now()), // Formats current date
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
-      )
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              const DateTimePickerSection(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Hot Offers',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            actions: [
+              Container(
+                width: 40,
+                height: 40,
+                margin: EdgeInsets.only( right: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                  border: Border.all(
+                    color: Colors.grey, // Stroke color
+                    width: 1, // Stroke width
                   ),
-                  TextButton(
+                ),
+                child: Center(
+                  child:  IconButton(
+                    icon: Icon(MingCute.notification_line, size: 20,),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SearchScreen()),
+                      // CupertinoAlertDialog(
+                      //   title: const Text('Confirm Logout'),
+                      //   content: const Text('Are you sure you want to logout?'),
+                      //   actions: [
+                      //     CupertinoDialogAction(
+                      //       onPressed: () => Navigator.of(context).pop(false),
+                      //       child: const Text('Cancel'),
+                      //     ),
+                      //     CupertinoDialogAction(
+                      //       onPressed: () => Navigator.of(context).pop(true),
+                      //       child: const Text('Logout'),
+                      //     ),
+                      //   ],
+                      // );
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CupertinoAlertDialog(
+                            title: const Text('Release Notes.'),
+                            content: const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('🌟 Key Features'),
+                                Text('🔐 User Authentication'),
+                                Text('📅 Booking Management'),
+                                Text('💳 Payment Processing'),
+                                Text('🎁 Promotional Offers'),
+                                SizedBox(height: 8), // Spacing
+
+                                Text('⏰ Time Display'),
+                                Text('🚀 Improvements'),
+                                Text('• Faster data retrieval for a smoother experience.'),
+                                Text('• Enhanced UI/UX for a user-friendly interface.'),
+                                SizedBox(height: 8), // Spacing
+
+                                Text('⚠️ Known Issues'),
+                                Text('• Minor UI glitches on certain devices. We\'re working on it!'),
+                                SizedBox(height: 8), // Spacing
+
+                                Text('🔮 Coming Soon'),
+                                Text('• More payment options.'),
+                                Text('• Improved user profile features.'),
+                              ],
+                            ),
+                            actions: [
+                              CupertinoDialogAction(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          );
+                        },
                       );
+
                     },
-                    child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
                   ),
-                ],
+
+                ),
               ),
-              const HotOffersSection(),
             ],
           ),
-        ),
-      ),
+
+          body: _isShimmerVisible
+              ? Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // const SizedBox(height: 10),
+                    const DateTimePickerSection(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Hot Offers',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SearchScreen()),
+                            );
+                          },
+                          child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                        ),
+                      ],
+                    ),
+                    const HotOffersSection(),
+                  ],
+                ),
+              ),
+            ),
+          )
+              : SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  const DateTimePickerSection(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Hot Offers',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SearchScreen()),
+                          );
+                        },
+                        child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                      ),
+                    ],
+                  ),
+                  const HotOffersSection(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 }
 class DateTimePickerSection extends StatefulWidget {

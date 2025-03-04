@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../providers/connectivity_provider.dart';
 import '../../services/dio.dart';
+import '../../utils/UiHelper.dart';
 import '../Booking/PaymentReceiptScreen.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -106,35 +109,56 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Transaction History'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.filter_list),
-              onPressed: () {},
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Transaction History'),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.filter_list),
+                  onPressed: () {},
+                ),
+              ],
+              bottom: TabBar(
+                indicatorWeight: 3,
+                tabs: [
+                  Tab(text: 'In Progress'),
+                  Tab(text: 'Completed'),
+                ],
+              ),
             ),
-          ],
-          bottom: TabBar(
-            indicatorWeight: 3,
-            tabs: [
-              Tab(text: 'In Progress'),
-              Tab(text: 'Completed'),
-            ],
+            body: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : TabBarView(
+              children: [
+                inProgressTransactions(context),
+                completedTransactions(context),
+              ],
+            ),
           ),
-        ),
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : TabBarView(
-          children: [
-            inProgressTransactions(context),
-            completedTransactions(context),
-          ],
-        ),
-      ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 
 

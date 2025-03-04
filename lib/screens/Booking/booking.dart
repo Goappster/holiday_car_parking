@@ -9,7 +9,9 @@ import 'package:holidayscar/screens/vehicle_management.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl_mobile_field/intl_mobile_field.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../services/booking_api.dart';
 import '../../widgets/text.dart';
 import 'package:http/http.dart' as http;
@@ -147,62 +149,83 @@ class _BookingScreenState extends State<BookingScreen> {
   final TextEditingController depFlightController = TextEditingController();
   final TextEditingController arrivalFlightController = TextEditingController();
 
+
   @override
   Widget build(BuildContext context) {
-
     double companyPrice = double.tryParse(widget.company['price'].toString()) ?? 0.0;
 
-    return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title:  const Text('Booking'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle('Your Personal Information'),
-                    _buildPersonalInfoCard(),
-                    _buildSectionTitle('Flight Details'),
-                    _buildFlightDetails(context),
-                    _buildSectionTitle('Vehicle Details'),
-                    _selectedVehicle != null
-                        ? _buildVehicleDetails(context, _selectedVehicle!)
-                        : const Text('No vehicle selected.'),
-                    _buildAddVehicleButton(context),
-                    _buildSectionTitle('Terminal Selections'),
-                    _selectTerminal(),
-                     // // _buildSectionTitle('Explore Additional Services'),
-                     // _buildAdditionalServices(context, companyPrice),
-                    SizedBox(height: 16,),
-                    _buildContinueButton(context, _selectedVehicle),
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
 
-                  ],
+        return  Scaffold(
+          appBar: AppBar(
+            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            title:  const Text('Booking'),
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8, right: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Your Personal Information'),
+                        _buildPersonalInfoCard(),
+                        _buildSectionTitle('Flight Details'),
+                        _buildFlightDetails(context),
+                        _buildSectionTitle('Vehicle Details'),
+                        _selectedVehicle != null
+                            ? _buildVehicleDetails(context, _selectedVehicle!)
+                            : const Text('No vehicle selected.'),
+                        _buildAddVehicleButton(context),
+                        _buildSectionTitle('Terminal Selections'),
+                        _selectTerminal(),
+                        // // _buildSectionTitle('Explore Additional Services'),
+                        // _buildAdditionalServices(context, companyPrice),
+                        SizedBox(height: 16,),
+                        _buildContinueButton(context, _selectedVehicle),
+
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // ElevatedButton(
-          //   onPressed: () {
-          //     saveBookingDetails();
-          //   },
-          //   child: Text('Add Data'),
-          // ),
-        ],
-      ),
+              // ElevatedButton(
+              //   onPressed: () {
+              //     saveBookingDetails();
+              //   },
+              //   child: Text('Add Data'),
+              // ),
+            ],
+          ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 
   Widget _selectTerminal() {

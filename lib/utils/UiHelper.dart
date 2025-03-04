@@ -1,5 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/connectivity_provider.dart';
+import '../theme/app_theme.dart';
 
 class UiHelper {
   // Screen Size Helpers
@@ -219,5 +224,108 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+
+
+
+class NoInternetDialog extends StatelessWidget {
+  final VoidCallback checkConnectivity;
+
+  const NoInternetDialog({Key? key, required this.checkConnectivity}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        // Close the dialog when the internet is restored
+        if (provider.isConnected) {
+          Future.delayed(Duration(milliseconds: 300), () {
+            Navigator.of(context, rootNavigator: true).pop();
+          });
+        }
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lottie Animation
+                Lottie.asset(
+                  'assets/no_internet.json', // Replace with your Lottie file
+                  height: 140,
+                  width: 140,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(height: 15),
+
+                // Title
+                Text(
+                  "Oops! No Internet",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Description
+                Text(
+                  "Please check your connection and try again.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Buttons Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Cancel Button
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+
+                    // Retry Button
+                    ElevatedButton(
+                      onPressed: checkConnectivity,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        backgroundColor: AppTheme.primaryColor,
+                        elevation: 5,
+                      ),
+                      child: Text(
+                        "Retry",
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 

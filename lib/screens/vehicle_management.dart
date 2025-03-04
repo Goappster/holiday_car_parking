@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:holidayscar/utils/UiHelper.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../providers/connectivity_provider.dart';
 import '../widgets/text.dart';
 class VehicleManagementScreen extends StatefulWidget {
   const VehicleManagementScreen({super.key});
@@ -95,148 +97,172 @@ class _VehicleManagementScreenState extends State<VehicleManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: Text('Vehicle Management '),
-      ),
-      body: _isLoading
-          ? const Center(child: CupertinoActivityIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchVehicles,
-              child: ListView.builder(
-                itemCount: _vehicles.length,
-                itemBuilder: (context, index) {
-                  final vehicle = _vehicles[index];
-                  return GestureDetector(
-                    onTap: () {
-                      _onVehicleSelected(index);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              Image.asset('assets/images/car.png', width: 50, height: 50, fit: BoxFit.cover,),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${vehicle['make']}',
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      '${vehicle['registration']}',
-                                      style: const TextStyle(color: Colors.grey),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                            height: 32,
-                                            width: 32,
-                                            decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(5),
-                                                color: const Color(0xFF1D9DD9).withOpacity(0.20)),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(4.0),
-                                              child: SvgPicture.asset(
-                                                'assets/color.svg',
-                                              ),
-                                            )),
-                                        const SizedBox(width: 6),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Color', style: Theme.of(context).textTheme.labelSmall),
-                                            const SizedBox(width: 2),
-                                            Text('${vehicle['color']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                        const Spacer(),
-                                        Container(
+    // final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    // final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
+    // final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+            title: Text('Vehicle Management '),
+          ),
+          body: _isLoading
+              ? const Center(child: CupertinoActivityIndicator())
+              : RefreshIndicator(
+            onRefresh: _fetchVehicles,
+            child: ListView.builder(
+              itemCount: _vehicles.length,
+              itemBuilder: (context, index) {
+                final vehicle = _vehicles[index];
+                return GestureDetector(
+                  onTap: () {
+                    _onVehicleSelected(index);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            Image.asset('assets/images/car.png', width: 50, height: 50, fit: BoxFit.cover,),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${vehicle['make']}',
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    '${vehicle['registration']}',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Container(
                                           height: 32,
                                           width: 32,
                                           decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(5),
-                                              color: const Color(0xFF33D91D).withOpacity(0.20)),
+                                              color: const Color(0xFF1D9DD9).withOpacity(0.20)),
                                           child: Padding(
                                             padding: const EdgeInsets.all(4.0),
                                             child: SvgPicture.asset(
-                                              'assets/model.no.svg',
+                                              'assets/color.svg',
                                             ),
+                                          )),
+                                      const SizedBox(width: 6),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Color', style: Theme.of(context).textTheme.labelSmall),
+                                          const SizedBox(width: 2),
+                                          Text('${vehicle['color']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        height: 32,
+                                        width: 32,
+                                        decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(5),
+                                            color: const Color(0xFF33D91D).withOpacity(0.20)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: SvgPicture.asset(
+                                            'assets/model.no.svg',
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Model No', style: Theme.of(context).textTheme.labelSmall),
-                                            const SizedBox(width: 2),
-                                            Text('${vehicle['model']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  //
-                                  showCupertinoModalPopup(
-                                    context: context,
-                                    builder: (context) => CupertinoActionSheet(
-                                      actions: [
-                                        CupertinoActionSheetAction(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            _updateVehicle(context, '${vehicle['registration']}', '${vehicle['make']}', '${vehicle['model']}', '${vehicle['color']}', '${vehicle['id']}');
-                                          },
-                                          child: const Text("Update", style: TextStyle(color: Colors.blue),),
-                                        ),
-                                        CupertinoActionSheetAction(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            deleteVehicle('${vehicle['id']}');
-                                          },
-                                          isDestructiveAction: true,
-                                          child: const Text("Delete"),
-                                        ),
-                                      ],
-                                      cancelButton: CupertinoActionSheetAction(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("Cancel"),
                                       ),
-                                    ),
-                                  );
-                                },
+                                      const SizedBox(width: 6),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Model No', style: Theme.of(context).textTheme.labelSmall),
+                                          const SizedBox(width: 2),
+                                          Text('${vehicle['model']}', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                //
+                                showCupertinoModalPopup(
+                                  context: context,
+                                  builder: (context) => CupertinoActionSheet(
+                                    actions: [
+                                      CupertinoActionSheetAction(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          _updateVehicle(context, '${vehicle['registration']}', '${vehicle['make']}', '${vehicle['model']}', '${vehicle['color']}', '${vehicle['id']}');
+                                        },
+                                        child: const Text("Update", style: TextStyle(color: Colors.blue),),
+                                      ),
+                                      CupertinoActionSheetAction(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          deleteVehicle('${vehicle['id']}');
+                                        },
+                                        isDestructiveAction: true,
+                                        child: const Text("Delete"),
+                                      ),
+                                    ],
+                                    cancelButton: CupertinoActionSheetAction(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text("Cancel"),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-      floatingActionButton: FloatingActionButton(
-        shape: const CircleBorder(),
-        onPressed: () {
-          _showVehicle(context);
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            shape: const CircleBorder(),
+            onPressed: () {
+              _showVehicle(context);
+            },
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 
 

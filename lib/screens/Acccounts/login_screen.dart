@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holidayscar/routes.dart';
 
+import '../../providers/connectivity_provider.dart';
 import '../../services/login_api.dart';
 import '../../utils/UiHelper.dart';
 import '../../utils/validation_utils.dart';
@@ -101,149 +103,187 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       Navigator.of(context).pop(); // Close loading dialog
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred, please try again later.')),
+        const SnackBar(
+            content: Text('An error occurred, please try again later.')),
       );
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final double screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: screenHeight * 0.05),
-                Center(
-                  child: Image.asset(
-                    'assets/images/Logo.png',
-                    height: screenHeight * 0.10,
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                CustomText(text: "Login", fontSizeFactor: 2.0),
-                SizedBox(height: screenHeight * 0.02),
-                Center(
-                  child: Image.asset(
-                    'assets/images/pana.png',
-                    height: screenHeight * 0.15,
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                TextFormField(
-                  controller: emailController,
-                  autofillHints: [AutofillHints.email], // Autofill hint for email
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.02),
-                TextFormField(
-                  controller: passwordController,
-                  autofillHints: [AutofillHints.password], // Autofill hint for password
-                  obscureText: !_passwordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
+
+        return Scaffold(
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: screenHeight * 0.05),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/Logo.png',
+                        height: screenHeight * 0.10,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _passwordVisible = !_passwordVisible;
-                        });
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    CustomText(text: "Login", fontSizeFactor: 2.0),
+                    SizedBox(height: screenHeight * 0.02),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/pana.png',
+                        height: screenHeight * 0.15,
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    TextFormField(
+                      controller: emailController,
+                      autofillHints: [AutofillHints.email],
+                      // Autofill hint for email
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'Email',
+                        prefixIcon: Icon(Icons.email),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^\S+@\S+\.\S+').hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
                       },
                     ),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.01),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          onChanged: (bool? value) {
+                    SizedBox(height: screenHeight * 0.02),
+                    TextFormField(
+                      controller: passwordController,
+                      autofillHints: [AutofillHints.password],
+                      // Autofill hint for password
+                      obscureText: !_passwordVisible,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        hintText: 'Password',
+                        prefixIcon: Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _passwordVisible ? Icons.visibility : Icons
+                                .visibility_off,
+                          ),
+                          onPressed: () {
                             setState(() {
-                              _rememberMe = value!;
+                              _passwordVisible = !_passwordVisible;
                             });
                           },
                         ),
-                        const Text('Remember Me'),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: screenHeight * 0.01),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  _rememberMe = value!;
+                                });
+                              },
+                            ),
+                            const Text('Remember Me'),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, AppRoutes.forgetPass);
+                          },
+                          child: const Text('Forgot Password?'),
+                        ),
                       ],
                     ),
-                    TextButton(
+                    SizedBox(height: screenHeight * 0.02),
+                    ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.forgetPass);
+                        TextInput
+                            .finishAutofillContext(); // Signal autofill context is complete
+                        if (_formKey.currentState!.validate()) {
+                          _login(emailController.text, passwordController.text);
+                        }
                       },
-                      child: const Text('Forgot Password?'),
+                      child: const Text('Login'),
                     ),
+                    SizedBox(height: screenHeight * 0.03),
+                    Center(
+                      child: Column(
+                        children: [
+                          CustomText(text: "Don't have an account?",
+                              fontSizeFactor: 0.7),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pushNamed(context, AppRoutes.signup),
+                            child: CustomText(
+                              text: "Create Account",
+                              fontSizeFactor: 0.5,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.05),
                   ],
                 ),
-                SizedBox(height: screenHeight * 0.02),
-                ElevatedButton(
-                  onPressed: () {
-                    TextInput.finishAutofillContext(); // Signal autofill context is complete
-                    if (_formKey.currentState!.validate()) {
-                      _login(emailController.text, passwordController.text);
-                    }
-                  },
-                  child: const Text('Login'),
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                Center(
-                  child: Column(
-                    children: [
-                      CustomText(text: "Don't have an account?", fontSizeFactor: 0.7),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.signup),
-                        child: CustomText(
-                          text: "Create Account",
-                          fontSizeFactor: 0.5,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.05),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            NoInternetDialog(
+              checkConnectivity: () {
+                Provider.of<ConnectivityProvider>(context, listen: false)
+                    .checkConnectivity();
+              },
+            ),
+      );
+    });
   }
 }

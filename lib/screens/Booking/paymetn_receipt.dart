@@ -8,7 +8,9 @@ import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/UiHelper.dart';
 
@@ -22,7 +24,6 @@ class PaymentReceipt extends StatefulWidget {
 class _PaymentReceiptState extends State<PaymentReceipt> {
   @override
   Widget build(BuildContext context) {
-    // Get device screen width and height using MediaQuery
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
@@ -100,201 +101,220 @@ class _PaymentReceiptState extends State<PaymentReceipt> {
       }
     }
 
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
 
-
-    return Scaffold(
-      backgroundColor: Color(0xFF105D38),
-      body: Stack(
-        children: [
-          /// **Top Ribbon SVG**
-          Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: double.infinity,
-              height: isPortrait ? screenHeight * 0.20 : screenHeight * 0.1, // Adjust height dynamically based on screen height
-              child:
-              SvgPicture.asset(
-                "assets/ribbon.svg",
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Screenshot(
-            controller: screenshotController,
-            child: Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(screenWidth * 0.04), // Padding based on screen width
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      /// **Title**
-                      ///
-                      Text(
-                        "Payment Receipt",
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.053, // Font size based on screen width
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.01), // Adjusted spacing
-                      /// **Receipt Container with SVG Background**
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          /// **SVG Background**
-                          ColorFiltered(
-                            colorFilter: ColorFilter.mode(
-                              Theme.of(context).cardColor, // Using theme color
-                              BlendMode.srcIn, // Apply color filter to SVG
-                            ),
-                            child: SvgPicture.asset(
-                              "assets/receipt_background.svg",
-                              width: double.infinity,
-                              height: isPortrait ? screenHeight * 0.80 : screenHeight * 0.5, // Adjust height based on screen size
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                          /// **Receipt Content**
-                          Padding(
-                            padding: EdgeInsets.all(screenWidth * 0.04), // Padding based on screen width
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SvgPicture.asset(
-                                  "assets/success_icon.svg",
-                                  width: screenWidth * 0.27, // Adjust icon size based on screen width
-                                  height: screenWidth * 0.27, // Adjust icon size based on screen width
-                                ),
-                                SizedBox(height: screenHeight * 0.01),
-                                Text(
-                                  "Payment Success",
-                                  style: TextStyle(
-                                    fontSize: screenWidth * 0.048, // Adjust font size based on screen width
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: screenHeight * 0.01), // Adjusted spacing
-                                Text(
-                                  "Your payment for booking has been successfully completed",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                SizedBox(height: screenHeight * 0.02), // Adjusted spacing
-                                Text(
-                                  "Total Payment",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                Text(
-                                  "£${booking['total_amount']}",
-                                  style: TextStyle(
-                                      color: AppTheme.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: screenWidth * 0.08), // Adjust font size for the amount
-                                ),
-                                // Company Info
-                                ListTile(
-                                  leading: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      booking['company_logo'] ?? '',
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(Icons.error,
-                                            size: 50, color: Colors.red);
-                                      },
-                                    ),
-                                  ),
-                                  title: Text(
-                                    booking['company_name'] ?? 'Unknown',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                      'Airport: ${booking['airport_name'] ?? 'N/A'}'),
-                                ),
-                                // SizedBox(height: screenHeight * 0.04),
-                                DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, dashSpace: 8,),
-                                // SizedBox(height: screenHeight * 0.06),
-                                // Booking Details Grid
-                                Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        _infoCard(
-                                            "Departure",
-                                            DateFormat('dd MMM, hh:mm a')
-                                                .format(departureDate),
-                                            Icons.local_parking),
-                                        _infoCard(
-                                            "Return",
-                                            DateFormat('dd MMM, hh:mm a')
-                                                .format(returnDate),
-                                            Icons.flight_land),
-                                        _infoCard(
-                                            "Days",
-                                            "${booking['number_of_days'] ?? 0}",
-                                            Icons.calendar_today),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                // Barcode & Reference
-                                Column(
-                                  children: [
-                                    Image.asset(
-                                        'assets/images/barcode.png', height: 60),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      booking['reference_no'] ?? 'N/A',
-                                      style: const TextStyle(fontSize: 18,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: screenHeight * 0.02), // Adjusted spacing
-                                CustomButton(
-                                  onPressed: () {
-                                    captureAndSaveReceipt();  // Ensure you are calling this method correctly.
-                                  },
-                                  text: "Sava in device",
-                                  backgroundColor: AppTheme.primaryColor,
-                                ),
-                                SizedBox(height: screenHeight * 0.01), // Adjusted spacing
-                                InkWell(
-                                  onTap: ()=> Navigator.pop(context),
-                                  child: CustomText(text: 'Back', style: TextStyle(color: Colors.grey,), fontSizeFactor: 0.6,),
-                                ),
-                                SizedBox(height: screenHeight * 0.01),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+        return  Scaffold(
+          backgroundColor: Color(0xFF105D38),
+          body: Stack(
+            children: [
+              /// **Top Ribbon SVG**
+              Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: isPortrait ? screenHeight * 0.20 : screenHeight * 0.1, // Adjust height dynamically based on screen height
+                  child:
+                  SvgPicture.asset(
+                    "assets/ribbon.svg",
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-            ),
+              Screenshot(
+                controller: screenshotController,
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(screenWidth * 0.04), // Padding based on screen width
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          /// **Title**
+                          ///
+                          Text(
+                            "Payment Receipt",
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.053, // Font size based on screen width
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.01), // Adjusted spacing
+                          /// **Receipt Container with SVG Background**
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              /// **SVG Background**
+                              ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Theme.of(context).cardColor, // Using theme color
+                                  BlendMode.srcIn, // Apply color filter to SVG
+                                ),
+                                child: SvgPicture.asset(
+                                  "assets/receipt_background.svg",
+                                  width: double.infinity,
+                                  height: isPortrait ? screenHeight * 0.80 : screenHeight * 0.5, // Adjust height based on screen size
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                              /// **Receipt Content**
+                              Padding(
+                                padding: EdgeInsets.all(screenWidth * 0.04), // Padding based on screen width
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SvgPicture.asset(
+                                      "assets/success_icon.svg",
+                                      width: screenWidth * 0.27, // Adjust icon size based on screen width
+                                      height: screenWidth * 0.27, // Adjust icon size based on screen width
+                                    ),
+                                    SizedBox(height: screenHeight * 0.01),
+                                    Text(
+                                      "Payment Success",
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.048, // Adjust font size based on screen width
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: screenHeight * 0.01), // Adjusted spacing
+                                    Text(
+                                      "Your payment for booking has been successfully completed",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    SizedBox(height: screenHeight * 0.02), // Adjusted spacing
+                                    Text(
+                                      "Total Payment",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    Text(
+                                      "£${booking['total_amount']}",
+                                      style: TextStyle(
+                                          color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: screenWidth * 0.08), // Adjust font size for the amount
+                                    ),
+                                    // Company Info
+                                    ListTile(
+                                      leading: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          booking['company_logo'] ?? '',
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(Icons.error,
+                                                size: 50, color: Colors.red);
+                                          },
+                                        ),
+                                      ),
+                                      title: Text(
+                                        booking['company_name'] ?? 'Unknown',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Text(
+                                          'Airport: ${booking['airport_name'] ?? 'N/A'}'),
+                                    ),
+                                    // SizedBox(height: screenHeight * 0.04),
+                                    DottedDashedLine(height: 0, width: double.infinity, axis: Axis.horizontal, dashColor: Theme.of(context).dividerColor, dashSpace: 8,),
+                                    // SizedBox(height: screenHeight * 0.06),
+                                    // Booking Details Grid
+                                    Card(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            _infoCard(
+                                                "Departure",
+                                                DateFormat('dd MMM, hh:mm a')
+                                                    .format(departureDate),
+                                                Icons.local_parking),
+                                            _infoCard(
+                                                "Return",
+                                                DateFormat('dd MMM, hh:mm a')
+                                                    .format(returnDate),
+                                                Icons.flight_land),
+                                            _infoCard(
+                                                "Days",
+                                                "${booking['number_of_days'] ?? 0}",
+                                                Icons.calendar_today),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // Barcode & Reference
+                                    Column(
+                                      children: [
+                                        Image.asset(
+                                            'assets/images/barcode.png', height: 60),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          booking['reference_no'] ?? 'N/A',
+                                          style: const TextStyle(fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: screenHeight * 0.02), // Adjusted spacing
+                                    CustomButton(
+                                      onPressed: () {
+                                        captureAndSaveReceipt();  // Ensure you are calling this method correctly.
+                                      },
+                                      text: "Sava in device",
+                                      backgroundColor: AppTheme.primaryColor,
+                                    ),
+                                    SizedBox(height: screenHeight * 0.01), // Adjusted spacing
+                                    InkWell(
+                                      onTap: ()=> Navigator.pop(context),
+                                      child: CustomText(text: 'Back', style: TextStyle(color: Colors.grey,), fontSizeFactor: 0.6,),
+                                    ),
+                                    SizedBox(height: screenHeight * 0.01),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Lottie.asset('assets/ribbon.json'), // Lottie animation stays at the top
+                ),
+              ),
+            ],
           ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: double.infinity,
-              child: Lottie.asset('assets/ribbon.json'), // Lottie animation stays at the top
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
+  }
   // Helper Widget for Booking Info Cards
   Widget _infoCard(String title, String value, IconData icon) {
     return Column(

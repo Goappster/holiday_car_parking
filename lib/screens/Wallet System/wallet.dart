@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../providers/wallet_provider.dart';
+import '../../utils/UiHelper.dart';
 import '../Booking/PaymentReceiptScreen.dart';
 import 'add_funds.dart';
 import '../../widgets/ImageSlider.dart';
@@ -65,129 +67,149 @@ class _WalletDashboardState extends State<WalletDashboard> {
   @override
   Widget build(BuildContext context) {
     final walletProvider = Provider.of<WalletProvider>(context);
+    return Consumer<ConnectivityProvider>(
+      builder: (context, provider, child) {
+        if (!provider.isConnected) {
+          _showNoInternetDialog(context);
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: Text('HCP Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Last Updated Balance', style: TextStyle(color: Colors.grey)),
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return  Scaffold(
+          appBar: AppBar(
+            surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
+            title: Text('HCP Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '₤${walletProvider.walletData?['balance']?.toString() ?? "0"}',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                Text('Last Updated Balance', style: TextStyle(color: Colors.grey)),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '₤${walletProvider.walletData?['balance']?.toString() ?? "0"}',
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.refresh),
+                      onPressed: () async {
+                        await walletProvider.loadWalletBalance(user!['id'].toString(),);
+                        await walletProvider.loadTransactions(user!['id'].toString(), forceReload: true); // Only reload on click
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: Icon(Icons.refresh),
-                  onPressed: () async {
-                    await walletProvider.loadWalletBalance(user!['id'].toString(),);
-                    await walletProvider.loadTransactions(user!['id'].toString(), forceReload: true); // Only reload on click
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
+                SizedBox(height: 20),
 
-            GridView.count(
-              crossAxisCount: 4,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: [
-                _buildQuickAction(context, LucideIcons.circle, 'Add funds', (){showPaymentBottomSheet(context);}),
-                _buildQuickAction(context, Icons.account_balance, 'Withdraw Funds', ()=>showShowWithdrwaScreen(context)),
-                _buildQuickAction(context, Icons.swap_horiz, 'Transfer', (){
-                  // showSortModal(context);
-                  _showMessage(context, 'Coming Soon!');
-                }),
-                _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){
-                  _showMessage(context, 'Coming Soon!');
-                })
-              ],
-            ),
-            SizedBox(height: 20),
-            Text('Promo & Offers', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            ImageSlider(imageUrls: [
-              'https://i.pinimg.com/474x/c2/b0/1a/c2b01ac41b052535bc3871e85f86753c.jpg',
-              'https://i.pinimg.com/736x/de/26/05/de26051a2c73292f11cd91b8ede87a66.jpg',
-              'https://i.pinimg.com/736x/1a/26/fd/1a26fdceeec831daae488589936e2116.jpg',
-            ]),
-            SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('RECENT TRANSACTIONS',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TransactionHistoryScreen()),
-                    );
-                  },
-                  child: Text('View All',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor)),
+                GridView.count(
+                  crossAxisCount: 4,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildQuickAction(context, LucideIcons.circle, 'Add funds', (){showPaymentBottomSheet(context);}),
+                    _buildQuickAction(context, Icons.account_balance, 'Withdraw Funds', ()=>showShowWithdrwaScreen(context)),
+                    _buildQuickAction(context, Icons.swap_horiz, 'Transfer', (){
+                      // showSortModal(context);
+                      _showMessage(context, 'Coming Soon!');
+                    }),
+                    _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){
+                      _showMessage(context, 'Coming Soon!');
+                    })
+                  ],
                 ),
-              ],
-            ),
-            SizedBox(height: 10),
-            walletProvider.isLoadingTransactions
-                ? Center(child: Text("Loading transactions...", style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)))
-                : walletProvider.transactions.isEmpty
-                ? Center(child: Text("No transactions available", style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)))
-                : Column(
-              children: walletProvider.transactions.take(5).map((tx) {
-                bool isCredit = tx['type'] == 'credit';
-                          return Card(
-                            child: ListTile(
-                              leading: Icon(
-                                isCredit
-                                    ? Icons.credit_card
-                                    : Icons.remove_circle,
-                                color: isCredit ? Colors.green : Colors.red,
+                SizedBox(height: 20),
+                Text('Promo & Offers', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                ImageSlider(imageUrls: [
+                  'https://i.pinimg.com/474x/c2/b0/1a/c2b01ac41b052535bc3871e85f86753c.jpg',
+                  'https://i.pinimg.com/736x/de/26/05/de26051a2c73292f11cd91b8ede87a66.jpg',
+                  'https://i.pinimg.com/736x/1a/26/fd/1a26fdceeec831daae488589936e2116.jpg',
+                ]),
+                SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('RECENT TRANSACTIONS',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TransactionHistoryScreen()),
+                        );
+                      },
+                      child: Text('View All',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor)),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                walletProvider.isLoadingTransactions
+                    ? Center(child: Text("Loading transactions...", style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)))
+                    : walletProvider.transactions.isEmpty
+                    ? Center(child: Text("No transactions available", style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)))
+                    : Column(
+                  children: walletProvider.transactions.take(5).map((tx) {
+                    bool isCredit = tx['type'] == 'credit';
+                    return Card(
+                      child: ListTile(
+                        leading: Icon(
+                          isCredit
+                              ? Icons.credit_card
+                              : Icons.remove_circle,
+                          color: isCredit ? Colors.green : Colors.red,
+                        ),
+                        title: Text(tx['description'] ?? ''),
+                        subtitle: Text(
+                          DateFormat('EEEE MMMM yyyy hh:mm a')
+                              .format(DateTime.parse(tx['created_at'])),
+                        ),
+                        trailing: Text(
+                          '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
+                          style: TextStyle(
+                            color: isCredit ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PaymentReceiptScreen(
+                                data: tx,
+                                source: 'transactions',
                               ),
-                              title: Text(tx['description'] ?? ''),
-                              subtitle: Text(
-                                DateFormat('EEEE MMMM yyyy hh:mm a')
-                                    .format(DateTime.parse(tx['created_at'])),
-                              ),
-                              trailing: Text(
-                                '${isCredit ? "+" : "-"}${tx['amount'] ?? "0"}',
-                                style: TextStyle(
-                                  color: isCredit ? Colors.green : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PaymentReceiptScreen(
-                                      data: tx,
-                                      source: 'transactions',
-                                    ),
-                                  ),
-                                );
-                              }, // No navigation on tap
                             ),
                           );
-                        }).toList(),
+                        }, // No navigation on tap
                       ),
-          ],
-        ),
-      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+  void _showNoInternetDialog(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => NoInternetDialog(
+          checkConnectivity: () {
+            Provider.of<ConnectivityProvider>(context, listen: false).checkConnectivity();
+          },
+        ),
+      );
+    });
   }
 
   Widget _buildQuickAction(BuildContext context, IconData icon, String label, VoidCallback onTap) {
