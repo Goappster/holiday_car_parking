@@ -7,11 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../providers/connectivity_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../services/Notifactions.dart';
-import '../../services/background_service.dart';
-import '../../utils/UiHelper.dart';
 import '../Booking/PaymentReceiptScreen.dart';
 import 'add_funds.dart';
 import '../../widgets/ImageSlider.dart';
@@ -125,7 +122,7 @@ class _WalletDashboardState extends State<WalletDashboard> {
                   _showMessage(context, 'Coming Soon!');
                 }),
                 _buildQuickAction(context, LucideIcons.ticket, 'Voucher Code', (){
-                  BackgroundNotificationService.fetchWithdrawStatus();
+                  // BackgroundNotificationService.fetchWithdrawStatus();
                   _showMessage(context, 'Coming Soon!');
                 })
               ],

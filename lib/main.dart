@@ -26,7 +26,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  initializeService();
+  await BackgroundService().initialize();
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   await NotificationService().init();
   Stripe.publishableKey = 'pk_live_51OvKOKIpEtljCntg35Uj6taKMymzZoDlsEXlJyWx7ELKOVE6CPmJhvHNAE5oPVsU7cJFHL9aoqBrJgYKQirYH2jd000rHCT9bF';

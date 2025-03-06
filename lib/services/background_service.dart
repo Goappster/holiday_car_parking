@@ -1,20 +1,73 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
-class BackgroundNotificationService {
-  static const String apiUrl = "https://holidayscarparking.uk/api/wallet/withdrawRequestStatus";
-  static int userId = 890; // Replace with actual logged-in user ID
+import 'Notifactions.dart';
 
-  static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+class BackgroundService {
+  static const String notificationChannelId = 'my_foreground';
+  static const int notificationId = 888;
 
+  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  static Future<void> fetchWithdrawStatus() async {
+  Future<void> initialize() async {
+    final service = FlutterBackgroundService();
+    await _setupNotifications();
+    await service.configure(
+      androidConfiguration: AndroidConfiguration(
+        onStart: onStart,
+        autoStart: true,
+        isForegroundMode: false,
+        notificationChannelId: notificationChannelId,
+        foregroundServiceNotificationId: notificationId,
+      ),
+      iosConfiguration: IosConfiguration(
+        autoStart: true,
+        onForeground: onStart,
+        onBackground: onIosBackground,
+      ),
+    );
+  }
+
+  Future<void> _setupNotifications() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      notificationChannelId,
+      'MY FOREGROUND SERVICE',
+      description: 'Used for background tasks',
+      importance: Importance.min,
+      playSound: false,
+      enableVibration: false,
+    );
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
+}
+
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  return true;
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) {
+  Timer.periodic(Duration(seconds: 30), (timer) {
+    // print("Service running: \$${DateTime.now()}");
+    WithdrawService().fetchWithdrawStatus();
+  });
+}
+
+class WithdrawService {
+  final String apiUrl = "https://holidayscarparking.uk/api/wallet/withdrawRequestStatus";
+  final int userId = 890; // Replace dynamically
+  final NotificationService _notificationService = NotificationService();
+
+  Future<void> fetchWithdrawStatus() async {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -23,7 +76,8 @@ class BackgroundNotificationService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data["success"] == true && data["withdraw_request"]["data"] != null) {
+        if (data["success"] == true &&
+            data["withdraw_request"]["data"] != null) {
           List<dynamic> transactions = data["withdraw_request"]["data"];
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -40,65 +94,39 @@ class BackgroundNotificationService {
               prefs.setString('withdraw_status_$id', newStatus);
 
               // Send notification only if status changed
-              showNotification("Withdrawal Status Update", "Your withdrawal request (ID: $id) is now: $newStatus");
+              // showNotification("Withdrawal Status Update", "Your withdrawal request (ID: $id) is now: $newStatus");
+
+              _notificationService.showNotification(
+                  '🎉 Payment Update!',
+                  'Withdrawal Status Update Your withdrawal request (ID: $id) is now: $newStatus'
+                      'Date & Time: ${DateFormat('EEE, dd MMM yyyy • HH:mm')
+                      .format(DateTime.now())}\n'
+                      'Thanks for choosing HCP Wallet! 🚀'
+              );
             }
           }
         }
       }
     } catch (e) {
-      print("Error fetching withdraw status: $e");
-    }
-  }
-
-
-  static void showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      "withdraw_updates",
-      "Withdraw Status",
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const NotificationDetails notificationDetails = NotificationDetails(android: androidDetails);
-
-    await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
-  }
-}
-
-Future<bool> onStart(ServiceInstance service) async {
-  Timer.periodic(Duration(seconds: 5), (timer) async {
-    if (service is AndroidServiceInstance) {
-      if (await service.isForegroundService()) {
-        BackgroundNotificationService.fetchWithdrawStatus();
+      if (kDebugMode) {
+        print("Error fetching withdraw status: $e");
       }
     }
-  });
-
-  return true;
+  }
 }
-void initializeService() async {
-  final service = FlutterBackgroundService();
 
-  await service.configure(
-    androidConfiguration: AndroidConfiguration(
-      onStart: onStart, // ✅ Correct function reference
-      autoStart: true,
-      isForegroundMode: true,
-      notificationChannelId: "withdraw_status_channel",
-      initialNotificationTitle: "Monitoring Withdraw Status",
-      initialNotificationContent: "Fetching withdrawal status...",
-      foregroundServiceTypes: [AndroidForegroundType.dataSync],
-    ),
-    iosConfiguration: IosConfiguration(
-      onBackground: onStart, // ✅ Pass function reference, don't call it
-      onForeground: onStart,
-    ),
-  );
 
-  service.startService();
 
-  // Initialize Local Notifications
-  const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initSettings = InitializationSettings(android: androidInit);
-  await BackgroundNotificationService.flutterLocalNotificationsPlugin.initialize(initSettings);
-}
+
+// final service = FlutterBackgroundService();
+//
+// void startService() {
+//   service.startService();
+//   setState(() {});
+// }
+//
+// void stopService() {
+//   service.invoke("stop");
+//   setState(() {});
+// }
+//

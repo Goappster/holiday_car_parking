@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,68 +9,25 @@ import 'package:holidayscar/screens/search_screen.dart';
 import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
-import '../providers/connectivity_provider.dart';
+import '../services/InAppReviewService.dart';
 import '../services/get_airports.dart';
 import '../theme/app_theme.dart';
 import '../utils/UiHelper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final InAppReviewService _inAppReviewService = InAppReviewService();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  // Initialize Firebase and Notification Settings
-  void initializeFirebase() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      if (message.notification != null) {
-        String? imageUrl = message.data['image']; // Get image URL from FCM payload
-        await showNotification(message.notification?.title, message.notification?.body, imageUrl);
-      }
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    });
-  }
-  // Initialize local notifications
-  Future<void> initializeLocalNotifications() async {
-    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');  // Default Android launcher icon
-    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-  // Request permissions for notifications
-  void requestPermissions() async {
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-  }
-  // Show notification with image
-  Future<void> showNotification(String? title, String? body, String? imageUrl) async {
-    var androidDetails = AndroidNotificationDetails(
-      'your_channel_id',
-      'your_channel_name',
-      channelDescription: 'your_channel_description',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',  // Use default Android icon here
-    );
-    var platformDetails = NotificationDetails(android: androidDetails);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformDetails,
-      payload: 'item x',
-    );
-  }
 
   String? token;
   Map<String, dynamic>? user;
@@ -82,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
     initializeFirebase();
     initializeLocalNotifications();
     requestPermissions();
+    _initializeInAppReview();
     _loadUserData();
+
     _shimmerTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _isShimmerVisible = false;
@@ -94,6 +54,49 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _shimmerTimer?.cancel();
     super.dispose();
+  }
+
+  // Initialize Firebase and Notification Settings
+  void initializeFirebase() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      if (message.notification != null) {
+        String? imageUrl = message.data['image']; // Get image URL from FCM payload
+        await showNotification(message.notification?.title, message.notification?.body, imageUrl);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {});
+  }
+
+  // Initialize local notifications
+  Future<void> initializeLocalNotifications() async {
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  // Request permissions for notifications
+  void requestPermissions() async {
+    await _firebaseMessaging.requestPermission(alert: true, badge: true, sound: true);
+  }
+
+  // Show notification with image
+  Future<void> showNotification(String? title, String? body, String? imageUrl) async {
+    var androidDetails = AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      channelDescription: 'your_channel_description',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',  // Default Android icon
+    );
+    var platformDetails = NotificationDetails(android: androidDetails);
+    await flutterLocalNotificationsPlugin.show(0, title, body, platformDetails, payload: 'item x');
+  }
+
+  Future<void> _initializeInAppReview() async {
+    await _inAppReviewService.init();
+    setState(() {});
   }
 
   Future<void> _loadUserData() async {
@@ -112,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
     final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
+
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -120,169 +124,80 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                'Hi, ${user?['first_name']} ${user?['last_name']}!',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
+              'Hi, ${user?['first_name']} ${user?['last_name']}!',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
-              DateFormat('dd MMM, yyyy').format(DateTime.now()), // Formats current date
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
+              DateFormat('dd MMM, yyyy').format(DateTime.now()),
+              style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
         actions: [
-          Container(
-            width: 40,
-            height: 40,
-            margin: EdgeInsets.only( right: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12), // Rounded corners
-              border: Border.all(
-                color: Colors.grey, // Stroke color
-                width: 1, // Stroke width
-              ),
-            ),
-            child: Center(
-              child:  IconButton(
-                icon: Icon(MingCute.notification_line, size: 20,),
-                onPressed: () {
-                  // CupertinoAlertDialog(
-                  //   title: const Text('Confirm Logout'),
-                  //   content: const Text('Are you sure you want to logout?'),
-                  //   actions: [
-                  //     CupertinoDialogAction(
-                  //       onPressed: () => Navigator.of(context).pop(false),
-                  //       child: const Text('Cancel'),
-                  //     ),
-                  //     CupertinoDialogAction(
-                  //       onPressed: () => Navigator.of(context).pop(true),
-                  //       child: const Text('Logout'),
-                  //     ),
-                  //   ],
-                  // );
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return CupertinoAlertDialog(
-                        title: const Text('Release Notes.'),
-                        content: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('🌟 Key Features'),
-                            Text('🔐 User Authentication'),
-                            Text('📅 Booking Management'),
-                            Text('💳 Payment Processing'),
-                            Text('🎁 Promotional Offers'),
-                            SizedBox(height: 8), // Spacing
-
-                            Text('⏰ Time Display'),
-                            Text('🚀 Improvements'),
-                            Text('• Faster data retrieval for a smoother experience.'),
-                            Text('• Enhanced UI/UX for a user-friendly interface.'),
-                            SizedBox(height: 8), // Spacing
-
-                            Text('⚠️ Known Issues'),
-                            Text('• Minor UI glitches on certain devices. We\'re working on it!'),
-                            SizedBox(height: 8), // Spacing
-
-                            Text('🔮 Coming Soon'),
-                            Text('• More payment options.'),
-                            Text('• Improved user profile features.'),
-                          ],
-                        ),
-                        actions: [
-                          CupertinoDialogAction(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      );
+          IconButton(
+            icon: Icon(MingCute.notification_line, size: 20),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return FeedbackDialog(
+                    onNegativePressed: () => Navigator.pop(context),
+                    onPositivePressed: () async {
+                      if (mounted) {
+                        _inAppReviewService.requestReview();
+                      }
                     },
                   );
-
                 },
-              ),
-
-            ),
+              );
+            },
           ),
         ],
       ),
-
       body: _isShimmerVisible
           ? Shimmer.fromColors(
         baseColor: baseColor,
         highlightColor: highlightColor,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: buildBody(),
+      )
+          : buildBody(),
+    );
+  }
+
+  Widget buildBody() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const DateTimePickerSection(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // const SizedBox(height: 10),
-                const DateTimePickerSection(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Hot Offers',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SearchScreen()),
-                        );
-                      },
-                      child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
-                    ),
-                  ],
+                Text(
+                  'Hot Offers',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const HotOffersSection(),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SearchScreen()),
+                    );
+                  },
+                  child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
+                ),
               ],
             ),
-          ),
-        ),
-      )
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              const DateTimePickerSection(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Hot Offers',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SearchScreen()),
-                      );
-                    },
-                    child: Text('View All', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor)),
-                  ),
-                ],
-              ),
-              const HotOffersSection(),
-            ],
-          ),
+            const HotOffersSection(),
+          ],
         ),
       ),
     );
   }
-
 }
+
 class DateTimePickerSection extends StatefulWidget {
   const DateTimePickerSection({super.key});
 
@@ -291,30 +206,24 @@ class DateTimePickerSection extends StatefulWidget {
 }
 
 class _DateTimePickerSectionState extends State<DateTimePickerSection> {
-
   TimeOfDay? _selectedStartTime, _selectedEndTime;
   DateTime? _pickupDate, _dropOffDate;
+  late Future<List<Map<String, dynamic>>> _airportData;
+  int? _selectedAirportId;
+  String? _selectedAirportName;
 
-  void _showDatePicker(BuildContext context, bool isPickup) {
+  @override
+  void initState() {
+    super.initState();
+    _airportData = GetAirports.fetchAirports();
+  }
+
+  Future<void> _showDatePicker(BuildContext context, bool isPickup) async {
     DateTime now = DateTime.now();
-
-    // Initialize drop-off date to be tomorrow if it's not already set
     DateTime initialDropOffDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-
-    // If no drop-off date is already set, use the initial drop-off date
     DateTime initialPickupDate = _pickupDate ?? _dropOffDate ?? initialDropOffDate;
-
-    // Set the selected date based on whether it's for pickup or dropoff
-    DateTime selectedDate = isPickup
-        ? (_pickupDate ?? initialPickupDate)  // If it's pickup, use _pickupDate or the initial pickup date
-        : (_dropOffDate ?? initialDropOffDate);
-
-    // Ensure minimumDate is not later than the selectedDate
-    DateTime minimumDate = isPickup
-        ? (_dropOffDate ?? initialDropOffDate)  // Pickup date cannot be earlier than the drop-off date
-        : initialDropOffDate;
-
-    // Make sure the minimum date is not after the selected date
+    DateTime selectedDate = isPickup ? (_pickupDate ?? initialPickupDate) : (_dropOffDate ?? initialDropOffDate);
+    DateTime minimumDate = isPickup ? (_dropOffDate ?? initialDropOffDate) : initialDropOffDate;
     minimumDate = minimumDate.isAfter(selectedDate) ? selectedDate : minimumDate;
 
     showCupertinoModalPopup(
@@ -334,7 +243,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.date,
                   initialDateTime: selectedDate,
-                  minimumDate: minimumDate, // Set the correct minimum date based on drop-off
+                  minimumDate: minimumDate,
                   maximumDate: DateTime(2100),
                   onDateTimeChanged: (DateTime newDate) {
                     setStateModal(() {
@@ -347,20 +256,14 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                 onPressed: () {
                   setState(() {
                     if (isPickup) {
-                      // If it's pickup, set the pickup date
                       _pickupDate = selectedDate;
-
-                      // Ensure drop-off date is at least the pickup date
                       if (_dropOffDate == null || _dropOffDate!.isAfter(_pickupDate!)) {
                         _dropOffDate = _pickupDate;
                       }
                     } else {
-                      // If it's dropoff, set the drop-off date
                       _dropOffDate = selectedDate;
-
-                      // Automatically set pickup date to be on or after drop-off date
                       if (_pickupDate == null || _pickupDate!.isAfter(_dropOffDate!)) {
-                        _pickupDate = _dropOffDate;  // Set pickup date to be the drop-off date or later
+                        _pickupDate = _dropOffDate;
                       }
                     }
                   });
@@ -374,7 +277,6 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       ),
     );
   }
-
 
   Widget _buildCupertinoToolbar(BuildContext context, bool isPickup, DateTime selectedDate) {
     return Container(
@@ -406,10 +308,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
   }
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
+    final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null) {
       setState(() {
         if (isStartTime) {
@@ -426,34 +325,15 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select all inputs.')));
       return;
     }
-    // Navigator.pushNamed(context, '/ShowResult', arguments: {
-    //   'startDate': UiHelperDateDate.formatDate(_dropOffDate),
-    //   'endDate': UiHelperDateDate.formatDate(_pickupDate),
-    //   'startTime': UiHelperDateDate.formatTime(_selectedStartTime),
-    //   'endTime': UiHelperDateDate.formatTime(_selectedEndTime),
-    // });
 
-    Navigator.pushNamed(context, '/ShowResult',
-      arguments: {
-        'startDate': UiHelperDate.formatDate(_dropOffDate),
-        'endDate': UiHelperDate.formatDate(_pickupDate),
-        'startTime': UiHelperDate.formatTime(_selectedStartTime),
-        'endTime': UiHelperDate.formatTime(_selectedEndTime),
-        'AirportId': _selectedAirportId.toString(),
-        'AirportName': _selectedAirportName,
-      },
-    );
-  }
-
-
-  late Future<List<Map<String, dynamic>>> _airportData;
-  int? _selectedAirportId;
-  String? _selectedAirportName;
-
-  @override
-  void initState() {
-    super.initState();
-    _airportData = GetAirports.fetchAirports(); // Fetch airport data once
+    Navigator.pushNamed(context, '/ShowResult', arguments: {
+      'startDate': UiHelperDate.formatDate(_dropOffDate),
+      'endDate': UiHelperDate.formatDate(_pickupDate),
+      'startTime': UiHelperDate.formatTime(_selectedStartTime),
+      'endTime': UiHelperDate.formatTime(_selectedEndTime),
+      'AirportId': _selectedAirportId.toString(),
+      'AirportName': _selectedAirportName,
+    });
   }
 
   @override
@@ -461,6 +341,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDarkTheme ? AppTheme.darkSurfaceColor : Colors.grey[300]!;
     final highlightColor = isDarkTheme ? AppTheme.darkTextSecondaryColor : Colors.grey[100]!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -473,13 +354,10 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Select Airport',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,),
-                ),
+                Text('Select Airport', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 5),
-                FutureBuilder<List<Map<String, dynamic>>> (
-                  future: _airportData, // Use the stored future
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _airportData,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Shimmer.fromColors(
@@ -495,7 +373,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         ),
                       );
                     } else if (snapshot.hasError) {
-                      return Text('Error: \${snapshot.error}');
+                      return Text('Error: ${snapshot.error}');
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Text('No airports available');
                     } else {
@@ -547,7 +425,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                                   child: Text(
                                     _selectedAirportName ?? "Select Airport",
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -555,10 +433,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                       );
                     }
                   },
-                )
-                ,
-
-
+                ),
                 const SizedBox(height: 16),
                 UiHelperDate.buildContainer(
                   label: "Drop-off Date",
@@ -583,7 +458,8 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                         label: "Drop-Off Time",
                         value: UiHelperDate.formatTimeOfDay(_selectedStartTime),
                         onTap: () => _selectTime(context, true),
-                        icon: Icons.access_time, context: context,
+                        icon: Icons.access_time,
+                        context: context,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -599,7 +475,7 @@ class _DateTimePickerSectionState extends State<DateTimePickerSection> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                CustomButton(text: 'Find Parking', onPressed:  _onFindParkingPressed,)
+                CustomButton(text: 'Find Parking', onPressed: _onFindParkingPressed),
               ],
             ),
           ),
