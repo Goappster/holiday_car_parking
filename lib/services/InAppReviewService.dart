@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:in_app_review/in_app_review.dart';
 
 import '../Code/noti_test.dart';
-
+enum Availability { loading, available, unavailable }
 class InAppReviewService {
   final InAppReview _inAppReview = InAppReview.instance;
   Availability _availability = Availability.loading;

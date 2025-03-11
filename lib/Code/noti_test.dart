@@ -1,155 +1,151 @@
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:in_app_review/in_app_review.dart';
 
-void main() => runApp( MyApp()); // Use MyApp as the root widget
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const InAppReviewExampleApp(),
-      // Other properties like theme, localization, etc. can be added as well.
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
     );
   }
 }
 
-enum Availability { loading, available, unavailable }
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
-class InAppReviewExampleApp extends StatefulWidget {
-  const InAppReviewExampleApp({super.key});
+  void showCustomModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Allows full-screen height
+      backgroundColor: Colors.transparent, // Ensures rounded corners
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9, // 90% of screen height
+        minChildSize: 0.5, // Can be dragged to 50%
+        maxChildSize: 0.95, // Can expand to 95%
+        expand: false,
+        builder: (_, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+          child: Column(
+            children: [
+              // Drag Indicator
+              Container(
+                width: 40,
+                height: 5,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
 
-  @override
-  InAppReviewExampleAppState createState() => InAppReviewExampleAppState();
-}
+              // Navigation Bar
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       CupertinoButton(
+              //         onPressed: () => Navigator.pop(context),
+              //         child: const Text("Cancel"),
+              //       ),
+              //       const Text(
+              //         "New Message",
+              //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              //       ),
+              //       CupertinoButton(
+              //         onPressed: () {},
+              //         child: const Icon(CupertinoIcons.arrow_up_circle_fill, color: Colors.blue),
+              //       ),
+              //     ],
+              //   ),
+              // ),
 
-class InAppReviewExampleAppState extends State<InAppReviewExampleApp> {
-  final InAppReview _inAppReview = InAppReview.instance;
-  Availability _availability = Availability.loading;
+              // const Divider(height: 1),
 
-  @override
-  void initState() {
-    super.initState();
-    _checkAvailability();
-  }
-
-  Future<void> _checkAvailability() async {
-    try {
-      final isAvailable = await _inAppReview.isAvailable();
-      setState(() {
-        _availability = isAvailable ? Availability.available : Availability.unavailable;
-      });
-    } catch (_) {
-      setState(() => _availability = Availability.unavailable);
-    }
-  }
-
-  Future<void> _requestReview() async {
-    if (_availability == Availability.available) {
-      await _inAppReview.requestReview();
-    } else {
-      _openStoreListing();
-    }
-  }
-
-  Future<void> _openStoreListing() async {
-    final packageName = "com.holiday.car.parking.uk"; // Replace with your app’s package name
-    final url = "https://play.google.com/store/apps/details?id=$packageName";
-    await _inAppReview.openStoreListing(appStoreId: null);
-  }
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Google Play In-App Review')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('In App Review status: ${_availability.name}'),
-            ElevatedButton(
-              onPressed: _requestReview,
-              child: const Text('Request Review'),
-            ),
-            ElevatedButton(
-              onPressed: () => _showFeedbackDialog(context),
-              child: const Text('Open Play Store Listing'),
-            ),
-          ],
+              // Scrollable Content
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CupertinoTextField(
+                          placeholder: "Email",
+                          padding: const EdgeInsets.all(16),
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemGrey5,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CupertinoTextField(
+                          placeholder: "Password",
+                          padding: const EdgeInsets.all(16),
+                          obscureText: true,
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemGrey5,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: CupertinoButton.filled(
+                            onPressed: () {},
+                            child: const Text("Login"),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CupertinoButton(
+                          onPressed: () {},
+                          child: const Text("Forgot Password?"),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Don't have an account?"),
+                            CupertinoButton(
+                              onPressed: () {},
+                              child: const Text("Sign Up"),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-void _showFeedbackDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return CupertinoAlertDialog(
-        title: Text(
-          "Enjoying this App?",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("iOS Style Bottom Sheet")),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => showCustomModal(context),
+          child: const Text("Show Modal"),
         ),
-        content: Text(
-          "Hi there! We’d love to know if you’re having a great experience.",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14),
-        ),
-        actions: <Widget>[
-          CupertinoDialogAction(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "😕",
-                  style: TextStyle(fontSize: 28),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  "Not Really",
-                  style: TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoDialogAction(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "🤗",
-                  style: TextStyle(fontSize: 28),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  "Yes!",
-                  style: TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      );
-    },
-  );
+      ),
+    );
+  }
 }

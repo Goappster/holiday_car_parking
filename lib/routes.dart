@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:holidayscar/screens/Acccounts/edit_profile_screen.dart';
-import 'package:holidayscar/screens/Acccounts/forget_pass.dart';
+import 'package:holidayscar/screens/Auth/edit_profile_screen.dart';
+import 'package:holidayscar/screens/Auth/forget_pass.dart';
 import 'package:holidayscar/screens/getsupport_ticket.dart';
 import 'package:holidayscar/screens/Booking/my_booking.dart';
-import 'package:holidayscar/screens/Acccounts/splash.dart';
+import 'package:holidayscar/screens/Auth/splash.dart';
 import 'package:holidayscar/screens/support_ticket.dart';
 import 'package:holidayscar/screens/vehicle_management.dart';
 import 'main.dart';
-import 'screens/Acccounts/login_screen.dart';
-import 'screens/Acccounts/signup_screen.dart';
+import 'screens/Auth/login_screen.dart';
+import 'screens/Auth/signup_screen.dart';
 
 class AppRoutes {
   static const String login = '/Login';

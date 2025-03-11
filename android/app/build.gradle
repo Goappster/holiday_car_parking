@@ -35,8 +35,8 @@ android {
         applicationId = "com.holiday.car.parking.uk"
         minSdk = 21  // Explicitly set to 21 or higher
         targetSdk = flutter.targetSdkVersion
-        versionCode 5
-        versionName "1.5"
+        versionCode 6
+        versionName "1.6"
     }
 
     signingConfigs {

@@ -12,7 +12,7 @@ import 'Notifactions.dart';
 class BackgroundService {
   static const String notificationChannelId = 'my_foreground';
   static const int notificationId = 888;
-
+  Map<String, dynamic>? user;
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
@@ -56,22 +56,33 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) {
-  Timer.periodic(Duration(seconds: 30), (timer) {
-    // print("Service running: \$${DateTime.now()}");
-    WithdrawService().fetchWithdrawStatus();
+  Timer.periodic(Duration(seconds: 30), (timer) async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+      String? userData = prefs.getString('user');
+      if (userData != null) {
+      Map<String, dynamic> user = json.decode(userData);
+      if (kDebugMode) {
+        print(user!['id']);
+      }
+      WithdrawService().fetchWithdrawStatus(user?['id']);
+
+      }
+
   });
 }
 
 class WithdrawService {
   final String apiUrl = "https://holidayscarparking.uk/api/wallet/withdrawRequestStatus";
-  final int userId = 890; // Replace dynamically
+  // final int userId = 890; // Replace dynamically
   final NotificationService _notificationService = NotificationService();
 
-  Future<void> fetchWithdrawStatus() async {
+  Future<void> fetchWithdrawStatus(int userID) async {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
-        body: {"userId": userId.toString()},
+        body: {"userId": userID.toString()},
       );
 
       if (response.statusCode == 200) {

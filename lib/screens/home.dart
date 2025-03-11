@@ -8,6 +8,7 @@ import 'package:holidayscar/screens/hot_offer_screen.dart';
 import 'package:holidayscar/screens/search_screen.dart';
 import 'package:holidayscar/utils/ui_helper_date.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -28,11 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final InAppReviewService _inAppReviewService = InAppReviewService();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-  String? token;
-  Map<String, dynamic>? user;
-  bool _isShimmerVisible = true;
-  Timer? _shimmerTimer;
+  AppUpdateInfo? _updateInfo;
+  bool _flexibleUpdateAvailable = false;
 
   @override
   void initState() {
@@ -42,13 +40,74 @@ class _HomeScreenState extends State<HomeScreen> {
     requestPermissions();
     _initializeInAppReview();
     _loadUserData();
-
+    checkForUpdate();
     _shimmerTimer = Timer(const Duration(seconds: 2), () {
       setState(() {
         _isShimmerVisible = false;
       });
     });
   }
+
+  Future<void> checkForUpdate() async {
+    try {
+      AppUpdateInfo info = await InAppUpdate.checkForUpdate();
+      setState(() {
+        _updateInfo = info;
+      });
+
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        _showUpdateDialog();
+      }
+    } catch (e) {
+      debugPrint("Error checking for update: $e");
+    }
+  }
+
+  void _showUpdateDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text("Update Available"),
+        content: Text("A new version of the app is available. Please update."),
+        actions: [
+          TextButton(
+            child: Text("Later"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: Text("Update Now"),
+            onPressed: () {
+              Navigator.pop(context);
+              _startUpdate();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startUpdate() {
+    if (_updateInfo?.immediateUpdateAllowed ?? false) {
+      InAppUpdate.performImmediateUpdate().catchError((e) {
+        debugPrint("Update failed: $e");
+      });
+    } else if (_updateInfo?.flexibleUpdateAllowed ?? false) {
+      InAppUpdate.startFlexibleUpdate().then((_) {
+        setState(() {
+          _flexibleUpdateAvailable = true;
+        });
+      }).catchError((e) {
+        debugPrint("Flexible update failed: $e");
+      });
+    }
+  }
+
+  String? token;
+  Map<String, dynamic>? user;
+  bool _isShimmerVisible = true;
+  Timer? _shimmerTimer;
+
 
   @override
   void dispose() {

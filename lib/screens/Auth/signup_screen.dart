@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:holidayscar/routes.dart';
 import 'package:holidayscar/services/registration_api.dart';
 import 'package:intl_mobile_field/intl_mobile_field.dart';
+import 'package:intl_mobile_field/mobile_number.dart';
 import 'package:provider/provider.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../utils/UiHelper.dart';
@@ -288,19 +289,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 borderSide: const BorderSide(color: Colors.redAccent)
             ),
           ),
-          controller: phoneNumberController,
+          controller: phoneNumberController ,
           initialCountryCode: 'GB',
           // disableLengthCounter: true,
           languageCode: "en",
-          validator: (value) {
-            if (value == null ) {
+          validator: (MobileNumber? value) {
+            if (value == null || value.number.isEmpty) {
               return 'Please enter your phone number';
             }
-            if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(value as String)) {
+            if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(value.number)) {
               return 'Please enter a valid phone number';
             }
             return null;
           },
+
         )
       ],
     );
@@ -349,7 +351,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             title: selectedTitle!,
             firstName: firstNameController.text,
             lastName: lastNameController.text,
-            phoneNumber: phoneNumberController.text,
+            phoneNumber: phoneNumberController.text.toString(),
             email: emailController.text,
             password: passwordController.text,
             context: context,
